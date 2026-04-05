@@ -9,7 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.66",
+    "@ai-sdk/google": "^3.0.58",
+    "@ai-sdk/openai": "^3.0.50",
+    "@ai-sdk/react": "^3.0.148",
+    "@shopify/hydrogen-react": "^2026.1.2",
+    "ai": "^6.0.146",
+    "graphql": "^16.13.2",
     "next": "16.2.2",
+    "ollama-ai-provider": "^1.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

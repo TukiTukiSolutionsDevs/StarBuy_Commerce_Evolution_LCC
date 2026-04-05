@@ -1,0 +1,76 @@
+name: Deploy Starbuy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Build the Docker image on the CI runner with all secrets as build args.
+      # NEXT_PUBLIC_* vars are baked into the JS bundle at build time.
+      # Server-only vars (no NEXT_PUBLIC_) are passed for completeness and to
+      # prevent any build-time reference errors.
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg SHOPIFY_STORE_DOMAIN=${{ secrets.SHOPIFY_STORE_DOMAIN }} \
+            --build-arg SHOPIFY_STOREFRONT_ACCESS_TOKEN=${{ secrets.SHOPIFY_STOREFRONT_ACCESS_TOKEN }} \
+            --build-arg SHOPIFY_STOREFRONT_PRIVATE_TOKEN=${{ secrets.SHOPIFY_STOREFRONT_PRIVATE_TOKEN }} \
+            --build-arg SHOPIFY_API_VERSION=${{ secrets.SHOPIFY_API_VERSION }} \
+            --build-arg NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN=${{ secrets.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN }} \
+            --build-arg NEXT_PUBLIC_SHOPIFY_API_VERSION=${{ secrets.NEXT_PUBLIC_SHOPIFY_API_VERSION }} \
+            --build-arg NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN=${{ secrets.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN }} \
+            -t starbuy-store:latest \
+            -t starbuy-store:${{ github.sha }} \
+            .
+
+      # Save and compress the image. We ship the tarball to the VPS instead of
+      # using a registry — simpler setup for a single-server deployment.
+      - name: Save Docker image
+        run: docker save starbuy-store:latest | gzip > starbuy-store.tar.gz
+
+      # Copy the image + compose file + nginx config to the VPS
+      - name: Copy artifacts to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "starbuy-store.tar.gz,docker-compose.yml,nginx/"
+          target: "/opt/starbuy"
+
+      # SSH into VPS, load the new image, and do a zero-downtime restart.
+      # docker compose down + up is acceptable for a single-instance deployment.
+      # For zero-downtime with multiple replicas, consider docker compose up --no-deps --scale.
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            cd /opt/starbuy
+
+            echo "Loading new Docker image..."
+            docker load < starbuy-store.tar.gz
+
+            echo "Restarting services..."
+            docker compose down
+            docker compose up -d
+
+            echo "Cleaning up tarball..."
+            rm starbuy-store.tar.gz
+
+            echo "Pruning old Docker images..."
+            docker image prune -f
+
+            echo "Deployment complete!"
+            docker compose ps

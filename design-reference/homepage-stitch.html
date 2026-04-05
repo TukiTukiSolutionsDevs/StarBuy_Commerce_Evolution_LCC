@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Starbuy | Smart shopping, trusted quality.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1B2A5E",
+                        accent: "#D4A843",
+                        surface: "#F8F9FC",
+                        dark: "#1A1A2E",
+                        success: "#10B981",
+                        danger: "#EF4444"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Plus Jakarta Sans"],
+                        body: ["Inter"],
+                        label: ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-dark overflow-x-hidden">
+<!-- ANNOUNCEMENT BAR -->
+<div class="bg-primary text-white py-2 text-center text-xs md:text-sm font-medium tracking-wide">
+        Free Shipping on Orders Over $50 | Shop the Latest Trends
+    </div>
+<!-- SHARED COMPONENT: TopNavBar -->
+<nav class="flex justify-between items-center px-6 py-4 w-full sticky top-0 z-50 bg-[#1B2A5E] dark:bg-slate-950 text-white dark:text-slate-100 font-['Plus_Jakarta_Sans'] font-bold tracking-tight border-b border-white/10 shadow-lg">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-white dark:text-amber-400">Starbuy</span>
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-amber-400 border-b-2 border-amber-400 pb-1" href="#">New Arrivals</a>
+<a class="text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200" href="#">Trending</a>
+<a class="text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200" href="#">Electronics</a>
+<a class="text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200" href="#">Home &amp; Garden</a>
+<a class="text-white/90 hover:text-white hover:bg-white/10 transition-colors duration-200" href="#">Deals</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex relative items-center">
+<input class="bg-white/10 border-none rounded-full px-4 py-1.5 text-sm w-64 focus:ring-1 focus:ring-amber-400 text-white placeholder-white/60" placeholder="Search products..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 text-white/60 text-xl">search</span>
+</div>
+<button class="p-2 hover:bg-white/10 transition-colors duration-200 active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+<button class="p-2 hover:bg-white/10 transition-colors duration-200 active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="absolute top-1 right-1 bg-amber-400 text-primary text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</nav>
+<!-- HERO SECTION -->
+<section class="relative h-[600px] flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="Trending Fashion" class="w-full h-full object-cover brightness-[0.4]" data-alt="Modern lifestyle shopping scene with high-end retail interior, bright natural lighting, and premium fashion products in soft focus background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDortHpWkUDYb79cNlxSQ_bY4QRu8oENk_8b-GRcj5VLTafJ6v2epGraCYdEh_blLrcD8UBRt6MZ3IjXdlN2yhvwwnNjgIQ0ivSWIIcEyAJJxawj1kTdd4MWElA1rNae6f5EhfgiFtOgDWfmCYOYkBP1kFvM48CaDODDwcB3SX5bTKSxuQSZJvxq1u4GGZztQjM72OWtWwj0Jek4hi3q3mmxR3YLwSR1Fogj_p8ksmi-TlGHxhg8IELwYGVv9WFVnTuzqQexl9syZo"/>
+</div>
+<div class="container mx-auto px-6 relative z-10 text-white">
+<div class="max-w-2xl">
+<h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">Discover What's Trending</h1>
+<p class="text-xl md:text-2xl mb-10 text-white/90 leading-relaxed font-body">Curated products at unbeatable prices — delivered to your door.</p>
+<button class="bg-accent hover:bg-[#C1973A] text-primary px-10 py-4 rounded-lg font-bold text-lg transition-transform active:scale-95 shadow-xl">
+                    Shop Now
+                </button>
+</div>
+</div>
+</section>
+<!-- CATEGORY SECTION -->
+<section class="py-20 bg-surface">
+<div class="container mx-auto px-6">
+<div class="flex justify-between items-end mb-12">
+<div>
+<h2 class="text-3xl font-extrabold text-dark mb-2">Shop by Category</h2>
+<div class="h-1 w-20 bg-accent rounded-full"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+<!-- Category Cards -->
+<div class="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center text-center group cursor-pointer hover:shadow-md transition-all">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">devices</span>
+</div>
+<span class="font-semibold text-dark">Electronics</span>
+</div>
+<div class="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center text-center group cursor-pointer hover:shadow-md transition-all">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">apparel</span>
+</div>
+<span class="font-semibold text-dark">Fashion</span>
+</div>
+<div class="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center text-center group cursor-pointer hover:shadow-md transition-all">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">home</span>
+</div>
+<span class="font-semibold text-dark">Home &amp; Garden</span>
+</div>
+<div class="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center text-center group cursor-pointer hover:shadow-md transition-all">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">face_3</span>
+</div>
+<span class="font-semibold text-dark">Beauty</span>
+</div>
+<div class="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center text-center group cursor-pointer hover:shadow-md transition-all">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">fitness_center</span>
+</div>
+<span class="font-semibold text-dark">Sports</span>
+</div>
+<div class="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center text-center group cursor-pointer hover:shadow-md transition-all">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl">smart_toy</span>
+</div>
+<span class="font-semibold text-dark">Toys &amp; Games</span>
+</div>
+</div>
+</div>
+</section>
+<!-- TRENDING PRODUCTS -->
+<section class="py-20">
+<div class="container mx-auto px-6">
+<div class="flex justify-between items-center mb-12">
+<h2 class="text-3xl font-extrabold text-dark">Trending Now</h2>
+<a class="text-primary font-bold hover:text-accent transition-colors flex items-center gap-1" href="#">
+                    View All <span class="material-symbols-outlined text-lg">chevron_right</span>
+</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<!-- Product 1 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Headphones" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Premium wireless noise-canceling headphones in matte black finish on a minimalist light gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVTomjwQpgjQ1bgfDoz0d95bhemO7FqayrAouacV-f_3TK5bZl_XnaHWtRt8pAFfXFKG-7kbJO5gHJl6qge3wZxouskSLAJt4tAcZSe1FUPJR9ptUedMqbKlAq1Ctq6qSezxrpj964-7oywNdiSkKrOJfc2RHKknkuFQOuC1Vprsv-Qy76titNXHHI1SxW2grbrpnOZQZDfXhxTIiTsv8xcwjcUO1U7o7oqeiZkchy2EhgEUjfghTGCeJWLvP-kJY3N4f3vOb2hj0"/>
+<span class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Trending</span>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star_half</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(128)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Pro Noise-Canceling Wireless Headphones</h3>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-primary">$299.00</span>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+<!-- Product 2 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Watch" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Minimalist luxury wristwatch with white face and silver band resting on a soft fabric texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRHDIx-HvmCen1O_ClXZyRKvv0grR2L6k-uDCQRu8Uz1SyLLfEg37JwuO7QLtMSJweNm1t1tX19E0xaAWdkW1wTB2Red8eSgBwSjpAv8yitnxEmLz3DI00feIqV6JfQKgPLdgw1D0VCFtjhRd07dioh9USWFadf6njIgnj0Sh0uYKOhbPUh16x4Rpzc9blGZ5oanapehveqf0jyBRYxn96XAxHbcZ2tI5X4AQeeUY_m-rXKK7uBrAmScs23TWYTBgQLVGfyUAWHkc"/>
+<span class="absolute top-3 left-3 bg-danger text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Sale</span>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(84)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Classic Silver Minimalist Watch</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-2 items-center">
+<span class="text-lg font-bold text-danger">$145.00</span>
+<span class="text-sm text-slate-400 line-through">$190.00</span>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+<!-- Product 3 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Shoes" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Vibrant red athletic running shoes suspended in air with a clean studio lighting setup" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFxk1vKjPukm1heozvE4vraJWeHffkOZGNmiKXsr3O_mvAVW9o6r8Tk8frEuHYQRWm6jgJCPOb3t9wl92DKzMFyeiVJQkymJ8NZbHmv5vBdWGilbgaNZth_1VMPMk10R3nDTMp934rEsQXWNapNGux6CRqkEEkM2hE3at06Xa9qVQEiBSd_RiHcTUH4Ri5XQNv6Bon9LnmEU3g-ro8cjTYulME0SC3EHqRmB5mdN-OX-F9PbSM3Lu-D_wRSXLZOohZWzbfhqto1Gs"/>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(256)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Elite Performance Running Shoes</h3>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-primary">$120.00</span>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+<!-- Product 4 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Camera" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Retro polaroid camera in warm lighting on a wooden surface with a cozy atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDwDrT7MJMqYenunLoMOTLnrZnZKoKHn5Ewoc0bAZ6JaTo1t9f1LMZ5RElTfp4vH0BFV9V3v3Am2alXkBWijBbYnGjrT1KLc8dOB1GHnzzlKDHd9ha6ceOMxP-hDRPXu5X_HeaHhfKPhXVnSnidGRYrkIItwXErPYxV9au4xHFCcowCpLpTCqN8jz3WhcOgY3CdGamjIGVM128K8HBHJUbb2cxT3M9F3_lpTsjzqypPlGSmSWM7TB3VgspD_Mt2Xy_7M76bMBHTVM"/>
+<span class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">New</span>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(42)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Retro Instant Film Camera</h3>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-primary">$89.99</span>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Second Row -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-12">
+<!-- Product 5 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Sunglasses" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Stylishly designed sunglasses with dark lenses on a clean, bright orange surface for a high-contrast aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVCuIsXTCvarEoPFsoFA4aw2RiJBNNtNZMLlGCivAH7rHejUcepo0uraBeIsL8cZCLY2_kjvZCqlL6OlUjO2alKri-_TOzNS8bVCogyknPpAo9LyhMno-LIy0NSH-oN6nBMRhsRYzZ9smIINZcDfpY-fNLPHL7vzK-tzVhyQUjLz5lqglLxLpUTiSvFUFJivbbrB1rDGexXYHIwBFFJ4NlC35ZVL9IVCMJhY4221BylGHvNOkmFOBdzHkGQZd-7HsZWpqgsFOzVp4"/>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(53)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Urban Explorer Sunglasses</h3>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-primary">$65.00</span>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+<!-- Product 6 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Tablet" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Modern smart tablet with stylus on a clean white desk with soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaAspFmhi_mkNJFwHisoH8s4DqLFjuyWTpTPxg9vH6rdqURP2jCXLlyMUFiJmwGgB832qgZzdY750eukXEEKiOJ4tbRRynJu-_3RFJh9Xt8ma-3zz-5UxoAka5yhrc4uMAbFPzP14rSZQNAPxiE645l1hmud3abUqAi_L4IzplrouuQrHzps3tWMBrQ2SmurfTZ_Vj48Vg75zTMU-teBd8DkitAPLi3O15gn4zxrSXMOhanVODTm72zssba-t-P0ELBXM2Ed2dB48"/>
+<span class="absolute top-3 left-3 bg-danger text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Sale</span>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(210)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Pro Creative Drawing Tablet</h3>
+<div class="flex items-center justify-between">
+<div class="flex gap-2 items-center">
+<span class="text-lg font-bold text-danger">$499.00</span>
+<span class="text-sm text-slate-400 line-through">$599.00</span>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+<!-- Product 7 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Chair" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Ergonomic leather desk chair in a bright, modern home office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAdWq07yx7-Gs8d2SkbLJZMtHcoZmR24hftGQk1FSWvI9vvbd0911suSFdgRH_INAbAdV5BRJqbI6KIJQ52WlKezOL-NzmFlr8vrm7McGhnoMsLaHVtHy5OAR3_XlXywL2A0xroGUPTmxP4gpve1l0OD0Wc48CXRTUV1HypQnGtvqMXD4yTrJX_XS9opZbWzDnZ587eXIkDqXbMO3mB9-_L3NNWgOv-TYyqgHdzVrccDekcPvtaT9MwKAvo_KZYGfCgCqK28hhP1E"/>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star_half</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(16)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Modern Ergonomic Task Chair</h3>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-primary">$189.00</span>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+<!-- Product 8 -->
+<div class="group">
+<div class="relative overflow-hidden rounded-lg mb-4 aspect-square bg-surface">
+<img alt="Lamp" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Minimalist ceramic desk lamp with a warm light glow on a neutral gray surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAopWSERebJ4_hn25tmOQ2zbZW9onnVzdr3JS74As_EsU3EK27-WOpJrKcS3NpDYsc9QYNQHhyvgMYc0Dg63wA3p9jJ1-apmXJ-xle0xFbAkJAOYO2aC6JSV1-sSKRPhRdQIf95ehkEszXkX3YEtS3CH2YYIJI4XtDB1e0bu0IFheL4fgb92wRLwCKQECJy0ZO5y1kV3nMhRtJMC-7wbV1GvWOddnRLVnU8cWn4OukD5X0Z2JmU5wBCxW68rojEKfoyXkph5PGXKw8"/>
+<span class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Trending</span>
+</div>
+<div class="flex items-center gap-1 text-accent mb-1">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="text-xs text-slate-400 font-medium ml-1">(37)</span>
+</div>
+<h3 class="font-bold text-dark mb-2 line-clamp-1">Nordic Style Desk Lamp</h3>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-primary">$45.00</span>
+<button class="bg-primary hover:bg-primary/90 text-white p-2 rounded-lg transition-colors active:scale-95">
+<span class="material-symbols-outlined text-xl">shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- DEAL BANNER -->
+<section class="py-12">
+<div class="container mx-auto px-6">
+<div class="relative rounded-2xl overflow-hidden bg-primary p-12 md:p-20 text-center flex flex-col items-center">
+<div class="absolute inset-0 opacity-20">
+<img alt="Sale Background" class="w-full h-full object-cover" data-alt="Abstract colorful shopping bags and gift boxes creating a celebratory retail pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpq-IN-RYDBw8nbjottQdk1pxPcSBI89KkxBpLu5ocHiqealvS5w-ghbmVnJMSN2-3BX0jJDoSpLxFKtBQmZp3Le2BkwfCYvaUpthFd5fIT-6qpDuypXU6qRrV1CYrtBPXae2YZpKL_1kNZuQRvcm-Fg_pdfUvdlM6DoY6ZgHGSAOIHeVlmfCuZaoUR_jXS26QM4WJOwSbEU0VMks9Ed60kSiO7Q5jZxxUfxFwnG-pYmCaGQSU_xNHivPaRDwC1dZZz_5frBD4DbE"/>
+</div>
+<div class="relative z-10">
+<span class="bg-accent text-primary px-4 py-1 rounded-full font-bold text-sm mb-6 inline-block uppercase tracking-widest">Limited Time</span>
+<h2 class="text-4xl md:text-6xl font-extrabold text-white mb-6">Up to 50% Off — Limited Time Deals</h2>
+<p class="text-white/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-body">Save big on your favorite electronics, apparel, and home essentials. While supplies last.</p>
+<button class="bg-accent hover:bg-[#C1973A] text-primary px-10 py-4 rounded-lg font-bold text-lg transition-transform active:scale-95 shadow-xl">
+                        Shop Deals
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- TRUST SECTION -->
+<section class="py-20 border-b border-slate-100">
+<div class="container mx-auto px-6">
+<h2 class="text-3xl font-extrabold text-dark text-center mb-16">Why Shop With Starbuy?</h2>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+<div class="text-center">
+<div class="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mb-6 mx-auto">
+<span class="material-symbols-outlined text-primary text-3xl">local_shipping</span>
+</div>
+<h3 class="font-bold text-lg mb-2">Free Shipping</h3>
+<p class="text-slate-500 text-sm">On all orders over $50 across the country.</p>
+</div>
+<div class="text-center">
+<div class="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mb-6 mx-auto">
+<span class="material-symbols-outlined text-primary text-3xl">keyboard_return</span>
+</div>
+<h3 class="font-bold text-lg mb-2">Easy Returns</h3>
+<p class="text-slate-500 text-sm">30-day no-questions-asked return policy.</p>
+</div>
+<div class="text-center">
+<div class="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mb-6 mx-auto">
+<span class="material-symbols-outlined text-primary text-3xl">verified_user</span>
+</div>
+<h3 class="font-bold text-lg mb-2">Secure Payment</h3>
+<p class="text-slate-500 text-sm">Your data is protected by 256-bit SSL encryption.</p>
+</div>
+<div class="text-center">
+<div class="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mb-6 mx-auto">
+<span class="material-symbols-outlined text-primary text-3xl">support_agent</span>
+</div>
+<h3 class="font-bold text-lg mb-2">24/7 Support</h3>
+<p class="text-slate-500 text-sm">Our team is always here to help you out.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- NEWSLETTER -->
+<section class="py-20 bg-surface">
+<div class="container mx-auto px-6 text-center">
+<div class="max-w-2xl mx-auto">
+<h2 class="text-3xl font-extrabold text-dark mb-4">Stay in the Loop</h2>
+<p class="text-slate-500 mb-10 font-body">Subscribe to receive updates, access to exclusive deals, and more.</p>
+<form class="flex flex-col sm:flex-row gap-4">
+<input class="flex-1 px-6 py-4 rounded-lg border border-slate-200 focus:ring-primary focus:border-primary" placeholder="Enter your email address" type="email"/>
+<button class="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-lg font-bold transition-colors">
+                        Subscribe
+                    </button>
+</form>
+</div>
+</div>
+</section>
+<!-- SHARED COMPONENT: Footer -->
+<footer class="bg-[#1B2A5E] dark:bg-slate-950 text-white dark:text-slate-200 font-['Inter'] text-sm border-t border-white/10 w-full">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 px-8 py-12 w-full">
+<div class="col-span-2 md:col-span-1">
+<span class="text-xl font-bold text-amber-400 mb-6 block">Starbuy</span>
+<p class="text-slate-300 mb-6 max-w-xs">Smart shopping, trusted quality. Bringing the best trends directly to your doorstep with unmatched service.</p>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 transition-all" href="#">
+<span class="material-symbols-outlined text-xl">public</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 transition-all" href="#">
+<span class="material-symbols-outlined text-xl">camera</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold mb-6 text-white uppercase tracking-wider text-xs">Shop</h4>
+<ul class="space-y-4">
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">New Arrivals</a></li>
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Trending</a></li>
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Deals</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6 text-white uppercase tracking-wider text-xs">Support</h4>
+<ul class="space-y-4">
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">About Us</a></li>
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Contact Support</a></li>
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Shipping Policy</a></li>
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Returns</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6 text-white uppercase tracking-wider text-xs">Legal</h4>
+<ul class="space-y-4">
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Terms of Service</a></li>
+<li><a class="text-slate-300 hover:text-white hover:underline transition-all" href="#">Privacy Policy</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-white/5 px-8 py-6 text-center text-slate-400">
+<p>© 2024 Starbuy. Smart shopping, trusted quality.</p>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,33 @@
+# Dependencies — reinstalled inside Docker via npm ci
+node_modules
+
+# Build output — rebuilt inside Docker
+.next
+
+# Git history — not needed in image
+.git
+.gitignore
+.gitattributes
+
+# Docs / local config
+*.md
+.vscode
+.idea
+
+# Env files — NEVER bake secrets into the image!
+# Env vars are passed via:
+#   - Build args (NEXT_PUBLIC_* only, baked into bundle at build time)
+#   - docker-compose env_file (runtime server-side vars)
+.env*
+!.env.local.example
+
+# Docker files themselves — no need to copy them into the image
+docker-compose.yml
+docker-compose*.yml
+Dockerfile*
+
+# Nginx config — mounted as volume, not copied into Next.js image
+nginx/
+
+# macOS artifacts
+.DS_Store

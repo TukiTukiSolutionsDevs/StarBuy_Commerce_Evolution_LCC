@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Electronics - Starbuy</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: "#1B2A5E",
+                            gold: "#D4A843",
+                            "gold-light": "#F5E6C4",
+                            dark: "#1A1A2E",
+                            gray: "#6B7280",
+                            "light-gray": "#F8F9FC",
+                            success: "#10B981",
+                            error: "#EF4444"
+                        }
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Plus Jakarta Sans", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .active-nav-border {
+            position: relative;
+        }
+        .active-nav-border::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #D4A843;
+        }
+    </style>
+</head>
+<body class="bg-white font-body text-brand-dark">
+<!-- TopNavBar Component -->
+<header class="bg-blue-900 dark:bg-slate-950 shadow-md sticky top-0 z-50 border-b border-blue-800 dark:border-slate-800">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<a class="text-2xl font-bold text-white tracking-tight font-headline" href="#">Starbuy</a>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-white/90 hover:text-white transition-colors" href="#">Shop</a>
+<a class="text-white/90 hover:text-white transition-colors" href="#">Trending</a>
+<a class="text-white/90 hover:text-white transition-colors" href="#">New Arrivals</a>
+<a class="text-amber-400 border-b-2 border-amber-400 pb-1" href="#">Deals</a>
+<a class="text-white/90 hover:text-white transition-colors" href="#">About</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:flex items-center bg-blue-800/50 rounded-lg px-3 py-1.5 border border-blue-700">
+<span class="material-symbols-outlined text-white/70 text-lg mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-white text-sm w-48 placeholder-white/50" placeholder="Search products..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-white hover:bg-blue-800 dark:hover:bg-slate-900 transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="text-white hover:bg-blue-800 dark:hover:bg-slate-900 transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined">person</span>
+</button>
+<button class="text-white hover:bg-blue-800 dark:hover:bg-slate-900 transition-colors p-2 rounded-full active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute top-0 right-0 bg-amber-500 text-brand-navy text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">3</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-8">
+<!-- Breadcrumbs -->
+<nav class="flex text-sm text-brand-gray mb-6">
+<a class="hover:text-brand-navy" href="#">Home</a>
+<span class="mx-2 text-brand-gray/50">/</span>
+<a class="hover:text-brand-navy" href="#">Shop</a>
+<span class="mx-2 text-brand-gray/50">/</span>
+<span class="text-brand-navy font-semibold">Electronics</span>
+</nav>
+<!-- Collection Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+<div>
+<h1 class="text-4xl font-extrabold font-headline text-brand-navy">Electronics</h1>
+<p class="text-brand-gray mt-1">Showing 124 products</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-sm font-semibold text-brand-dark">Sort by:</span>
+<select class="border-brand-light-gray bg-brand-light-gray rounded-lg px-4 py-2 text-sm focus:ring-brand-navy focus:border-brand-navy outline-none cursor-pointer">
+<option>Best Selling</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Newest Arrivals</option>
+<option>Customer Rating</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-10">
+<!-- Left Sidebar: Filters -->
+<aside class="space-y-8">
+<div class="flex items-center justify-between">
+<h2 class="font-headline text-lg font-bold text-brand-navy uppercase tracking-wider">Filters</h2>
+<button class="text-sm text-brand-gray hover:text-brand-error underline">Clear All</button>
+</div>
+<!-- Price Range -->
+<div class="space-y-4">
+<h3 class="font-bold text-sm text-brand-navy">Price Range</h3>
+<div class="relative h-2 bg-brand-light-gray rounded-full">
+<div class="absolute h-full bg-brand-gold rounded-full" style="left: 0%; right: 40%;"></div>
+<div class="absolute -top-1.5 left-[0%] h-5 w-5 bg-white border-2 border-brand-gold rounded-full shadow-sm cursor-pointer"></div>
+<div class="absolute -top-1.5 left-[60%] h-5 w-5 bg-white border-2 border-brand-gold rounded-full shadow-sm cursor-pointer"></div>
+</div>
+<div class="flex items-center justify-between gap-4">
+<div class="flex items-center border border-brand-light-gray rounded-lg px-2 bg-brand-light-gray">
+<span class="text-brand-gray text-xs">$</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm py-1" type="text" value="0"/>
+</div>
+<span class="text-brand-gray">—</span>
+<div class="flex items-center border border-brand-light-gray rounded-lg px-2 bg-brand-light-gray">
+<span class="text-brand-gray text-xs">$</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm py-1" type="text" value="500"/>
+</div>
+</div>
+</div>
+<!-- Brands -->
+<div class="space-y-3">
+<h3 class="font-bold text-sm text-brand-navy">Brand</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-brand-navy focus:ring-brand-navy border-brand-gray/30 h-4 w-4" type="checkbox"/>
+<span class="text-sm text-brand-gray group-hover:text-brand-dark">Samsung</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="rounded text-brand-navy focus:ring-brand-navy border-brand-gray/30 h-4 w-4" type="checkbox"/>
+<span class="text-sm text-brand-dark group-hover:text-brand-dark">Apple</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-brand-navy focus:ring-brand-navy border-brand-gray/30 h-4 w-4" type="checkbox"/>
+<span class="text-sm text-brand-gray group-hover:text-brand-dark">Sony</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-brand-navy focus:ring-brand-navy border-brand-gray/30 h-4 w-4" type="checkbox"/>
+<span class="text-sm text-brand-gray group-hover:text-brand-dark">JBL</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-brand-navy focus:ring-brand-navy border-brand-gray/30 h-4 w-4" type="checkbox"/>
+<span class="text-sm text-brand-gray group-hover:text-brand-dark">Anker</span>
+</label>
+</div>
+</div>
+<!-- Rating -->
+<div class="space-y-3">
+<h3 class="font-bold text-sm text-brand-navy">Rating</h3>
+<div class="space-y-2">
+<button class="flex items-center gap-2 text-brand-gold hover:opacity-80">
+<div class="flex text-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-sm text-brand-gray">&amp; Up</span>
+</button>
+<button class="flex items-center gap-2 text-brand-gold hover:opacity-80">
+<div class="flex text-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-brand-gray/30">star</span>
+</div>
+<span class="text-sm text-brand-gray">&amp; Up</span>
+</button>
+<button class="flex items-center gap-2 text-brand-gold hover:opacity-80">
+<div class="flex text-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-brand-gray/30">star</span>
+<span class="material-symbols-outlined text-sm text-brand-gray/30">star</span>
+</div>
+<span class="text-sm text-brand-gray">&amp; Up</span>
+</button>
+</div>
+</div>
+<!-- Availability -->
+<div class="flex items-center justify-between pt-4 border-t border-brand-light-gray">
+<span class="font-bold text-sm text-brand-navy">In Stock Only</span>
+<button class="w-10 h-5 bg-brand-success rounded-full relative">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</button>
+</div>
+<button class="w-full bg-brand-navy text-white font-bold py-3 rounded-lg hover:bg-brand-navy/90 transition-all shadow-md active:scale-[0.98]">
+                    Apply Filters
+                </button>
+</aside>
+<!-- Main Product Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Premium Noise Cancelling Headphones" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Modern high-fidelity noise cancelling headphones in matte black finish on a clean studio background with soft reflections" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHMj-UUDYjya1jl0ol2AQNE2kMv4i6ymWOVVR4rUynpZQ-WmpNfSnL2Y_g9JL1rWFaZDXq7K4NPfHDYdrrZrKwzoKmAPnyDm3IQdTRD0f6KxDC_ID02L1F01KTmWhF7YKTchl_DpmpUtYWTafFjKtw3m18b5MlYOBPx-iM2Ci6w0HFmz_Y-5U4k3DuRWuCw8EebE-4S8Llq_U6nAlbC9YBVxZhqeaZb7y8AF610mkoZS35Bo1CqI_YfUR7mY9-qXDxBA_bdjHJri0"/>
+<span class="absolute top-3 left-3 bg-brand-error text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Sale</span>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Sony</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">WH-1000XM5 Wireless Headphones</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(2,143)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$299.99</span>
+<span class="text-brand-gray line-through text-sm">$399.00</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Sleek Modern Smartwatch" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Minimalist modern smartwatch with a silver casing and white band, glowing digital face, professional product photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPK-gPo72yrE_joutHHWKdEOA0M3oj1wR0jN4qbfxavTVqFzToL9OjJYSVNYcOUuD4mdO8QUiOvxWNb_TTEyZ2WPnp9DpoFklLnbWlZYRBFSPzl9DmXWeeSXfqG73-HZjeH9QbASXNc2pNPPYhiVN5FYDm52HMo8x14-S7Yn957ifS9585CPs2BANl3EbXLDnCyLwd4KI6SLydrprPLX7g1J7Ed5KmUtfdD-bbjhqXZ1-xsB3u8AGbW-eyOQyDcGinbzKbi6OERGw"/>
+<span class="absolute top-3 left-3 bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">New</span>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Apple</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">Series 9 Pro Smartwatch Silver</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(845)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$449.00</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Deep Bass Wireless Earbuds" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Compact wireless earbuds in a charging case, soft overhead lighting emphasizing the sleek texture of the case and buds" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiJg0kg0ga9MqzLME_g__jkeVkE341I7FkeDZmai-qMwJM31QPJKl1K21Tj6fxQZ8nueOt3M-seEpKGcUr1mkKPeAFsuZhecgp4smSFAaynQu_pK4Sve0QHgAifrLK1mmy6i9k8JaiqglxsX74qLcdsI_6MKW3rchkv6L2OQb9KJqZ58nvuAVdy0FaR_4ciyKlIwCa_uXzfFWQ2COr74Nvr78Wnr5FgwXmsVAsmocFrz1y94Ydjc2FKVTRq_ym9ECvyAsWyrJ3DBM"/>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Samsung</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">Galaxy Buds2 Pro Noise Cancelling</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(1,529)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$189.99</span>
+<span class="text-brand-gray line-through text-sm">$229.00</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="4K Professional Monitor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Wide ultra-slim computer monitor displaying vibrant landscape photography on a minimalist wooden desk setup" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_ty2Iuv5QO4Dquhlqm-MXHEKq1pgIJzgcxdHJDXRTy0IGegOOU539C4LoTbLtzqZ5aUxxDOo1ra0PGEVxvIBCuVdVZYlaGoH3LMFA-0lov7mROH7knFm0UrvLCaCbdEVJF4z20Y_IWHXA3jKYEQlHKrLTvsIK1bViZ21Xu3rf1z9No0aXxoIJh3wazyQCL_kqzdJzyOK6TwDY0fydBO1ujYQp_HWk_cbiWny47bW1QIQTDCH-kzrFUb6Mh2285qealNz_0t5XNJM"/>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Samsung</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">32" ViewFinity S8 4K IPS Monitor</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(312)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$499.99</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 5 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Compact Portable Speaker" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Durable rugged waterproof portable speaker in forest green, standing on a rock by a stream with water splashes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtikjbPXSDV4493rQ5SM1qy1qZ66UHQzUD_cq4N3cz16AopAyWmArqMGnqp1oUBCXL7ahLld9cEa0MvxQmKpIb_VhvnFzAXN1bpkzzhckw1jxTP7_ZsIslKtjv_hR-6QFaf4GUm1ouNaMT4w05534pNPujssVALJmVuoV9M8JobMN8ApgvOQ2-12o2nHCq9ujyL9JbtpWGgW_enb06A-Y2JM9kaVtOiVikVQBJ6dwVRLnIzNVT2NBdvGGQf7SHgxcrMUpTrfFOdJ0"/>
+<span class="absolute top-3 left-3 bg-brand-error text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Sale</span>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">JBL</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">Flip 6 Waterproof Portable Speaker</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(4,921)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$99.95</span>
+<span class="text-brand-gray line-through text-sm">$129.95</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 6 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Lightweight Tablet" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Modern high-resolution tablet with a stylus resting on the screen, bright creative workspace environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArAqw5YCPI-ahWJ32fF4FnpXWYnsPkkUPzpYnuhsK1hUwgxPRDjBGdJFM2hZem552nvHpq5yopAdkbLITpWMydYHJzI9uj47t5AEDbPaPNmB-4ORUZyQUlXsiC82xnqaghfHwZyrS6z8beXJueg9WjBLpbDInYNn-_X6ISwTu9W7vL_xlKyJ7Kof-1Ixv9QK2rpf7-jv17FXDCm9OsMaYssRd9bvZqLBAH8544QH3DjeRCZS1N59NnkTLmELdizk_O-wRnOLtcpbI"/>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Apple</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">iPad Air 10.9" M1 Chip 256GB</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(967)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$599.00</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 7 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Dual-Drive Charger" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Multiple port USB-C fast wall charger with glowing LED indicator, professional product lighting on dark surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3URql7f1iEYij4IAwq0iuszuc3Is8gfhO6y8-_bv92yvk2W4QjkcveJHfPrbYkMWmhfhzlXrimAQcOb3kG8apq4jvGAQ83Ho7siBwl71EsECu6XX-N_979bBOXiXQ8ZDztKoYRrQcqZJO8aIwtZcoZgJ0KTGC1JRR1O4e99rdbf0eni1gNB94tPaw6zwdE0YLlmM5lBObgWXOmWM_7nTLkgm2tU22-xfAkW5ES-RuxOSul3_kfPVSpEP5Y92DAe3QcL7-UKoyqZg"/>
+<span class="absolute top-3 left-3 bg-brand-gold text-brand-navy text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">New</span>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Anker</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">737 Charger (GaNPrime 120W)</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 0.5;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(452)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$89.99</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 8 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Latest Generation Smartphone" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Elegant smartphone with triple camera system, shimmering iridescent back cover, floating in a clean studio space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAftIw2YWZ24tJ3UMM4nF9QA7XknOUEbkHKMgB9myRSVM5iuNtpVMQfZEyFRhNL0daYgA2EJSETi7hUVvrOlyJO5clozU0K0sVMxpGbf_E1vnnuSRM5W67VIJSDooZRw2aLdh2yszO42pJxSKshXnLAwW0bFzp5MszFwWIEm1y0CtFAMBfy8Z3y3LWt28qWJ___g2N5LZzCbr3NQozkBzzf-gd3QkH-qXmOZhHPf0N5RmehfnKaQzjONdUKr7qsYb1U2Kr5HX_iwkY"/>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Samsung</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">Galaxy S24 Ultra 512GB Titanium</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(89)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$1,299.00</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+<!-- Card 9 -->
+<article class="group bg-white border border-brand-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
+<div class="relative aspect-square overflow-hidden bg-brand-light-gray">
+<img alt="Luxury Leather Smartwatch" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Classic watch face with smart features, genuine brown leather strap, resting on a velvet cushion in soft warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArQIXnaJb2-ncJbRnIEGkJDXcaawBbHza0YpeQmEXxw0VfLsRZbhDf6XOa0kWKE6lSLxGT2dtCM8Uf6ouRqAd_xAW7wxvSvgZ0Var2R5cMhhQU-IAIKDuQNhxH4XrPeZ4CmYS0-phT1a6Eq3IoZKaJ5V0iDYCiEroqEMkKbXWixW_ZU_6yp99NTPJNXIyilakrQuBgVbvKbQi0ND3NpbrH9ca-4xOk4s8x9oeWFm1V9O0PIlXmz6QfCZOWomVAGDa_R39DWaf0bz4"/>
+<span class="absolute top-3 left-3 bg-brand-error text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Sale</span>
+<button class="absolute top-3 right-3 h-8 w-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-brand-navy shadow-sm backdrop-blur-sm transition-colors">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+<div class="p-5 flex flex-col flex-grow">
+<span class="text-brand-gray text-xs font-semibold mb-1">Sony</span>
+<h3 class="font-bold text-brand-navy mb-2 group-hover:text-brand-gold transition-colors">Smart Watch Classic Edition 2</h3>
+<div class="flex items-center gap-2 mb-3">
+<div class="flex text-brand-gold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm text-brand-gray/30">star</span>
+</div>
+<span class="text-[11px] text-brand-gray">(522)</span>
+</div>
+<div class="flex items-center gap-3 mt-auto">
+<span class="text-brand-navy font-bold text-xl">$149.00</span>
+<span class="text-brand-gray line-through text-sm">$199.00</span>
+</div>
+<button class="mt-4 w-full border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white font-bold py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">shopping_cart</span> Add to Cart
+                        </button>
+</div>
+</article>
+</section>
+</div>
+<!-- Pagination -->
+<div class="mt-16 flex justify-center items-center gap-2 font-semibold">
+<button class="px-4 py-2 text-brand-gray hover:text-brand-navy flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-base">chevron_left</span> Previous
+            </button>
+<div class="flex items-center gap-1">
+<button class="w-10 h-10 rounded-lg bg-brand-navy text-white shadow-md">1</button>
+<button class="w-10 h-10 rounded-lg text-brand-gray hover:bg-brand-light-gray">2</button>
+<button class="w-10 h-10 rounded-lg text-brand-gray hover:bg-brand-light-gray">3</button>
+<span class="px-2 text-brand-gray">...</span>
+<button class="w-10 h-10 rounded-lg text-brand-gray hover:bg-brand-light-gray">14</button>
+</div>
+<button class="px-4 py-2 text-brand-gray hover:text-brand-navy flex items-center gap-1 transition-colors">
+                Next <span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="bg-blue-900 dark:bg-slate-950 border-t border-blue-800 dark:border-slate-800 mt-20">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 px-6 py-12 w-full max-w-7xl mx-auto">
+<div class="space-y-4">
+<span class="text-xl font-bold text-white font-headline">Starbuy</span>
+<p class="text-slate-300 text-sm leading-relaxed">© 2024 Starbuy. Modern shopping for trending products.</p>
+<div class="flex gap-4 pt-2">
+<a class="text-slate-300 hover:text-amber-500 transition-colors" href="#"><span class="material-symbols-outlined">public</span></a>
+<a class="text-slate-300 hover:text-amber-500 transition-colors" href="#"><span class="material-symbols-outlined">share</span></a>
+<a class="text-slate-300 hover:text-amber-500 transition-colors" href="#"><span class="material-symbols-outlined">alternate_email</span></a>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold uppercase text-xs tracking-widest">Support</h4>
+<ul class="space-y-2 text-sm">
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Customer Service</a></li>
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Shipping Info</a></li>
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Returns</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold uppercase text-xs tracking-widest">Company</h4>
+<ul class="space-y-2 text-sm">
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">About Us</a></li>
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Careers</a></li>
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Contact</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold uppercase text-xs tracking-widest">Legal</h4>
+<ul class="space-y-2 text-sm">
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-slate-300 hover:text-white transition-colors" href="#">Terms of Service</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-blue-800 py-6 text-center">
+<p class="text-slate-400 text-xs">Starbuy Electronics Department • All Rights Reserved 2024</p>
+</div>
+</footer>
+</body></html>
