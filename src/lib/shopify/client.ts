@@ -17,8 +17,9 @@ export async function shopifyFetch<T>({
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Shopify-Storefront-Private-Token':
-        process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN!,
+      ...(process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN
+        ? { 'Shopify-Storefront-Private-Token': process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN }
+        : { 'X-Shopify-Storefront-Access-Token': process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN! }),
     },
     body: JSON.stringify({ query, variables }),
     next: {

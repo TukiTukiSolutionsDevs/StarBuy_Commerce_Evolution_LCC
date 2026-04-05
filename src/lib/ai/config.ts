@@ -22,7 +22,7 @@ export type AIConfig = {
   shopify: {
     domain: string;
     clientId: string;
-    hasClientSecret: boolean; // never expose the actual secret
+    hasClientSecret: boolean;
     connected: boolean;
   };
 };

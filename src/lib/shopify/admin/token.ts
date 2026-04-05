@@ -1,7 +1,8 @@
 /**
- * Shopify Admin API — OAuth Token Manager
+ * Shopify Admin API — OAuth Token Manager (client_credentials)
  *
- * Exchanges client credentials for an access token (client_credentials grant).
+ * Since Jan 2026, Shopify no longer shows static tokens.
+ * Uses Client ID + Client Secret to obtain access tokens via OAuth.
  * Singleton — prevents concurrent fetches and auto-refreshes 5 min before expiry.
  */
 
@@ -37,7 +38,8 @@ async function fetchNewToken(): Promise<TokenState> {
 
   if (!domain || !clientId || !clientSecret) {
     throw new Error(
-      '[AdminToken] Missing required env vars: SHOPIFY_STORE_DOMAIN, SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET'
+      '[AdminToken] Missing required env vars: SHOPIFY_STORE_DOMAIN, SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET. ' +
+      'Get them from: Shopify Admin → Settings → Apps → Develop apps → Build app in Dev Dashboard → API credentials'
     );
   }
 
@@ -53,7 +55,6 @@ async function fetchNewToken(): Promise<TokenState> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
-    // No Next.js cache — token management is handled manually
     cache: 'no-store',
   });
 
@@ -70,7 +71,6 @@ async function fetchNewToken(): Promise<TokenState> {
 
   return {
     accessToken: data.access_token,
-    // Shopify returns expires_in in seconds; convert to absolute ms timestamp
     expiresAt: Date.now() + data.expires_in * 1000,
   };
 }
@@ -82,12 +82,10 @@ async function fetchNewToken(): Promise<TokenState> {
  * Thread-safe: concurrent calls share a single in-flight fetch promise.
  */
 export async function getAdminToken(): Promise<string> {
-  // Fast path — token is still valid
   if (tokenState && !isExpired(tokenState)) {
     return tokenState.accessToken;
   }
 
-  // Prevent concurrent fetches (mutex via shared promise)
   if (pendingFetch) {
     const state = await pendingFetch;
     return state.accessToken;

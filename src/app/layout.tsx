@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers/Providers';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StorefrontShell } from '@/components/layout/StorefrontShell';
 import type { ReactNode } from 'react';
 
 // ── Fonts ──────────────────────────────────────────────────────────────────────
@@ -79,9 +78,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
         <Providers>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <StorefrontShell>{children}</StorefrontShell>
         </Providers>
       </body>
     </html>

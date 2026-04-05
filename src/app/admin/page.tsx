@@ -5,6 +5,8 @@
  * Shows stats cards, recent products, and quick actions.
  */
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { searchProducts } from '@/lib/shopify/admin/tools/products';
 import { listCollections } from '@/lib/shopify/admin/tools/collections';
