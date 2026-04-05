@@ -229,7 +229,7 @@ export default function SettingsPage() {
 
                 <p className="text-[#6b7280] text-xs leading-relaxed">{meta.description}</p>
 
-                {!isReady && p !== 'ollama' && (
+                {!isReady && meta.envKey && (
                   <p className="text-[#374151] text-[10px] mt-2 font-mono">
                     Add {meta.envKey} to .env.local
                   </p>

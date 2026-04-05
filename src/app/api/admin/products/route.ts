@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
 
     const result = await createProduct(body as { title: string; descriptionHtml?: string; vendor?: string; productType?: string; tags?: string[]; status?: 'ACTIVE' | 'DRAFT' | 'ARCHIVED'; price?: string });
 
-    if (result.errors.length > 0) {
+    if (result.userErrors.length > 0) {
       return Response.json(
-        { error: result.errors.map((e) => e.message).join(', ') },
+        { error: result.userErrors.map((e) => e.message).join(', ') },
         { status: 422 }
       );
     }

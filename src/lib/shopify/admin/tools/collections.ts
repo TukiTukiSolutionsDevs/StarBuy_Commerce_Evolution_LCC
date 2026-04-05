@@ -55,7 +55,7 @@ export async function listCollections(
 export async function addProductToCollection(
   productId: string,
   collectionId: string
-): Promise<{ success: boolean; errors: UserError[] }> {
+): Promise<{ success: boolean; userErrors: UserError[] }> {
   const productGid = productId.startsWith('gid://')
     ? productId
     : `gid://shopify/Product/${productId}`;
@@ -88,7 +88,7 @@ export async function addProductToCollection(
 
   return {
     success: !!data.collectionAddProducts.collection,
-    errors: data.collectionAddProducts.userErrors,
+    userErrors: data.collectionAddProducts.userErrors,
   };
 }
 
@@ -97,7 +97,7 @@ export async function addProductToCollection(
 export async function removeProductFromCollection(
   productId: string,
   collectionId: string
-): Promise<{ success: boolean; errors: UserError[] }> {
+): Promise<{ success: boolean; userErrors: UserError[] }> {
   const productGid = productId.startsWith('gid://')
     ? productId
     : `gid://shopify/Product/${productId}`;
@@ -130,6 +130,6 @@ export async function removeProductFromCollection(
 
   return {
     success: !!data.collectionRemoveProducts.job,
-    errors: data.collectionRemoveProducts.userErrors,
+    userErrors: data.collectionRemoveProducts.userErrors,
   };
 }

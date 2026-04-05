@@ -139,7 +139,7 @@ const DEFAULT_LOCATION_ID = 'gid://shopify/Location/86682697925';
 
 export async function createProduct(
   input: CreateProductInput
-): Promise<{ product: AdminProduct | null; errors: UserError[] }> {
+): Promise<{ product: AdminProduct | null; userErrors: UserError[] }> {
   const createMutation = `
     mutation CreateProduct($input: ProductInput!) {
       productCreate(input: $input) {
@@ -171,7 +171,7 @@ export async function createProduct(
   const { product, userErrors } = createData.productCreate;
 
   if (userErrors.length > 0 || !product) {
-    return { product: null, errors: userErrors };
+    return { product: null, userErrors: userErrors };
   }
 
   // Set price on the default variant
@@ -212,7 +212,7 @@ export async function createProduct(
 
   // Return refreshed product
   const refreshed = await getProductById(product.id);
-  return { product: refreshed, errors: [] };
+  return { product: refreshed, userErrors: [] };
 }
 
 // ─── Update ────────────────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ type UpdateProductFields = Partial<
 export async function updateProduct(
   id: string,
   fields: UpdateProductFields
-): Promise<{ product: AdminProduct | null; errors: UserError[] }> {
+): Promise<{ product: AdminProduct | null; userErrors: UserError[] }> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Product/${id}`;
 
   const mutation = `
@@ -256,7 +256,7 @@ export async function updateProduct(
 
 export async function deleteProduct(
   id: string
-): Promise<{ deleted: boolean; errors: UserError[] }> {
+): Promise<{ deleted: boolean; userErrors: UserError[] }> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Product/${id}`;
 
   const mutation = `
@@ -277,7 +277,7 @@ export async function deleteProduct(
 
   return {
     deleted: !!data.productDelete.deletedProductId,
-    errors: data.productDelete.userErrors,
+    userErrors: data.productDelete.userErrors,
   };
 }
 
@@ -287,7 +287,7 @@ export async function setProductPrice(
   variantId: string,
   price: string,
   compareAtPrice?: string
-): Promise<{ errors: UserError[] }> {
+): Promise<{ userErrors: UserError[] }> {
   const gid = variantId.startsWith('gid://')
     ? variantId
     : `gid://shopify/ProductVariant/${variantId}`;
@@ -317,7 +317,7 @@ export async function setProductPrice(
     };
   }>({ query: mutation, variables: { input } });
 
-  return { errors: data.productVariantUpdate.userErrors };
+  return { userErrors: data.productVariantUpdate.userErrors };
 }
 
 // ─── Internal: set inventory for a variant ─────────────────────────────────────

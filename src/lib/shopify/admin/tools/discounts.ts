@@ -46,7 +46,7 @@ type CreateDiscountInput = {
 
 export async function createDiscountCode(
   input: CreateDiscountInput
-): Promise<{ discount: AdminDiscount | null; errors: UserError[] }> {
+): Promise<{ discount: AdminDiscount | null; userErrors: UserError[] }> {
   const mutation = `
     mutation CreateDiscountCode($discount: DiscountCodeBasicInput!) {
       discountCodeBasicCreate(basicCodeDiscount: $discount) {
@@ -128,7 +128,7 @@ export async function createDiscountCode(
   const { codeDiscountNode, userErrors } = data.discountCodeBasicCreate;
 
   if (!codeDiscountNode) {
-    return { discount: null, errors: userErrors };
+    return { discount: null, userErrors: userErrors };
   }
 
   // Shape into AdminDiscount format
@@ -146,7 +146,7 @@ export async function createDiscountCode(
     },
   };
 
-  return { discount, errors: userErrors };
+  return { discount, userErrors: userErrors };
 }
 
 // ─── List Active Discounts ─────────────────────────────────────────────────────

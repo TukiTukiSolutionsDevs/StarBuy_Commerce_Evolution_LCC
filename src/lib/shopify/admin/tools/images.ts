@@ -112,7 +112,7 @@ export async function uploadProductImage(
   for (const param of target.parameters) {
     formData.append(param.name, param.value);
   }
-  formData.append('file', new Blob([fileBuffer], { type: file.mimeType }), file.filename);
+  formData.append('file', new Blob([new Uint8Array(fileBuffer)], { type: file.mimeType }), file.filename);
 
   const uploadRes = await fetch(target.url, {
     method: 'POST',

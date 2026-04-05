@@ -6,7 +6,7 @@
  * Provider selection from admin settings (runtime, no restart needed)
  */
 
-import { streamText } from 'ai';
+import { streamText, stepCountIs } from 'ai';
 import type { NextRequest } from 'next/server';
 import { adminTools } from '@/lib/ai/tools';
 import { getActiveProvider } from '@/lib/ai/config';
@@ -109,17 +109,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const model = await resolveModel(provider, modelName);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const model = await resolveModel(provider, modelName) as any;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = streamText({
       model,
       system: SYSTEM_PROMPT,
-      messages: messages as Parameters<typeof streamText>[0]['messages'],
+      messages: messages as any,
       tools: adminTools,
-      maxSteps: 5,
-    });
+      stopWhen: stepCountIs(5),
+    } as any);
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (err) {
     console.error(`[api/admin/chat] ${provider}/${modelName} error:`, err);
     return Response.json(

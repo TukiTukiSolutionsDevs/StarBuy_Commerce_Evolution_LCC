@@ -178,7 +178,7 @@ export async function cancelOrder(
   reason: string = 'OTHER',
   restock: boolean = true,
   refund: boolean = false
-): Promise<{ order: AdminOrder | null; errors: UserError[] }> {
+): Promise<{ order: AdminOrder | null; userErrors: UserError[] }> {
   const gid = orderId.startsWith('gid://')
     ? orderId
     : `gid://shopify/Order/${orderId}`;
@@ -220,7 +220,7 @@ export async function createFulfillment(
   trackingNumber?: string,
   trackingUrl?: string,
   company?: string
-): Promise<{ fulfillment: { id: string; status: string } | null; errors: UserError[] }> {
+): Promise<{ fulfillment: { id: string; status: string } | null; userErrors: UserError[] }> {
   const gid = orderId.startsWith('gid://')
     ? orderId
     : `gid://shopify/Order/${orderId}`;
@@ -257,7 +257,7 @@ export async function createFulfillment(
   if (openFOs.length === 0) {
     return {
       fulfillment: null,
-      errors: [{ field: null, message: 'No open fulfillment orders found for this order.' }],
+      userErrors: [{ field: null, message: 'No open fulfillment orders found for this order.' }],
     };
   }
 
@@ -310,7 +310,7 @@ export async function refundOrder(
   orderId: string,
   lineItems?: RefundLineItem[],
   note?: string
-): Promise<{ refund: { id: string } | null; errors: UserError[] }> {
+): Promise<{ refund: { id: string } | null; userErrors: UserError[] }> {
   const gid = orderId.startsWith('gid://')
     ? orderId
     : `gid://shopify/Order/${orderId}`;

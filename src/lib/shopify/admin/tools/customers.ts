@@ -116,7 +116,7 @@ type CreateCustomerInput = {
 
 export async function createCustomer(
   input: CreateCustomerInput
-): Promise<{ customer: AdminCustomer | null; errors: UserError[] }> {
+): Promise<{ customer: AdminCustomer | null; userErrors: UserError[] }> {
   const mutation = `
     mutation CreateCustomer($input: CustomerInput!) {
       customerCreate(input: $input) {
@@ -148,7 +148,7 @@ type UpdateCustomerFields = Partial<
 export async function updateCustomer(
   id: string,
   fields: UpdateCustomerFields
-): Promise<{ customer: AdminCustomer | null; errors: UserError[] }> {
+): Promise<{ customer: AdminCustomer | null; userErrors: UserError[] }> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Customer/${id}`;
 
   const mutation = `
@@ -177,7 +177,7 @@ export async function updateCustomer(
 
 export async function deleteCustomer(
   id: string
-): Promise<{ deleted: boolean; errors: UserError[] }> {
+): Promise<{ deleted: boolean; userErrors: UserError[] }> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Customer/${id}`;
 
   const mutation = `
@@ -198,6 +198,6 @@ export async function deleteCustomer(
 
   return {
     deleted: !!data.customerDelete.deletedCustomerId,
-    errors: data.customerDelete.userErrors,
+    userErrors: data.customerDelete.userErrors,
   };
 }

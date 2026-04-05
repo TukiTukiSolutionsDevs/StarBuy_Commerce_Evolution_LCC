@@ -76,9 +76,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const result = await updateProduct(id, body);
 
-    if (result.errors.length > 0) {
+    if (result.userErrors.length > 0) {
       return Response.json(
-        { error: result.errors.map((e) => e.message).join(', ') },
+        { error: result.userErrors.map((e) => e.message).join(', ') },
         { status: 422 }
       );
     }
@@ -101,9 +101,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const result = await deleteProduct(id);
 
-    if (result.errors.length > 0) {
+    if (result.userErrors.length > 0) {
       return Response.json(
-        { error: result.errors.map((e) => e.message).join(', ') },
+        { error: result.userErrors.map((e) => e.message).join(', ') },
         { status: 422 }
       );
     }
