@@ -20,6 +20,7 @@ type ProductFormData = {
   vendor: string;
   productType: string;
   price: string;
+  compareAtPrice: string;
   tags: string;
   status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
 };
@@ -112,6 +113,7 @@ const EMPTY_FORM: ProductFormData = {
   vendor: '',
   productType: '',
   price: '',
+  compareAtPrice: '',
   tags: '',
   status: 'ACTIVE',
 };
@@ -121,13 +123,17 @@ function ProductForm({
   onSubmit,
   loading,
   submitLabel,
+  imageSlot,
 }: {
   initial: ProductFormData;
   onSubmit: (data: ProductFormData) => void;
   loading: boolean;
   submitLabel: string;
+  imageSlot?: React.ReactNode;
 }) {
   const [form, setForm] = useState<ProductFormData>(initial);
+  const [descMode, setDescMode] = useState<'edit' | 'preview'>('edit');
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     setForm(initial);
@@ -137,118 +143,369 @@ function ProductForm({
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function addTag() {
+    const newTag = tagInput.trim();
+    if (!newTag) return;
+    const existing = form.tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (existing.includes(newTag)) {
+      setTagInput('');
+      return;
+    }
+    const updated = [...existing, newTag].join(', ');
+    set('tags', updated);
+    setTagInput('');
+  }
+
+  function removeTag(tag: string) {
+    const updated = form.tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t && t !== tag)
+      .join(', ');
+    set('tags', updated);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit(form);
   }
 
   const inputClass =
-    'w-full bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors';
+    'w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843]/50 focus:outline-none text-white placeholder:text-[#374151] rounded-xl px-4 py-2.5 text-sm transition-colors';
+
+  const labelClass = 'block text-xs font-medium mb-1.5' as const;
+
+  const statusColor: Record<string, string> = {
+    ACTIVE: '#10b981',
+    DRAFT: '#d4a843',
+    ARCHIVED: '#6b7280',
+  };
+
+  const currentTags = form.tags
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-          Title <span className="text-[#ef4444]">*</span>
-        </label>
-        <input
-          required
-          value={form.title}
-          onChange={(e) => set('title', e.target.value)}
-          placeholder="Product title"
-          className={inputClass}
-        />
+    <form onSubmit={handleSubmit}>
+      {/* ── Two-column grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── LEFT COLUMN (2/3) ── */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Media card */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4">
+            <h4
+              className="text-xs font-semibold uppercase tracking-wider mb-3"
+              style={{ color: '#9ca3af' }}
+            >
+              Media
+            </h4>
+            {imageSlot ?? (
+              <p className="text-xs" style={{ color: '#374151' }}>
+                Save the product first to upload images.
+              </p>
+            )}
+          </div>
+
+          {/* Title */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4">
+            <h4
+              className="text-xs font-semibold uppercase tracking-wider mb-3"
+              style={{ color: '#9ca3af' }}
+            >
+              Product Details
+            </h4>
+            <div>
+              <label className={labelClass} style={{ color: '#9ca3af' }}>
+                Title <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                required
+                value={form.title}
+                onChange={(e) => set('title', e.target.value)}
+                placeholder="Product title"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: '#9ca3af' }}
+              >
+                Description
+              </h4>
+              <div className="flex items-center gap-1 bg-[#111827] border border-[#1f2d4e] rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setDescMode('edit')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    descMode === 'edit'
+                      ? 'bg-[#1f2d4e] text-white'
+                      : 'text-[#6b7280] hover:text-[#9ca3af]'
+                  }`}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDescMode('preview')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    descMode === 'preview'
+                      ? 'bg-[#1f2d4e] text-white'
+                      : 'text-[#6b7280] hover:text-[#9ca3af]'
+                  }`}
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
+
+            {descMode === 'edit' ? (
+              <textarea
+                rows={6}
+                value={form.descriptionHtml}
+                onChange={(e) => set('descriptionHtml', e.target.value)}
+                placeholder="Product description (HTML supported)"
+                className={`${inputClass} resize-none`}
+              />
+            ) : (
+              <div
+                className="prose prose-invert prose-sm max-w-none bg-[#111827] border border-[#1f2d4e] rounded-xl p-4 min-h-[120px]"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    form.descriptionHtml ||
+                    '<p style="color:#374151;font-size:0.875rem">No description yet.</p>',
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ── RIGHT COLUMN (1/3) ── */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Status */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4
+                className="text-xs font-semibold uppercase tracking-wider"
+                style={{ color: '#9ca3af' }}
+              >
+                Status
+              </h4>
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: `${statusColor[form.status] ?? '#6b7280'}18`,
+                  color: statusColor[form.status] ?? '#6b7280',
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: statusColor[form.status] ?? '#6b7280' }}
+                />
+                {form.status.charAt(0) + form.status.slice(1).toLowerCase()}
+              </span>
+            </div>
+            <select
+              value={form.status}
+              onChange={(e) => set('status', e.target.value as ProductFormData['status'])}
+              className={inputClass}
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="DRAFT">Draft</option>
+              <option value="ARCHIVED">Archived</option>
+            </select>
+          </div>
+
+          {/* Pricing */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4 space-y-3">
+            <h4
+              className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: '#9ca3af' }}
+            >
+              Pricing
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass} style={{ color: '#9ca3af' }}>
+                  Price (USD) <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <div className="relative">
+                  <span
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                    style={{ color: '#6b7280' }}
+                  >
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={(e) => set('price', e.target.value)}
+                    placeholder="0.00"
+                    className={`${inputClass} pl-7`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass} style={{ color: '#9ca3af' }}>
+                  Compare at
+                </label>
+                <div className="relative">
+                  <span
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                    style={{ color: '#6b7280' }}
+                  >
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.compareAtPrice}
+                    onChange={(e) => set('compareAtPrice', e.target.value)}
+                    placeholder="0.00"
+                    className={`${inputClass} pl-7`}
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs" style={{ color: '#374151' }}>
+              Compare at price shows as crossed-out original price.
+            </p>
+          </div>
+
+          {/* Organization */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4 space-y-3">
+            <h4
+              className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: '#9ca3af' }}
+            >
+              Organization
+            </h4>
+            <div>
+              <label className={labelClass} style={{ color: '#9ca3af' }}>
+                Vendor
+              </label>
+              <input
+                value={form.vendor}
+                onChange={(e) => set('vendor', e.target.value)}
+                placeholder="Brand / Vendor"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass} style={{ color: '#9ca3af' }}>
+                Type
+              </label>
+              <input
+                value={form.productType}
+                onChange={(e) => set('productType', e.target.value)}
+                placeholder="e.g. Electronics"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4 space-y-3">
+            <h4
+              className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: '#9ca3af' }}
+            >
+              Tags
+            </h4>
+
+            {/* Chips */}
+            {currentTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {currentTags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs"
+                    style={{ backgroundColor: '#1f2d4e', color: '#e5e7eb' }}
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="transition-colors"
+                      style={{ color: '#6b7280' }}
+                      onMouseEnter={(e) =>
+                        ((e.currentTarget as HTMLButtonElement).style.color = '#ef4444')
+                      }
+                      onMouseLeave={(e) =>
+                        ((e.currentTarget as HTMLButtonElement).style.color = '#6b7280')
+                      }
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>
+                        close
+                      </span>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addTag();
+                }
+              }}
+              placeholder="Add tag and press Enter…"
+              className={inputClass}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Vendor</label>
-          <input
-            value={form.vendor}
-            onChange={(e) => set('vendor', e.target.value)}
-            placeholder="Brand / Vendor"
-            className={inputClass}
+      {/* ── Save Button ── */}
+      <div className="mt-6 flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={loading || !form.title.trim()}
+          className="flex-1 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:cursor-not-allowed text-[#0a0f1e] font-semibold rounded-xl py-3 text-sm transition-colors flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <span className="material-symbols-outlined text-base animate-spin">
+                progress_activity
+              </span>
+              Saving…
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-base">save</span>
+              {submitLabel}
+            </>
+          )}
+        </button>
+        <span
+          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium flex-none"
+          style={{
+            backgroundColor: `${statusColor[form.status] ?? '#6b7280'}18`,
+            color: statusColor[form.status] ?? '#6b7280',
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: statusColor[form.status] ?? '#6b7280' }}
           />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Type</label>
-          <input
-            value={form.productType}
-            onChange={(e) => set('productType', e.target.value)}
-            placeholder="e.g. Electronics"
-            className={inputClass}
-          />
-        </div>
+          {form.status.charAt(0) + form.status.slice(1).toLowerCase()}
+        </span>
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Price (USD)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={form.price}
-            onChange={(e) => set('price', e.target.value)}
-            placeholder="0.00"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Status</label>
-          <select
-            value={form.status}
-            onChange={(e) => set('status', e.target.value as ProductFormData['status'])}
-            className={inputClass}
-          >
-            <option value="ACTIVE">Active</option>
-            <option value="DRAFT">Draft</option>
-            <option value="ARCHIVED">Archived</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Tags</label>
-        <input
-          value={form.tags}
-          onChange={(e) => set('tags', e.target.value)}
-          placeholder="tag1, tag2, tag3"
-          className={inputClass}
-        />
-        <p className="text-[#374151] text-xs mt-1">Separate tags with commas</p>
-      </div>
-
-      <div>
-        <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Description</label>
-        <textarea
-          rows={4}
-          value={form.descriptionHtml}
-          onChange={(e) => set('descriptionHtml', e.target.value)}
-          placeholder="Product description (HTML supported)"
-          className={`${inputClass} resize-none`}
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading || !form.title.trim()}
-        className="w-full bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:cursor-not-allowed text-[#0a0f1e] font-semibold rounded-xl py-3 text-sm transition-colors flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <span className="material-symbols-outlined text-base animate-spin">
-              progress_activity
-            </span>
-            Saving…
-          </>
-        ) : (
-          <>
-            <span className="material-symbols-outlined text-base">save</span>
-            {submitLabel}
-          </>
-        )}
-      </button>
     </form>
   );
 }
@@ -337,8 +594,7 @@ function ImageGallery({
   }
 
   return (
-    <div className="mb-5">
-      <label className="block text-xs font-medium text-[#9ca3af] mb-2">Product Images</label>
+    <div>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {loading && <div className="w-20 h-20 rounded-lg bg-[#1f2d4e] animate-pulse flex-none" />}
 
@@ -403,10 +659,12 @@ function Modal({
   title,
   onClose,
   children,
+  size = 'default',
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  size?: 'default' | 'wide';
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -419,6 +677,8 @@ function Modal({
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
+  const maxW = size === 'wide' ? 'max-w-5xl' : 'max-w-lg';
+
   return (
     <div
       ref={overlayRef}
@@ -427,7 +687,9 @@ function Modal({
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl shadow-black/60">
+      <div
+        className={`bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full ${maxW} max-h-[90vh] flex flex-col shadow-2xl shadow-black/60`}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
           <h2
             className="font-semibold"
@@ -847,12 +1109,14 @@ export default function ProductsPage() {
 
   function productToForm(p: Product): ProductFormData {
     const price = p.variants.edges[0]?.node.price ?? '';
+    const compareAtPrice = p.variants.edges[0]?.node.compareAtPrice ?? '';
     return {
       title: p.title,
       descriptionHtml: p.descriptionHtml ?? '',
       vendor: p.vendor ?? '',
       productType: p.productType ?? '',
       price,
+      compareAtPrice: compareAtPrice ?? '',
       tags: (p.tags ?? []).join(', '),
       status: p.status as ProductFormData['status'],
     };
@@ -1164,7 +1428,7 @@ export default function ProductsPage() {
 
       {/* Create Modal */}
       {createOpen && (
-        <Modal title="Add Product" onClose={() => setCreateOpen(false)}>
+        <Modal title="Add Product" onClose={() => setCreateOpen(false)} size="wide">
           <ProductForm
             initial={EMPTY_FORM}
             onSubmit={handleCreate}
@@ -1176,17 +1440,19 @@ export default function ProductsPage() {
 
       {/* Edit Modal */}
       {editProduct && (
-        <Modal title="Edit Product" onClose={() => setEditProduct(null)}>
-          <ImageGallery
-            productId={editProduct.id}
-            onSuccess={(msg) => toast.success(msg)}
-            onError={(msg) => toast.error(msg)}
-          />
+        <Modal title="Edit Product" onClose={() => setEditProduct(null)} size="wide">
           <ProductForm
             initial={productToForm(editProduct)}
             onSubmit={handleEdit}
             loading={editLoading}
             submitLabel="Save Changes"
+            imageSlot={
+              <ImageGallery
+                productId={editProduct.id}
+                onSuccess={(msg) => toast.success(msg)}
+                onError={(msg) => toast.error(msg)}
+              />
+            }
           />
         </Modal>
       )}
