@@ -25,19 +25,50 @@ const CommandPalette = dynamic(() => import('@/components/admin/CommandPalette')
 
 // ─── Navigation ────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS = [
-  { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
-  { href: '/admin/products', label: 'Products', icon: 'inventory_2', exact: false },
-  { href: '/admin/inventory', label: 'Inventory', icon: 'warehouse', exact: false },
-  { href: '/admin/collections', label: 'Collections', icon: 'collections_bookmark', exact: false },
-  { href: '/admin/orders', label: 'Orders', icon: 'receipt_long', exact: false },
-  { href: '/admin/customers', label: 'Customers', icon: 'people', exact: false },
-  { href: '/admin/discounts', label: 'Discounts', icon: 'local_offer', exact: false },
-  { href: '/admin/activity', label: 'Activity', icon: 'notifications_active', exact: false },
-  { href: '/admin/automations', label: 'Automations', icon: 'electric_bolt', exact: false },
-  { href: '/admin/market-research', label: 'Market Intel', icon: 'query_stats', exact: false },
-  { href: '/admin/settings', label: 'Settings', icon: 'settings', exact: false },
-] as const;
+type NavItem = { href: string; label: string; icon: string; exact: boolean };
+type NavGroup = { label: string; items: NavItem[] };
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Store',
+    items: [
+      { href: '/admin', label: 'Dashboard', icon: 'dashboard', exact: true },
+      { href: '/admin/products', label: 'Products', icon: 'inventory_2', exact: false },
+      { href: '/admin/inventory', label: 'Inventory', icon: 'warehouse', exact: false },
+      {
+        href: '/admin/collections',
+        label: 'Collections',
+        icon: 'collections_bookmark',
+        exact: false,
+      },
+      { href: '/admin/orders', label: 'Orders', icon: 'receipt_long', exact: false },
+      { href: '/admin/customers', label: 'Customers', icon: 'people', exact: false },
+    ],
+  },
+  {
+    label: 'Marketing',
+    items: [
+      { href: '/admin/discounts', label: 'Discounts', icon: 'local_offer', exact: false },
+      { href: '/admin/market-research', label: 'Market Intel', icon: 'query_stats', exact: false },
+    ],
+  },
+  {
+    label: 'Automation',
+    items: [
+      { href: '/admin/automations', label: 'Automations', icon: 'electric_bolt', exact: false },
+      {
+        href: '/admin/activity',
+        label: 'Activity Log',
+        icon: 'notifications_active',
+        exact: false,
+      },
+    ],
+  },
+  {
+    label: 'System',
+    items: [{ href: '/admin/settings', label: 'Settings', icon: 'settings', exact: false }],
+  },
+];
 
 // ─── Sidebar Nav Item ──────────────────────────────────────────────────────────
 
@@ -140,12 +171,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
 
           {/* Nav */}
-          <nav className={`flex-1 overflow-y-auto py-4 space-y-1 ${collapsed ? 'px-2' : 'px-3'}`}>
+          <nav className={`flex-1 overflow-y-auto py-4 ${collapsed ? 'px-2' : 'px-3'}`}>
             {/* Search button */}
             <button
               onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
               title={collapsed ? 'Search (⌘K)' : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group mb-2 text-[#9ca3af] hover:text-white hover:bg-[#1b2a5e]/40`}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group mb-3 text-[#9ca3af] hover:text-white hover:bg-[#1b2a5e]/40"
             >
               <span className="material-symbols-outlined text-xl flex-none text-[#4b5563] group-hover:text-[#d4a843] transition-colors">
                 search
@@ -160,18 +191,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               )}
             </button>
 
-            {!collapsed && (
-              <p className="text-[#374151] text-[10px] font-semibold uppercase tracking-widest mb-3 px-3 mt-2">
-                Navigation
-              </p>
-            )}
-            {NAV_ITEMS.map((item) => (
-              <NavItem
-                key={item.href}
-                {...item}
-                collapsed={collapsed}
-                active={isActive(item.href, item.exact)}
-              />
+            {/* Grouped navigation */}
+            {NAV_GROUPS.map((group, gi) => (
+              <div key={group.label} className={gi > 0 ? 'mt-4' : ''}>
+                {!collapsed && (
+                  <p className="text-[#374151] text-[10px] font-semibold uppercase tracking-widest mb-2 px-3">
+                    {group.label}
+                  </p>
+                )}
+                {collapsed && gi > 0 && <div className="mx-2 mb-2 border-t border-[#1f2d4e]" />}
+                <div className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <NavItem
+                      key={item.href}
+                      {...item}
+                      collapsed={collapsed}
+                      active={isActive(item.href, item.exact)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
 
