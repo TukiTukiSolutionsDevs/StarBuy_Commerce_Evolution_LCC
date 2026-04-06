@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/useToast';
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 type Provider = 'claude' | 'openai' | 'gemini' | 'ollama';
+type SearchMode = 'free' | 'tavily';
 
 type ProviderInfo = {
   configured: boolean;
@@ -78,6 +79,79 @@ const PROVIDER_META: Record<
     description: 'Run AI locally — free, private, no API key needed. Requires Ollama running.',
   },
 };
+
+// ─── Setup Guide Component ─────────────────────────────────────────────────────
+
+function SetupGuide({
+  open,
+  onToggle,
+  steps,
+  pricing,
+  pricingNote,
+  freeNote,
+  links,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  steps: string[];
+  pricing?: string;
+  pricingNote?: string;
+  freeNote?: string;
+  links?: { text: string; href: string }[];
+}) {
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-1.5 text-[10px] text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+      >
+        <span
+          className="material-symbols-outlined text-sm transition-transform duration-200"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        >
+          expand_more
+        </span>
+        {open ? 'Hide setup guide' : 'Show setup guide'}
+      </button>
+      {open && (
+        <div className="mt-2 bg-[#0a0f1e]/50 rounded-xl p-4 space-y-3">
+          <ol className="space-y-1.5">
+            {steps.map((step, i) => (
+              <li key={i} className="flex gap-2 text-xs text-[#9ca3af]">
+                <span className="font-mono text-xs text-[#374151] shrink-0 w-4">{i + 1}.</span>
+                <span dangerouslySetInnerHTML={{ __html: step }} />
+              </li>
+            ))}
+          </ol>
+          {pricing && (
+            <p className="text-[#374151] text-[10px] border-t border-[#1f2d4e] pt-2">
+              💰 {pricing}
+            </p>
+          )}
+          {pricingNote && <p className="text-[#374151] text-[10px]">🎁 {pricingNote}</p>}
+          {freeNote && <p className="text-[#10b981] text-[10px]">✅ {freeNote}</p>}
+          {links && (
+            <div className="flex gap-3 flex-wrap pt-1">
+              {links.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-[#d4a843] hover:underline flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  {l.text}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Section Header Component ──────────────────────────────────────────────────
 
@@ -170,6 +244,21 @@ export default function SettingsPage() {
   const [clearingCache, setClearingCache] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // Market Research state
+  const [searchMode, setSearchMode] = useState<SearchMode>('free');
+  const [tavilyKey, setTavilyKey] = useState('');
+  const [showTavilyKey, setShowTavilyKey] = useState(false);
+  const [tavilyGuideOpen, setTavilyGuideOpen] = useState(false);
+  const [tavilyTest, setTavilyTest] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  // Setup guide expand state per provider
+  const [guideOpen, setGuideOpen] = useState<Record<string, boolean>>({
+    claude: false,
+    openai: false,
+    gemini: false,
+    ollama: false,
+  });
+
   useEffect(() => {
     fetch('/api/admin/settings')
       .then((r) => r.json())
@@ -248,6 +337,47 @@ export default function SettingsPage() {
       toast.error('Failed to save API keys');
     } finally {
       setSavingKeys(false);
+    }
+  }
+
+  // ─── Tavily Key Save ──────────────────────────────────────────────────────────
+
+  async function handleSaveTavilyKey() {
+    if (!tavilyKey.trim()) {
+      toast.error('Enter a Tavily API key first');
+      return;
+    }
+    setSavingKeys(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKeys: { tavily: tavilyKey.trim() } }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      setTavilyKey('');
+      toast.success('Tavily API key saved');
+    } catch {
+      toast.error('Failed to save Tavily key');
+    } finally {
+      setSavingKeys(false);
+    }
+  }
+
+  async function handleTestTavily() {
+    setTesting('tavily');
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: 'tavily' }),
+      });
+      const data = (await res.json()) as { success: boolean; message?: string; error?: string };
+      setTavilyTest({ ok: data.success, msg: data.message ?? data.error ?? 'Unknown' });
+    } catch (err) {
+      setTavilyTest({ ok: false, msg: err instanceof Error ? err.message : 'Connection failed' });
+    } finally {
+      setTesting('');
     }
   }
 
@@ -705,6 +835,61 @@ export default function SettingsPage() {
               const inputVal = apiKeyInputs[p] ?? '';
               const isVisible = showKeys[p] ?? false;
 
+              const GUIDE_DATA: Record<
+                'claude' | 'openai' | 'gemini',
+                {
+                  why: string;
+                  steps: string[];
+                  pricing: string;
+                  pricingNote: string;
+                  links: { text: string; href: string }[];
+                  recommended?: boolean;
+                }
+              > = {
+                claude: {
+                  recommended: true,
+                  why: 'Best tool calling and reasoning. Handles complex Shopify operations accurately.',
+                  steps: [
+                    'Go to <a href="https://console.anthropic.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">console.anthropic.com</a>',
+                    'Create a free account',
+                    'Go to <strong>API Keys → Create Key</strong>',
+                    'Copy the key — it starts with <code class="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">sk-ant-</code>',
+                    'Paste it in the field below',
+                  ],
+                  pricing: '$3/MTok input, $15/MTok output. ~$0.02 per chat message average.',
+                  pricingNote: '$5 free credit on signup — enough for ~250 messages.',
+                  links: [{ text: 'console.anthropic.com', href: 'https://console.anthropic.com' }],
+                },
+                openai: {
+                  why: 'GPT-4o is fast and reliable for general tasks. Good alternative to Claude.',
+                  steps: [
+                    'Go to <a href="https://platform.openai.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">platform.openai.com</a>',
+                    'Create a free account',
+                    'Go to <strong>API Keys → Create new secret key</strong>',
+                    'Copy the key — it starts with <code class="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">sk-</code>',
+                    'Paste it in the field below',
+                  ],
+                  pricing: '$2.50/MTok input, $10/MTok output. ~$0.01 per chat message average.',
+                  pricingNote: '$5 free credit on signup.',
+                  links: [{ text: 'platform.openai.com', href: 'https://platform.openai.com' }],
+                },
+                gemini: {
+                  why: 'Good for image analysis and multimodal tasks. Very generous free tier.',
+                  steps: [
+                    'Go to <a href="https://aistudio.google.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">aistudio.google.com</a>',
+                    'Sign in with your Google account',
+                    'Click <strong>"Get API Key" → Create API key</strong>',
+                    'Copy the key',
+                    'Paste it in the field below',
+                  ],
+                  pricing: 'Free tier: 15 RPM, 1 million tokens/min. Paid: $0.075/MTok.',
+                  pricingNote: 'Very generous — 15 requests/minute completely free!',
+                  links: [{ text: 'aistudio.google.com', href: 'https://aistudio.google.com' }],
+                },
+              };
+
+              const guide = GUIDE_DATA[p];
+
               return (
                 <div key={p} className="bg-[#0d1526] rounded-xl p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -716,6 +901,11 @@ export default function SettingsPage() {
                         {meta.icon}
                       </span>
                       <span className="text-sm text-white font-medium">{meta.name}</span>
+                      {guide.recommended && (
+                        <span className="bg-[#d4a843]/10 text-[#d4a843] text-[10px] px-2 py-0.5 rounded-full font-medium">
+                          ⭐ Recommended
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       {isKeySet && status && (
@@ -742,6 +932,19 @@ export default function SettingsPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Why this provider */}
+                  <p className="text-[10px] text-[#6b7280] italic">{guide.why}</p>
+
+                  {/* Setup Guide (collapsible) */}
+                  <SetupGuide
+                    open={guideOpen[p] ?? false}
+                    onToggle={() => setGuideOpen((prev) => ({ ...prev, [p]: !prev[p] }))}
+                    steps={guide.steps}
+                    pricing={guide.pricing}
+                    pricingNote={guide.pricingNote}
+                    links={guide.links}
+                  />
 
                   {/* Masked current key */}
                   {isKeySet && status?.masked && (
@@ -816,6 +1019,34 @@ export default function SettingsPage() {
 
             {selectedProvider === 'ollama' ? (
               <div className="space-y-3">
+                {/* Ollama Setup Guide */}
+                <div className="bg-[#0d1526] rounded-xl p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="material-symbols-outlined text-sm text-[#f97316]">
+                      computer
+                    </span>
+                    <span className="text-xs text-[#9ca3af] font-medium">
+                      Ollama — Free &amp; Private
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-[#6b7280] italic mb-1">
+                    Run AI on your own computer. Completely free, no data leaves your machine.
+                  </p>
+                  <SetupGuide
+                    open={guideOpen['ollama'] ?? false}
+                    onToggle={() => setGuideOpen((prev) => ({ ...prev, ollama: !prev['ollama'] }))}
+                    steps={[
+                      'Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">ollama.com</a>',
+                      'Run <code class="bg-[#1f2d4e] px-1 rounded text-[#9ca3af] font-mono">ollama pull llama3.1:8b</code> in your terminal',
+                      'Make sure Ollama is running — the app icon should appear in your menu bar',
+                      'Set the URL below (default: <code class="bg-[#1f2d4e] px-1 rounded text-[#9ca3af] font-mono">http://localhost:11434</code>)',
+                    ]}
+                    pricing="Free — uses your computer's GPU/CPU."
+                    freeNote="8GB RAM minimum, 16GB recommended for best performance."
+                    links={[{ text: 'ollama.com', href: 'https://ollama.com' }]}
+                  />
+                </div>
+
                 <div>
                   <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
                     Ollama Server URL
@@ -982,7 +1213,185 @@ export default function SettingsPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          SECTION 5 — Environment Variables Reference
+          SECTION 5 — Market Research Configuration
+      ════════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+        <SectionHeader
+          icon="manage_search"
+          iconColor="text-[#6366f1]"
+          title="Market Research Configuration"
+          description="Choose how the Market Intelligence feature searches the web for product data"
+        />
+
+        <div className="p-6 space-y-4">
+          {/* Search Mode Cards */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Free Search Card */}
+            <button
+              type="button"
+              onClick={() => setSearchMode('free')}
+              className={`relative text-left rounded-xl p-4 border-2 transition-all ${
+                searchMode === 'free'
+                  ? 'border-[#10b981] bg-[#10b981]/5'
+                  : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-xl">🆓</span>
+                <span className="text-[10px] bg-[#10b981]/10 text-[#10b981] px-2 py-0.5 rounded-full font-medium">
+                  No API key needed
+                </span>
+              </div>
+              <p className="text-sm text-white font-medium mb-1">Free Search</p>
+              <p className="text-[10px] text-[#6b7280] leading-relaxed mb-3">
+                Uses DuckDuckGo web scraping for product research. Good for getting started, but
+                results may be limited.
+              </p>
+              <div className="space-y-1">
+                <p className="text-[10px] text-[#10b981]">✓ Free — no setup required</p>
+                <p className="text-[10px] text-[#10b981]">✓ Works immediately</p>
+                <p className="text-[10px] text-[#374151]">✗ Slower, may get rate-limited</p>
+                <p className="text-[10px] text-[#374151]">✗ Less accurate results</p>
+              </div>
+            </button>
+
+            {/* Tavily Pro Card */}
+            <button
+              type="button"
+              onClick={() => setSearchMode('tavily')}
+              className={`relative text-left rounded-xl p-4 border-2 transition-all ${
+                searchMode === 'tavily'
+                  ? 'border-[#6366f1] bg-[#6366f1]/5'
+                  : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-xl">⚡</span>
+                <span className="text-[10px] bg-[#ef4444]/10 text-[#ef4444] px-2 py-0.5 rounded-full font-medium">
+                  API key required
+                </span>
+              </div>
+              <p className="text-sm text-white font-medium mb-1">Tavily Pro Search</p>
+              <p className="text-[10px] text-[#6b7280] leading-relaxed mb-3">
+                Professional search API with deep web analysis. More accurate results, faster,
+                better for serious research.
+              </p>
+              <div className="space-y-1">
+                <p className="text-[10px] text-[#10b981]">✓ Fast, accurate, structured results</p>
+                <p className="text-[10px] text-[#10b981]">✓ Includes answer summaries</p>
+                <p className="text-[10px] text-[#374151]">✗ ~$0.01 per search</p>
+                <p className="text-[10px] text-[#374151]">✗ ~$0.12 per full research session</p>
+              </div>
+            </button>
+          </div>
+
+          {/* Tavily Setup (expanded when tavily mode selected) */}
+          {searchMode === 'tavily' && (
+            <div className="bg-[#0d1526] rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-[#6366f1]">bolt</span>
+                <span className="text-sm text-white font-medium">Tavily API Key</span>
+              </div>
+
+              <SetupGuide
+                open={tavilyGuideOpen}
+                onToggle={() => setTavilyGuideOpen((v) => !v)}
+                steps={[
+                  'Go to <a href="https://tavily.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">tavily.com</a> and click <strong>"Get API Key"</strong>',
+                  'Create a free account — <strong>1,000 free searches/month</strong> included',
+                  'Copy your API key from the dashboard',
+                  'Paste it in the field below and click Save',
+                ]}
+                pricing="~$0.01 per search. ~$0.12 per full research session (12 searches avg)."
+                pricingNote="1,000 free searches/month on the free tier — enough for ~83 research sessions!"
+              />
+
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type={showTavilyKey ? 'text' : 'password'}
+                    value={tavilyKey}
+                    onChange={(e) => setTavilyKey(e.target.value)}
+                    placeholder="tvly-..."
+                    className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] text-white rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowTavilyKey((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      {showTavilyKey ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTestTavily}
+                  disabled={testing === 'tavily'}
+                  className="bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#6366f1] border border-[#6366f1]/20 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {testing === 'tavily' ? (
+                    <span className="material-symbols-outlined text-base animate-spin">
+                      progress_activity
+                    </span>
+                  ) : (
+                    <span className="material-symbols-outlined text-base">bolt</span>
+                  )}
+                  Test
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTavilyKey}
+                  disabled={savingKeys || !tavilyKey.trim()}
+                  className="bg-[#1f2d4e] hover:bg-[#2a3d5e] disabled:opacity-40 text-[#d4a843] border border-[#d4a843]/30 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  {savingKeys ? (
+                    <span className="material-symbols-outlined text-base animate-spin">
+                      progress_activity
+                    </span>
+                  ) : (
+                    <span className="material-symbols-outlined text-base">save</span>
+                  )}
+                  Save
+                </button>
+              </div>
+
+              {tavilyTest && (
+                <div
+                  className={`text-xs flex items-center gap-1 ${tavilyTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    {tavilyTest.ok ? 'check_circle' : 'error'}
+                  </span>
+                  {tavilyTest.msg}
+                </div>
+              )}
+
+              <p className="text-[10px] text-[#374151] font-mono">Env: TAVILY_API_KEY</p>
+            </div>
+          )}
+
+          {/* Mode info pill */}
+          <div
+            className={`flex items-center gap-2 text-xs px-4 py-2 rounded-xl ${
+              searchMode === 'free'
+                ? 'bg-[#10b981]/5 text-[#10b981] border border-[#10b981]/20'
+                : 'bg-[#6366f1]/5 text-[#6366f1] border border-[#6366f1]/20'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">
+              {searchMode === 'free' ? 'check_circle' : 'bolt'}
+            </span>
+            {searchMode === 'free'
+              ? 'Market Intelligence will use DuckDuckGo (free mode). No key needed.'
+              : 'Market Intelligence will use Tavily Pro when a key is configured.'}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 7 — Environment Variables Reference
       ════════════════════════════════════════════════════════════════════════ */}
       <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
         <SectionHeader
@@ -1049,7 +1458,7 @@ export default function SettingsPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          SECTION 6 — Danger Zone
+          SECTION 8 — Danger Zone
       ════════════════════════════════════════════════════════════════════════ */}
       <section className="bg-[#111827] border border-[#ef4444]/30 rounded-2xl overflow-hidden">
         <div className="px-6 py-4 border-b border-[#ef4444]/20 bg-[#ef4444]/5">
