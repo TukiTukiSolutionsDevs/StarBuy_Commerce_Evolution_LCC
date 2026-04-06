@@ -3,12 +3,14 @@
 /**
  * Admin Inventory Page
  *
- * Full inventory management: stats, alerts, table with inline quantity editing.
+ * Full inventory management: stats, alerts, table with modal quantity editing,
+ * bulk update, CSV export, location filter, SKU/barcode, tracked indicator.
  * Calls /api/admin/inventory — no direct Shopify calls from client.
  */
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useToast } from '@/components/ui/useToast';
+import type { InventoryAdjustmentReason } from '@/lib/shopify/admin/tools/inventory';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -26,6 +28,9 @@ type InventoryLevel = {
 type InventoryVariant = {
   variantId: string;
   variantTitle: string;
+  sku: string;
+  barcode: string | null;
+  tracked: boolean;
   inventoryItemId: string | null;
   inventoryQuantity: number;
   levels: InventoryLevel[];
@@ -48,17 +53,24 @@ type InventoryRow = {
   productImage: { url: string; altText: string | null } | null;
   variantId: string;
   variantTitle: string;
+  sku: string;
+  barcode: string | null;
+  tracked: boolean;
   inventoryItemId: string | null;
   available: number;
   onHand: number;
   committed: number;
+  incoming: number;
   locationId: string;
   locationName: string;
 };
 
 type StockFilter = 'all' | 'in_stock' | 'low_stock' | 'out_of_stock';
-type SortField = 'product' | 'variant' | 'available' | 'on_hand' | 'committed';
+type SortField = 'product' | 'sku' | 'variant' | 'available' | 'on_hand' | 'committed';
 type SortDir = 'asc' | 'desc';
+
+// Adjustment modal data — either single row or bulk
+type AdjustTarget = { type: 'single'; row: InventoryRow } | { type: 'bulk'; rows: InventoryRow[] };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -88,10 +100,14 @@ function flattenProducts(products: InventoryProduct[]): InventoryRow[] {
           productImage: p.featuredImage,
           variantId: v.variantId,
           variantTitle: v.variantTitle,
+          sku: v.sku ?? '',
+          barcode: v.barcode ?? null,
+          tracked: v.tracked ?? true,
           inventoryItemId: v.inventoryItemId,
           available: v.inventoryQuantity,
           onHand: v.inventoryQuantity,
           committed: 0,
+          incoming: 0,
           locationId: '',
           locationName: '—',
         });
@@ -103,10 +119,14 @@ function flattenProducts(products: InventoryProduct[]): InventoryRow[] {
             productImage: p.featuredImage,
             variantId: v.variantId,
             variantTitle: v.variantTitle,
+            sku: v.sku ?? '',
+            barcode: v.barcode ?? null,
+            tracked: v.tracked ?? true,
             inventoryItemId: v.inventoryItemId,
             available: getQty([level], 'available'),
             onHand: getQty([level], 'on_hand'),
             committed: getQty([level], 'committed'),
+            incoming: getQty([level], 'incoming'),
             locationId: level.location.id,
             locationName: level.location.name,
           });
@@ -116,6 +136,76 @@ function flattenProducts(products: InventoryProduct[]): InventoryRow[] {
   }
   return rows;
 }
+
+function exportToCsv(rows: InventoryRow[]) {
+  const headers = [
+    'Product',
+    'SKU',
+    'Barcode',
+    'Variant',
+    'Available',
+    'On Hand',
+    'Committed',
+    'Incoming',
+    'Location',
+    'Status',
+  ];
+  const escape = (v: string | number | null) => {
+    const s = String(v ?? '');
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+  const lines = [
+    headers.join(','),
+    ...rows.map((r) =>
+      [
+        escape(r.productTitle),
+        escape(r.sku),
+        escape(r.barcode),
+        escape(r.variantTitle === 'Default Title' ? '—' : r.variantTitle),
+        r.available,
+        r.onHand,
+        r.committed,
+        r.incoming,
+        escape(r.locationName),
+        escape(
+          r.tracked
+            ? r.available === 0
+              ? 'Out of Stock'
+              : r.available <= 10
+                ? 'Low Stock'
+                : 'In Stock'
+            : 'Not Tracked',
+        ),
+      ].join(','),
+    ),
+  ].join('\n');
+
+  const blob = new Blob([lines], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `inventory-export-${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Reason options ──────────────────────────────────────────────────────────────
+
+const REASON_OPTIONS: { value: InventoryAdjustmentReason; label: string }[] = [
+  { value: 'correction', label: 'Correction' },
+  { value: 'cycle_count_available', label: 'Cycle count' },
+  { value: 'damaged', label: 'Damaged' },
+  { value: 'promotion_or_exchange', label: 'Promotion / Exchange' },
+  { value: 'received', label: 'Received' },
+  { value: 'restock', label: 'Restock' },
+  { value: 'safety_stock', label: 'Safety stock' },
+  { value: 'shrinkage', label: 'Shrinkage' },
+  { value: 'quality_control', label: 'Quality control' },
+  { value: 'other', label: 'Other' },
+];
 
 // ─── Stock Badge ────────────────────────────────────────────────────────────────
 
@@ -134,6 +224,18 @@ function StockBadge({ qty }: { qty: number }) {
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
       {label}
+    </span>
+  );
+}
+
+function NotTrackedBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+      style={{ backgroundColor: '#6b728020', color: '#6b7280' }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#6b7280' }} />
+      Not tracked
     </span>
   );
 }
@@ -176,7 +278,9 @@ function StatCard({
           <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider mb-1">
             {label}
           </p>
-          <p className="text-white text-2xl font-bold tabular-nums">{value}</p>
+          <p className="text-white text-2xl font-bold tabular-nums" style={{ color: '#ffffff' }}>
+            {value}
+          </p>
         </div>
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-none"
@@ -245,114 +349,288 @@ function AlertCard({
   );
 }
 
-// ─── Inline Qty Editor ───────────────────────────────────────────────────────────
+// ─── Adjustment Modal ────────────────────────────────────────────────────────────
 
-function QtyEditor({
-  row,
+function AdjustmentModal({
+  target,
   onSave,
-  onCancel,
+  onClose,
   saving,
 }: {
-  row: InventoryRow;
+  target: AdjustTarget;
   onSave: (
-    inventoryItemId: string,
-    locationId: string,
-    value: number,
-    mode: 'set' | 'adjust',
+    params: {
+      inventoryItemId: string;
+      locationId: string;
+      value: number;
+      mode: 'set' | 'adjust';
+      reason: InventoryAdjustmentReason;
+      note: string;
+    }[],
   ) => Promise<void>;
-  onCancel: () => void;
+  onClose: () => void;
   saving: boolean;
 }) {
   const [mode, setMode] = useState<'set' | 'adjust'>('set');
-  const [value, setValue] = useState(mode === 'set' ? String(row.available) : '0');
+  const [value, setValue] = useState('0');
+  const [reason, setReason] = useState<InventoryAdjustmentReason>('correction');
+  const [note, setNote] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const isBulk = target.type === 'bulk';
+  const singleRow = target.type === 'single' ? target.row : null;
+  const rows = target.type === 'bulk' ? target.rows : [target.row];
+
+  // For single row, initialise set value to current available
   useEffect(() => {
-    inputRef.current?.focus();
-    inputRef.current?.select();
+    if (singleRow && mode === 'set') {
+      setValue(String(singleRow.available));
+    } else if (mode === 'adjust') {
+      setValue('0');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
-  function handleModeChange(m: 'set' | 'adjust') {
-    setMode(m);
-    setValue(m === 'set' ? String(row.available) : '0');
+  // Close on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const numValue = parseInt(value, 10);
+  const isValid = !isNaN(numValue) && rows.every((r) => r.inventoryItemId && r.locationId);
+
+  function previewQty(currentAvailable: number): number {
+    if (isNaN(numValue)) return currentAvailable;
+    return mode === 'set' ? numValue : currentAvailable + numValue;
   }
 
   async function handleSave() {
-    const num = parseInt(value, 10);
-    if (isNaN(num)) return;
-    if (!row.inventoryItemId || !row.locationId) return;
-    await onSave(row.inventoryItemId, row.locationId, num, mode);
+    if (!isValid || saving) return;
+    const params = rows
+      .filter((r) => r.inventoryItemId && r.locationId)
+      .map((r) => ({
+        inventoryItemId: r.inventoryItemId!,
+        locationId: r.locationId,
+        value: numValue,
+        mode,
+        reason,
+        note,
+      }));
+    await onSave(params);
   }
 
-  const canSave = !isNaN(parseInt(value, 10)) && !!row.inventoryItemId && !!row.locationId;
-
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {/* Mode toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-[#1f2d4e] text-xs">
-        {(['set', 'adjust'] as const).map((m) => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="w-full max-w-lg bg-[#111827] border border-[#1f2d4e] rounded-2xl shadow-2xl flex flex-col"
+        style={{ maxHeight: '90vh' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
+          <div>
+            <h2
+              className="text-base font-semibold"
+              style={{ color: '#ffffff', fontFamily: 'var(--font-heading)' }}
+            >
+              {isBulk
+                ? `Update ${rows.length} items`
+                : singleRow
+                  ? 'Update inventory'
+                  : 'Update inventory'}
+            </h2>
+            {!isBulk && singleRow && (
+              <p className="text-[#6b7280] text-xs mt-0.5">
+                {singleRow.productTitle}
+                {singleRow.variantTitle !== 'Default Title' ? ` · ${singleRow.variantTitle}` : ''}
+                {singleRow.locationName !== '—' ? ` · ${singleRow.locationName}` : ''}
+              </p>
+            )}
+            {isBulk && (
+              <p className="text-[#6b7280] text-xs mt-0.5">
+                {rows.length} variant{rows.length !== 1 ? 's' : ''} selected
+              </p>
+            )}
+          </div>
           <button
-            key={m}
-            onClick={() => handleModeChange(m)}
-            className={`px-2.5 py-1 font-medium transition-colors ${
-              mode === m
-                ? 'bg-[#d4a843]/20 text-[#d4a843]'
-                : 'bg-[#0f1729] text-[#6b7280] hover:text-[#9ca3af]'
-            }`}
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#6b7280] hover:text-white flex items-center justify-center transition-colors"
           >
-            {m === 'set' ? 'Set to' : 'Adjust by'}
+            <span className="material-symbols-outlined text-sm">close</span>
           </button>
-        ))}
+        </div>
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+          {/* Current stock — single only */}
+          {!isBulk && singleRow && (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Available', value: singleRow.available, color: '#10b981' },
+                { label: 'On Hand', value: singleRow.onHand, color: '#9ca3af' },
+                { label: 'Committed', value: singleRow.committed, color: '#6b7280' },
+              ].map(({ label, value: v, color }) => (
+                <div
+                  key={label}
+                  className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-3 text-center"
+                >
+                  <p className="text-[#6b7280] text-xs mb-1">{label}</p>
+                  <p className="text-lg font-bold tabular-nums" style={{ color }}>
+                    {v}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Mode toggle */}
+          <div>
+            <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider mb-2">
+              Adjustment type
+            </p>
+            <div className="flex rounded-xl overflow-hidden border border-[#1f2d4e]">
+              {(['set', 'adjust'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                    mode === m
+                      ? 'bg-[#d4a843]/15 text-[#d4a843]'
+                      : 'bg-[#0a0f1e] text-[#6b7280] hover:text-[#9ca3af]'
+                  }`}
+                >
+                  {m === 'set' ? 'Set to' : 'Adjust by'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quantity input */}
+          <div>
+            <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider mb-2">
+              {mode === 'set' ? 'New quantity' : 'Delta (+ or −)'}
+            </p>
+            <div className="flex items-center gap-0">
+              <button
+                onClick={() => setValue((v) => String((parseInt(v, 10) || 0) - 1))}
+                className="w-10 h-10 rounded-l-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] flex items-center justify-center text-sm transition-colors border border-[#1f2d4e]"
+              >
+                <span className="material-symbols-outlined text-sm">remove</span>
+              </button>
+              <input
+                ref={inputRef}
+                type="number"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && isValid) handleSave();
+                  if (e.key === 'Escape') onClose();
+                }}
+                className="flex-1 h-10 bg-[#0a0f1e] border-y border-[#1f2d4e] focus:border-[#d4a843] text-white text-center text-base font-semibold outline-none tabular-nums transition-colors"
+                style={{ color: '#ffffff' }}
+              />
+              <button
+                onClick={() => setValue((v) => String((parseInt(v, 10) || 0) + 1))}
+                className="w-10 h-10 rounded-r-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] flex items-center justify-center text-sm transition-colors border border-[#1f2d4e]"
+              >
+                <span className="material-symbols-outlined text-sm">add</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Preview — single row only */}
+          {!isBulk && singleRow && !isNaN(numValue) && (
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+              style={{
+                backgroundColor: '#d4a84308',
+                borderColor: '#d4a84330',
+              }}
+            >
+              <span className="material-symbols-outlined text-[#d4a843] text-base">preview</span>
+              <p className="text-sm" style={{ color: '#e5e7eb' }}>
+                Available will be:{' '}
+                <strong style={{ color: '#d4a843' }}>{previewQty(singleRow.available)}</strong>{' '}
+                units
+              </p>
+            </div>
+          )}
+
+          {/* Reason */}
+          <div>
+            <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider mb-2">
+              Reason
+            </p>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value as InventoryAdjustmentReason)}
+              className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#d4a843] transition-colors appearance-none"
+              style={{ color: '#e5e7eb' }}
+            >
+              {REASON_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value} style={{ backgroundColor: '#0a0f1e' }}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Note */}
+          <div>
+            <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider mb-2">
+              Note{' '}
+              <span className="text-[#374151] normal-case font-normal tracking-normal">
+                (optional)
+              </span>
+            </p>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Internal note about this adjustment…"
+              rows={2}
+              className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#d4a843] transition-colors resize-none placeholder-[#374151]"
+              style={{ color: '#e5e7eb' }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#1f2d4e]">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-sm font-medium transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!isValid || saving}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#d4a843]/15 hover:bg-[#d4a843]/25 disabled:opacity-40 disabled:cursor-not-allowed text-[#d4a843] text-sm font-medium transition-all border border-[#d4a843]/30"
+          >
+            {saving ? (
+              <span className="material-symbols-outlined text-sm animate-spin">
+                progress_activity
+              </span>
+            ) : (
+              <span className="material-symbols-outlined text-sm">check</span>
+            )}
+            {isBulk ? `Update ${rows.length} items` : 'Save changes'}
+          </button>
+        </div>
       </div>
-
-      {/* Spinner buttons + input */}
-      <div className="flex items-center gap-0.5">
-        <button
-          onClick={() => setValue((v) => String((parseInt(v, 10) || 0) - 1))}
-          className="w-7 h-7 rounded-l-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] flex items-center justify-center text-sm transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">remove</span>
-        </button>
-        <input
-          ref={inputRef}
-          type="number"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && canSave) handleSave();
-            if (e.key === 'Escape') onCancel();
-          }}
-          className="w-16 bg-[#0f1729] border-y border-[#1f2d4e] focus:border-[#d4a843] text-white text-center text-sm py-1 outline-none tabular-nums"
-        />
-        <button
-          onClick={() => setValue((v) => String((parseInt(v, 10) || 0) + 1))}
-          className="w-7 h-7 rounded-r-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] flex items-center justify-center text-sm transition-colors"
-        >
-          <span className="material-symbols-outlined text-sm">add</span>
-        </button>
-      </div>
-
-      {/* Save */}
-      <button
-        onClick={handleSave}
-        disabled={!canSave || saving}
-        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#d4a843]/15 hover:bg-[#d4a843]/25 disabled:opacity-40 disabled:cursor-not-allowed text-[#d4a843] text-xs font-medium transition-colors"
-      >
-        {saving ? (
-          <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-        ) : (
-          <span className="material-symbols-outlined text-sm">check</span>
-        )}
-        Save
-      </button>
-
-      {/* Cancel */}
-      <button
-        onClick={onCancel}
-        className="w-7 h-7 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#6b7280] hover:text-white flex items-center justify-center transition-colors"
-      >
-        <span className="material-symbols-outlined text-sm">close</span>
-      </button>
     </div>
   );
 }
@@ -399,7 +677,8 @@ function SortTh({
 function SkeletonRow() {
   return (
     <tr className="border-b border-[#1f2d4e]">
-      {[180, 100, 60, 60, 60, 100, 80].map((w, i) => (
+      {/* checkbox, Product, SKU, Variant, Available, On Hand, Committed, Incoming, Location, Status, Actions */}
+      {[24, 180, 90, 100, 60, 60, 60, 60, 100, 80, 70].map((w, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-4 bg-[#1f2d4e] rounded animate-pulse" style={{ width: `${w}px` }} />
         </td>
@@ -408,7 +687,7 @@ function SkeletonRow() {
   );
 }
 
-// ─── Page ───────────────────────────────────────────────────────────────────────
+// ─── Page constants ──────────────────────────────────────────────────────────────
 
 const STOCK_FILTERS: { value: StockFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -419,6 +698,8 @@ const STOCK_FILTERS: { value: StockFilter; label: string }[] = [
 
 const PAGE_SIZE = 50;
 
+// ─── Page ───────────────────────────────────────────────────────────────────────
+
 export default function InventoryPage() {
   const { toast } = useToast();
 
@@ -428,15 +709,19 @@ export default function InventoryPage() {
 
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(1);
 
   const [alertsOpen, setAlertsOpen] = useState(true);
 
-  // Editing state: key = `${variantId}::${locationId}`
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  // Modal state
+  const [adjustTarget, setAdjustTarget] = useState<AdjustTarget | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Bulk selection
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 
   // ── Fetch ─────────────────────────────────────────────────────────────────────
 
@@ -452,6 +737,7 @@ export default function InventoryPage() {
       if (!res.ok) throw new Error(data.error ?? 'Failed to load');
       const flat = flattenProducts(data.products ?? []);
       setRows(flat);
+      setSelectedKeys(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load inventory');
     } finally {
@@ -462,6 +748,18 @@ export default function InventoryPage() {
   useEffect(() => {
     fetchInventory();
   }, [fetchInventory]);
+
+  // ── Locations ─────────────────────────────────────────────────────────────────
+
+  const locations = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of rows) {
+      if (r.locationId && r.locationName !== '—') {
+        map.set(r.locationId, r.locationName);
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [rows]);
 
   // ── Stats ─────────────────────────────────────────────────────────────────────
 
@@ -508,7 +806,11 @@ export default function InventoryPage() {
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter(
-        (r) => r.productTitle.toLowerCase().includes(q) || r.variantTitle.toLowerCase().includes(q),
+        (r) =>
+          r.productTitle.toLowerCase().includes(q) ||
+          r.variantTitle.toLowerCase().includes(q) ||
+          r.sku.toLowerCase().includes(q) ||
+          (r.barcode ?? '').toLowerCase().includes(q),
       );
     }
 
@@ -516,10 +818,15 @@ export default function InventoryPage() {
       result = result.filter((r) => stockStatus(r.available) === stockFilter);
     }
 
+    if (locationFilter !== 'all') {
+      result = result.filter((r) => r.locationId === locationFilter);
+    }
+
     if (sortField) {
       result = [...result].sort((a, b) => {
         let cmp = 0;
         if (sortField === 'product') cmp = a.productTitle.localeCompare(b.productTitle);
+        else if (sortField === 'sku') cmp = a.sku.localeCompare(b.sku);
         else if (sortField === 'variant') cmp = a.variantTitle.localeCompare(b.variantTitle);
         else if (sortField === 'available') cmp = a.available - b.available;
         else if (sortField === 'on_hand') cmp = a.onHand - b.onHand;
@@ -529,7 +836,7 @@ export default function InventoryPage() {
     }
 
     return result;
-  }, [rows, search, stockFilter, sortField, sortDir]);
+  }, [rows, search, stockFilter, locationFilter, sortField, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -544,50 +851,130 @@ export default function InventoryPage() {
     setPage(1);
   }
 
+  // ── Row key ───────────────────────────────────────────────────────────────────
+
+  function rowKey(row: InventoryRow) {
+    return `${row.inventoryItemId ?? row.variantId}::${row.locationId}`;
+  }
+
+  // ── Bulk selection ────────────────────────────────────────────────────────────
+
+  const allPageKeys = useMemo(() => pagedRows.map(rowKey), [pagedRows]);
+  const allSelected = allPageKeys.length > 0 && allPageKeys.every((k) => selectedKeys.has(k));
+  const someSelected = selectedKeys.size > 0;
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedKeys((prev) => {
+        const next = new Set(prev);
+        allPageKeys.forEach((k) => next.delete(k));
+        return next;
+      });
+    } else {
+      setSelectedKeys((prev) => {
+        const next = new Set(prev);
+        allPageKeys.forEach((k) => next.add(k));
+        return next;
+      });
+    }
+  }
+
+  function toggleRow(row: InventoryRow) {
+    const k = rowKey(row);
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  }
+
+  const selectedRows = useMemo(
+    () => filteredRows.filter((r) => selectedKeys.has(rowKey(r))),
+
+    [filteredRows, selectedKeys],
+  );
+
   // ── Inventory update ──────────────────────────────────────────────────────────
 
-  async function handleSave(
-    inventoryItemId: string,
-    locationId: string,
-    value: number,
-    mode: 'set' | 'adjust',
+  async function handleSaveAdjustments(
+    params: {
+      inventoryItemId: string;
+      locationId: string;
+      value: number;
+      mode: 'set' | 'adjust';
+      reason: InventoryAdjustmentReason;
+      note: string;
+    }[],
   ) {
-    const key = `${inventoryItemId}::${locationId}`;
-    setSavingKey(key);
+    setSaving(true);
+    let successCount = 0;
+    let errorCount = 0;
+
     try {
-      const body =
-        mode === 'set'
-          ? { inventoryItemId, locationId, quantity: value }
-          : { inventoryItemId, locationId, delta: value };
+      // Process in batches of 5 to avoid overwhelming the API
+      const BATCH = 5;
+      for (let i = 0; i < params.length; i += BATCH) {
+        const batch = params.slice(i, i + BATCH);
+        await Promise.all(
+          batch.map(async (p) => {
+            const body =
+              p.mode === 'set'
+                ? {
+                    inventoryItemId: p.inventoryItemId,
+                    locationId: p.locationId,
+                    quantity: p.value,
+                    reason: p.reason,
+                    note: p.note || undefined,
+                  }
+                : {
+                    inventoryItemId: p.inventoryItemId,
+                    locationId: p.locationId,
+                    delta: p.value,
+                    reason: p.reason,
+                    note: p.note || undefined,
+                  };
 
-      const res = await fetch('/api/admin/inventory', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+            const res = await fetch('/api/admin/inventory', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
 
-      const data = (await res.json()) as { success?: boolean; message?: string; error?: string };
+            const data = (await res.json()) as {
+              success?: boolean;
+              message?: string;
+              error?: string;
+            };
 
-      if (!res.ok) throw new Error(data.error ?? 'Update failed');
+            if (!res.ok) {
+              errorCount++;
+              console.error('Inventory update error:', data.error);
+            } else {
+              successCount++;
+            }
+          }),
+        );
+      }
 
-      toast.success(data.message ?? 'Inventory updated');
-      setEditingKey(null);
-      // Refresh data
+      if (errorCount === 0) {
+        toast.success(
+          params.length === 1
+            ? 'Inventory updated'
+            : `${successCount} of ${params.length} items updated`,
+        );
+      } else {
+        toast.error(`${errorCount} update(s) failed, ${successCount} succeeded`);
+      }
+
+      setAdjustTarget(null);
+      setSelectedKeys(new Set());
       await fetchInventory();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to update inventory');
     } finally {
-      setSavingKey(null);
+      setSaving(false);
     }
-  }
-
-  function startEdit(row: InventoryRow) {
-    const key = `${row.inventoryItemId ?? row.variantId}::${row.locationId}`;
-    setEditingKey(key);
-  }
-
-  function rowEditKey(row: InventoryRow) {
-    return `${row.inventoryItemId ?? row.variantId}::${row.locationId}`;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -609,16 +996,28 @@ export default function InventoryPage() {
               : `${stats.totalSKUs} SKU${stats.totalSKUs !== 1 ? 's' : ''} across all locations`}
           </p>
         </div>
-        <button
-          onClick={fetchInventory}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1f2d4e] bg-[#111827] hover:border-[#263d6e] text-[#9ca3af] hover:text-white text-sm font-medium transition-all disabled:opacity-50"
-        >
-          <span className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}>
-            refresh
-          </span>
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportToCsv(filteredRows)}
+            disabled={loading || filteredRows.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1f2d4e] bg-[#111827] hover:border-[#263d6e] text-[#9ca3af] hover:text-white text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-base">download</span>
+            Export
+          </button>
+          <button
+            onClick={fetchInventory}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1f2d4e] bg-[#111827] hover:border-[#263d6e] text-[#9ca3af] hover:text-white text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <span
+              className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}
+            >
+              refresh
+            </span>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* ── Stats Row ─────────────────────────────────────────────────────────── */}
@@ -713,7 +1112,7 @@ export default function InventoryPage() {
                       <AlertCard
                         key={`${r.variantId}-${r.locationId}`}
                         row={r}
-                        onUpdate={startEdit}
+                        onUpdate={(row) => setAdjustTarget({ type: 'single', row })}
                       />
                     ))}
                   </div>
@@ -731,7 +1130,7 @@ export default function InventoryPage() {
                       <AlertCard
                         key={`${r.variantId}-${r.locationId}`}
                         row={r}
-                        onUpdate={startEdit}
+                        onUpdate={(row) => setAdjustTarget({ type: 'single', row })}
                       />
                     ))}
                   </div>
@@ -755,7 +1154,7 @@ export default function InventoryPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search products or variants…"
+            placeholder="Search products, variants, SKU, barcode…"
             className="w-full bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl pl-12 pr-4 py-2.5 text-sm outline-none transition-colors"
           />
           {search && (
@@ -770,6 +1169,28 @@ export default function InventoryPage() {
             </button>
           )}
         </div>
+
+        {/* Location filter */}
+        {locations.length > 0 && (
+          <select
+            value={locationFilter}
+            onChange={(e) => {
+              setLocationFilter(e.target.value);
+              setPage(1);
+            }}
+            className="bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-3 py-2.5 text-sm outline-none transition-colors appearance-none"
+            style={{ color: locationFilter === 'all' ? '#6b7280' : '#e5e7eb' }}
+          >
+            <option value="all" style={{ backgroundColor: '#111827' }}>
+              All locations
+            </option>
+            {locations.map(({ id, name }) => (
+              <option key={id} value={id} style={{ backgroundColor: '#111827' }}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
 
         {/* Stock filter tabs */}
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -827,13 +1248,29 @@ export default function InventoryPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#1f2d4e] bg-[#0d1526]">
+                  {/* Checkbox */}
+                  <th className="px-4 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-[#1f2d4e] bg-[#0a0f1e] accent-[#d4a843] cursor-pointer"
+                      title="Select all on this page"
+                    />
+                  </th>
                   <SortTh
                     field="product"
                     label="Product"
                     activeField={sortField}
                     direction={sortDir}
                     onSort={handleSort}
-                    className="pl-5"
+                  />
+                  <SortTh
+                    field="sku"
+                    label="SKU"
+                    activeField={sortField}
+                    direction={sortDir}
+                    onSort={handleSort}
                   />
                   <SortTh
                     field="variant"
@@ -864,7 +1301,13 @@ export default function InventoryPage() {
                     onSort={handleSort}
                   />
                   <th className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3 text-[#6b7280]">
+                    Incoming
+                  </th>
+                  <th className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3 text-[#6b7280]">
                     Location
+                  </th>
+                  <th className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3 text-[#6b7280]">
+                    Status
                   </th>
                   <th className="text-right text-xs font-medium uppercase tracking-wider px-4 py-3 text-[#6b7280]">
                     Actions
@@ -876,7 +1319,7 @@ export default function InventoryPage() {
                   Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
                 ) : pagedRows.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-16">
+                    <td colSpan={11} className="text-center py-16">
                       <div className="flex flex-col items-center gap-3">
                         <span className="material-symbols-outlined text-[#374151] text-4xl">
                           warehouse
@@ -893,19 +1336,30 @@ export default function InventoryPage() {
                   </tr>
                 ) : (
                   pagedRows.map((row) => {
-                    const key = rowEditKey(row);
-                    const isEditing = editingKey === key;
-                    const isSaving = savingKey === key;
+                    const k = rowKey(row);
+                    const isSelected = selectedKeys.has(k);
 
                     return (
                       <tr
                         key={`${row.variantId}-${row.locationId}`}
                         className={`transition-colors ${
-                          isEditing ? 'bg-[#d4a843]/5' : 'hover:bg-[#1f2d4e]/20'
+                          isSelected
+                            ? 'bg-[#d4a843]/5 border-l-2 border-l-[#d4a843]/30'
+                            : 'hover:bg-[#1f2d4e]/20'
                         }`}
                       >
+                        {/* Checkbox */}
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleRow(row)}
+                            className="w-4 h-4 rounded border-[#1f2d4e] bg-[#0a0f1e] accent-[#d4a843] cursor-pointer"
+                          />
+                        </td>
+
                         {/* Product */}
-                        <td className="px-4 pl-5 py-3">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {row.productImage ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -921,10 +1375,27 @@ export default function InventoryPage() {
                                 </span>
                               </div>
                             )}
-                            <p className="text-white text-sm font-medium line-clamp-1 max-w-[180px]">
+                            <p
+                              className="text-sm font-medium line-clamp-1 max-w-[160px]"
+                              style={{ color: '#ffffff' }}
+                            >
                               {row.productTitle}
                             </p>
                           </div>
+                        </td>
+
+                        {/* SKU (with barcode tooltip) */}
+                        <td className="px-4 py-3">
+                          {row.sku ? (
+                            <span
+                              className="text-[#9ca3af] text-xs font-mono cursor-default"
+                              title={row.barcode ? `Barcode: ${row.barcode}` : undefined}
+                            >
+                              {row.sku}
+                            </span>
+                          ) : (
+                            <span className="text-[#374151] text-xs">—</span>
+                          )}
                         </td>
 
                         {/* Variant */}
@@ -934,27 +1405,9 @@ export default function InventoryPage() {
                           </span>
                         </td>
 
-                        {/* Available — editable */}
+                        {/* Available */}
                         <td className="px-4 py-3">
-                          {isEditing ? (
-                            <QtyEditor
-                              row={row}
-                              onSave={handleSave}
-                              onCancel={() => setEditingKey(null)}
-                              saving={isSaving}
-                            />
-                          ) : (
-                            <button
-                              onClick={() => startEdit(row)}
-                              className="group flex items-center gap-1.5 hover:text-[#d4a843] transition-colors"
-                              title="Click to edit"
-                            >
-                              <QtyText qty={row.available} />
-                              <span className="material-symbols-outlined text-sm text-[#374151] opacity-0 group-hover:opacity-80 transition-opacity">
-                                edit
-                              </span>
-                            </button>
-                          )}
+                          <QtyText qty={row.available} />
                         </td>
 
                         {/* On Hand */}
@@ -969,24 +1422,38 @@ export default function InventoryPage() {
                           </span>
                         </td>
 
+                        {/* Incoming */}
+                        <td className="px-4 py-3">
+                          {row.incoming > 0 ? (
+                            <span className="text-[#6366f1] text-sm tabular-nums font-medium">
+                              +{row.incoming}
+                            </span>
+                          ) : (
+                            <span className="text-[#374151] text-sm tabular-nums">0</span>
+                          )}
+                        </td>
+
                         {/* Location */}
                         <td className="px-4 py-3">
                           <span className="text-[#6b7280] text-xs">{row.locationName}</span>
                         </td>
 
+                        {/* Status */}
+                        <td className="px-4 py-3">
+                          {row.tracked ? <StockBadge qty={row.available} /> : <NotTrackedBadge />}
+                        </td>
+
                         {/* Actions */}
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-2">
-                            <StockBadge qty={row.available} />
-                            {!isEditing && (
-                              <button
-                                onClick={() => startEdit(row)}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
-                              >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                                Update
-                              </button>
-                            )}
+                          <div className="flex items-center justify-end">
+                            <button
+                              onClick={() => setAdjustTarget({ type: 'single', row })}
+                              disabled={!row.inventoryItemId || !row.locationId}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <span className="material-symbols-outlined text-sm">edit</span>
+                              Update
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1040,6 +1507,44 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
+
+      {/* ── Bulk Action Bar ───────────────────────────────────────────────────── */}
+      {someSelected && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl border border-[#d4a843]/30 shadow-2xl"
+          style={{ backgroundColor: '#0d1526' }}
+        >
+          <span className="material-symbols-outlined text-[#d4a843] text-base">check_box</span>
+          <span className="text-sm font-medium" style={{ color: '#e5e7eb' }}>
+            {selectedKeys.size} item{selectedKeys.size !== 1 ? 's' : ''} selected
+          </span>
+          <div className="w-px h-5 bg-[#1f2d4e]" />
+          <button
+            onClick={() => setAdjustTarget({ type: 'bulk', rows: selectedRows })}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#d4a843]/15 hover:bg-[#d4a843]/25 text-[#d4a843] text-xs font-medium transition-all border border-[#d4a843]/30"
+          >
+            <span className="material-symbols-outlined text-sm">inventory_2</span>
+            Bulk Set Quantity
+          </button>
+          <button
+            onClick={() => setSelectedKeys(new Set())}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#6b7280] hover:text-white text-xs font-medium transition-all"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+            Deselect All
+          </button>
+        </div>
+      )}
+
+      {/* ── Adjustment Modal ──────────────────────────────────────────────────── */}
+      {adjustTarget && (
+        <AdjustmentModal
+          target={adjustTarget}
+          onSave={handleSaveAdjustments}
+          onClose={() => setAdjustTarget(null)}
+          saving={saving}
+        />
+      )}
     </div>
   );
 }

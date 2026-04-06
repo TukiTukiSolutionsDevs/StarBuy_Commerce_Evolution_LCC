@@ -8,22 +8,22 @@
 
 ## Estado General
 
-| #   | Pagina         | Auditada | Mejorada | Notas                                                                   |
-| --- | -------------- | -------- | -------- | ----------------------------------------------------------------------- |
-| 1   | Dashboard      | SI       | SI       | Headings fix, KPIs, charts, alerts — completo                           |
-| 2   | Products       | SI       | SI       | Modal 2-col, tags chips, compare-at-price, preview desc, image auth fix |
-| 3   | Inventory      | NO       | NO       | Pendiente                                                               |
-| 4   | Collections    | NO       | NO       | Pendiente                                                               |
-| 5   | Orders         | NO       | NO       | Pendiente                                                               |
-| 6   | Orders/[id]    | NO       | NO       | Pendiente                                                               |
-| 7   | Customers      | NO       | NO       | Pendiente                                                               |
-| 8   | Customers/[id] | NO       | NO       | Pendiente                                                               |
-| 9   | Discounts      | NO       | NO       | Pendiente                                                               |
-| 10  | Activity Log   | NO       | NO       | Pendiente                                                               |
-| 11  | Automations    | NO       | NO       | Pendiente                                                               |
-| 12  | Market Intel   | SI       | SI       | Progress bar, scores, color fix, search modes                           |
-| 13  | Settings       | SI       | SI       | iOS toggles, API keys, search modes, guides                             |
-| 14  | Login          | NO       | NO       | Pendiente                                                               |
+| #   | Pagina         | Auditada | Mejorada | Notas                                                                                                                       |
+| --- | -------------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Dashboard      | SI       | SI       | Headings fix, KPIs, charts, alerts — completo                                                                               |
+| 2   | Products       | SI       | SI       | Modal 2-col, tags chips, compare-at-price, preview desc, image auth fix                                                     |
+| 3   | Inventory      | SI       | SI       | SKU/barcode cols, tracked indicator, adjustment modal w/reason+note, bulk update, CSV export, location filter, incoming qty |
+| 4   | Collections    | SI       | SI       | Search, sort, type badges (Manual/Smart), SEO fields, 2-col modal, smart rules editor, sort order, published dot            |
+| 5   | Orders         | SI       | SI       | +Paid tab, sort, items col, tags, notes icon, risk badge, CSV export                                                        |
+| 6   | Orders/[id]    | SI       | SI       | +9 GQL fields, billing, SKU/price cols, tracking, timeline, print, modals mejorados                                         |
+| 7   | Customers      | SI       | SI       | Create modal, filter pills, marketing col, note indicator, +acceptsMarketing/note GQL                                       |
+| 8   | Customers/[id] | SI       | SI       | Notes editor, marketing toggle, full addresses (7 new fields), address dedup                                                |
+| 9   | Discounts      | SI       | SI       | Status filters, search, copy code, edit modal, onePerCustomer, fixed amount fix, stats                                      |
+| 10  | Activity Log   | SI       | SI       | Search w/highlight, date range filter, event count stats, smart empty state                                                 |
+| 11  | Automations    | SI       | SI       | Search bar (name, desc, trigger), search empty state                                                                        |
+| 12  | Market Intel   | SI       | SI       | Progress bar, scores, color fix, search modes                                                                               |
+| 13  | Settings       | SI       | SI       | iOS toggles, API keys, search modes, guides                                                                                 |
+| 14  | Login          | SI       | SI       | Show/hide password toggle, accessibility label                                                                              |
 
 ---
 
@@ -45,20 +45,28 @@ Para cada pagina:
 
 ### Que debe tener (segun Shopify)
 
-- [ ] Lista de productos con niveles de stock por location
-- [ ] Busqueda por producto
-- [ ] Filtro por estado (in stock, low stock, out of stock)
-- [ ] Edicion inline de cantidades
-- [ ] Historial de ajustes de inventario
-- [ ] Bulk update de cantidades
-- [ ] Alertas de bajo stock configurables
-- [ ] Export/import CSV
+- [x] Lista de productos con niveles de stock por location
+- [x] Busqueda por producto, variante, SKU
+- [x] Filtro por estado (in stock, low stock, out of stock)
+- [x] Edicion de cantidades (modal profesional con preview en vivo)
+- [ ] Historial de ajustes de inventario (API limited — Shopify no expone history via GraphQL)
+- [x] Bulk update de cantidades (checkboxes + floating action bar)
+- [x] Alertas de bajo stock (collapsible section, out + low)
+- [x] Export CSV (descarga filtered data)
 
-### Que revisar
+### Que se reviso
 
-- Campos: SKU, barcode, tracked, quantity, location
-- Formulario de ajuste: reason, quantity delta, note
-- Vista: tabla con sorting por columnas
+- [x] Campos: SKU (columna en tabla), barcode (tooltip en SKU), tracked (badge "Not tracked"), quantity, location
+- [x] Formulario de ajuste: reason dropdown (10 opciones), quantity set/adjust con preview, note textarea
+- [x] Vista: tabla con sorting por 7 columnas (product, SKU, variant, available, on_hand, committed, incoming)
+- [x] Location filter dropdown (se muestra cuando hay >1 location)
+- [x] Incoming quantity column (purple highlight para >0)
+
+### Archivos modificados
+
+- `src/lib/shopify/admin/tools/inventory.ts` — GraphQL query + InventoryAdjustmentReason type + reason param
+- `src/app/api/admin/inventory/route.ts` — SKU/barcode/tracked in response + reason/note in PATCH
+- `src/app/admin/inventory/page.tsx` — Full rewrite (1045 → 1559 lines)
 
 ---
 

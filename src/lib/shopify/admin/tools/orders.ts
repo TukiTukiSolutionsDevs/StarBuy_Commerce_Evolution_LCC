@@ -11,6 +11,18 @@ import { adminFetch } from '../client';
 type Money = { amount: string; currencyCode: string };
 type UserError = { field: string[] | null; message: string };
 
+type Address = {
+  firstName: string | null;
+  lastName: string | null;
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  province: string | null;
+  zip: string | null;
+  country: string | null;
+  phone: string | null;
+};
+
 export type AdminOrder = {
   id: string;
   name: string;
@@ -20,39 +32,64 @@ export type AdminOrder = {
   displayFulfillmentStatus: string;
   currentTotalPriceSet: { shopMoney: Money };
   subtotalPriceSet: { shopMoney: Money } | null;
+  totalTaxSet: { shopMoney: Money } | null;
+  totalShippingPriceSet: { shopMoney: Money } | null;
+  totalDiscountsSet: { shopMoney: Money } | null;
   createdAt: string;
   updatedAt: string;
   cancelledAt: string | null;
+  cancelReason: string | null;
   note: string | null;
   tags: string[];
+  hasTimelineComment: boolean;
   customer: {
     id: string;
     firstName: string | null;
     lastName: string | null;
     email: string;
+    phone: string | null;
   } | null;
-  shippingAddress: {
-    firstName: string | null;
-    lastName: string | null;
-    address1: string | null;
-    city: string | null;
-    country: string | null;
-  } | null;
+  shippingAddress: Address | null;
+  billingAddress: Address | null;
   lineItems: {
     edges: Array<{
       node: {
         id: string;
         name: string;
         quantity: number;
+        sku: string | null;
         originalTotalSet: { shopMoney: Money };
+        originalUnitPriceSet: { shopMoney: Money };
         variant: {
           id: string;
           title: string;
           price: string;
+          sku: string | null;
         } | null;
+        fulfillmentStatus: string;
       };
     }>;
   };
+  fulfillments: Array<{
+    id: string;
+    status: string;
+    createdAt: string;
+    trackingInfo: Array<{
+      number: string | null;
+      url: string | null;
+      company: string | null;
+    }>;
+  }>;
+  events: {
+    edges: Array<{
+      node: {
+        id: string;
+        createdAt: string;
+        message: string;
+      };
+    }>;
+  };
+  riskLevel: string;
 };
 
 const ORDER_FRAGMENT = `
@@ -65,36 +102,81 @@ const ORDER_FRAGMENT = `
     displayFulfillmentStatus
     currentTotalPriceSet { shopMoney { amount currencyCode } }
     subtotalPriceSet { shopMoney { amount currencyCode } }
+    totalTaxSet { shopMoney { amount currencyCode } }
+    totalShippingPriceSet { shopMoney { amount currencyCode } }
+    totalDiscountsSet { shopMoney { amount currencyCode } }
     createdAt
     updatedAt
     cancelledAt
+    cancelReason
     note
     tags
+    hasTimelineComment
+    riskLevel
     customer {
       id
       firstName
       lastName
       email
+      phone
     }
     shippingAddress {
       firstName
       lastName
       address1
+      address2
       city
+      province
+      zip
       country
+      phone
     }
-    lineItems(first: 20) {
+    billingAddress {
+      firstName
+      lastName
+      address1
+      address2
+      city
+      province
+      zip
+      country
+      phone
+    }
+    lineItems(first: 50) {
       edges {
         node {
           id
           name
           quantity
+          sku
+          fulfillmentStatus
           originalTotalSet { shopMoney { amount currencyCode } }
+          originalUnitPriceSet { shopMoney { amount currencyCode } }
           variant {
             id
             title
             price
+            sku
           }
+        }
+      }
+    }
+    fulfillments {
+      id
+      status
+      createdAt
+      trackingInfo {
+        number
+        url
+        company
+      }
+    }
+    events(first: 20, sortKey: CREATED_AT, reverse: true) {
+      edges {
+        node {
+          id
+          createdAt
+          message
         }
       }
     }
@@ -106,7 +188,7 @@ const ORDER_FRAGMENT = `
 export async function searchOrders(
   query: string = '',
   limit: number = 10,
-  status?: string
+  status?: string,
 ): Promise<AdminOrder[]> {
   // Build query string combining search and status filter
   let queryStr = query;
@@ -177,11 +259,9 @@ export async function cancelOrder(
   orderId: string,
   reason: string = 'OTHER',
   restock: boolean = true,
-  refund: boolean = false
+  refund: boolean = false,
 ): Promise<{ order: AdminOrder | null; userErrors: UserError[] }> {
-  const gid = orderId.startsWith('gid://')
-    ? orderId
-    : `gid://shopify/Order/${orderId}`;
+  const gid = orderId.startsWith('gid://') ? orderId : `gid://shopify/Order/${orderId}`;
 
   const mutation = `
     mutation CancelOrder($orderId: ID!, $reason: OrderCancelReason!, $restock: Boolean!, $refund: Boolean!) {
@@ -219,11 +299,10 @@ export async function createFulfillment(
   orderId: string,
   trackingNumber?: string,
   trackingUrl?: string,
-  company?: string
+  company?: string,
+  notifyCustomer: boolean = true,
 ): Promise<{ fulfillment: { id: string; status: string } | null; userErrors: UserError[] }> {
-  const gid = orderId.startsWith('gid://')
-    ? orderId
-    : `gid://shopify/Order/${orderId}`;
+  const gid = orderId.startsWith('gid://') ? orderId : `gid://shopify/Order/${orderId}`;
 
   // Get fulfillment order IDs first
   const foQuery = `
@@ -280,7 +359,7 @@ export async function createFulfillment(
 
   const fulfillmentInput: Record<string, unknown> = {
     lineItemsByFulfillmentOrder: openFOs,
-    notifyCustomer: true,
+    notifyCustomer,
   };
 
   if (Object.keys(trackingInfo).length > 0) {
@@ -309,11 +388,9 @@ type RefundLineItem = {
 export async function refundOrder(
   orderId: string,
   lineItems?: RefundLineItem[],
-  note?: string
+  note?: string,
 ): Promise<{ refund: { id: string } | null; userErrors: UserError[] }> {
-  const gid = orderId.startsWith('gid://')
-    ? orderId
-    : `gid://shopify/Order/${orderId}`;
+  const gid = orderId.startsWith('gid://') ? orderId : `gid://shopify/Order/${orderId}`;
 
   const mutation = `
     mutation RefundOrder($input: RefundInput!) {

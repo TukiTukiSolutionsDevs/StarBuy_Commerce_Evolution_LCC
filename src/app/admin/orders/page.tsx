@@ -3,7 +3,9 @@
 /**
  * Admin Orders Page
  *
- * Full orders management: filter, search, paginate, view detail.
+ * Full orders management: filter, search, sort, paginate, view detail.
+ * Matches Shopify Admin: payment/fulfillment badges, tags, notes indicator,
+ * risk level, item count, sort controls.
  */
 
 import { useEffect, useCallback, useState } from 'react';
@@ -17,6 +19,7 @@ const STATUS_TABS = [
   { value: '', label: 'All' },
   { value: 'unfulfilled', label: 'Unfulfilled' },
   { value: 'fulfilled', label: 'Fulfilled' },
+  { value: 'paid', label: 'Paid' },
   { value: 'refunded', label: 'Refunded' },
   { value: 'cancelled', label: 'Cancelled' },
 ] as const;
@@ -29,6 +32,15 @@ const DATE_RANGES = [
   { value: 9999, label: 'All time' },
 ] as const;
 
+const SORT_OPTIONS = [
+  { value: 'date_desc', label: 'Newest first' },
+  { value: 'date_asc', label: 'Oldest first' },
+  { value: 'total_desc', label: 'Highest total' },
+  { value: 'total_asc', label: 'Lowest total' },
+] as const;
+
+type SortOption = (typeof SORT_OPTIONS)[number]['value'];
+
 const PAGE_SIZE = 25;
 
 // ─── Badge helpers ──────────────────────────────────────────────────────────────
@@ -38,6 +50,7 @@ const PAYMENT_COLORS: Record<string, string> = {
   PENDING: '#d4a843',
   PARTIALLY_PAID: '#f59e0b',
   REFUNDED: '#ef4444',
+  PARTIALLY_REFUNDED: '#f97316',
   VOIDED: '#6b7280',
 };
 
@@ -45,17 +58,26 @@ const FULFILLMENT_COLORS: Record<string, string> = {
   FULFILLED: '#10b981',
   UNFULFILLED: '#f59e0b',
   PARTIALLY_FULFILLED: '#eab308',
+  SCHEDULED: '#6366f1',
+  ON_HOLD: '#8b5cf6',
+};
+
+const RISK_COLORS: Record<string, string> = {
+  HIGH: '#ef4444',
+  MEDIUM: '#f59e0b',
+  LOW: '#10b981',
 };
 
 function PaymentBadge({ status }: { status: string }) {
   const color = PAYMENT_COLORS[status] ?? '#6b7280';
+  const label = status.replace(/_/g, ' ');
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
       style={{ backgroundColor: `${color}15`, color }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-      {status.replace(/_/g, ' ').charAt(0) + status.replace(/_/g, ' ').slice(1).toLowerCase()}
+      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: color }} />
+      {label.charAt(0) + label.slice(1).toLowerCase()}
     </span>
   );
 }
@@ -69,8 +91,24 @@ function FulfillmentBadge({ status }: { status: string | null }) {
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
       style={{ backgroundColor: `${color}15`, color }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: color }} />
       {label.charAt(0) + label.slice(1).toLowerCase()}
+    </span>
+  );
+}
+
+function RiskBadge({ level }: { level: string }) {
+  if (!level || level === 'LOW') return null;
+  const color = RISK_COLORS[level] ?? '#f59e0b';
+  const icon = level === 'HIGH' ? 'gpp_bad' : 'gpp_maybe';
+  return (
+    <span
+      title={`Fraud risk: ${level.toLowerCase()}`}
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold"
+      style={{ backgroundColor: `${color}20`, color }}
+    >
+      <span className="material-symbols-outlined text-xs">{icon}</span>
+      {level === 'HIGH' ? 'High risk' : 'Medium risk'}
     </span>
   );
 }
@@ -102,13 +140,72 @@ function formatCurrency(amount: string, currency: string): string {
 function SkeletonRow() {
   return (
     <tr className="border-b border-[#1f2d4e]">
-      {[120, 160, 80, 80, 100, 110, 60].map((w, i) => (
-        <td key={i} className="px-5 py-4">
+      {[120, 160, 80, 90, 80, 100, 110, 60].map((w, i) => (
+        <td key={i} className="px-4 py-4">
           <div className="h-4 bg-[#1f2d4e] rounded animate-pulse" style={{ width: `${w}px` }} />
         </td>
       ))}
     </tr>
   );
+}
+
+// ─── Sort helper ────────────────────────────────────────────────────────────────
+
+function sortOrders(orders: AdminOrder[], sort: SortOption): AdminOrder[] {
+  return [...orders].sort((a, b) => {
+    switch (sort) {
+      case 'date_asc':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'date_desc':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'total_asc':
+        return (
+          parseFloat(a.currentTotalPriceSet.shopMoney.amount) -
+          parseFloat(b.currentTotalPriceSet.shopMoney.amount)
+        );
+      case 'total_desc':
+        return (
+          parseFloat(b.currentTotalPriceSet.shopMoney.amount) -
+          parseFloat(a.currentTotalPriceSet.shopMoney.amount)
+        );
+      default:
+        return 0;
+    }
+  });
+}
+
+// ─── Export CSV ─────────────────────────────────────────────────────────────────
+
+function exportCsv(orders: AdminOrder[]) {
+  const headers = ['Order', 'Customer', 'Email', 'Date', 'Total', 'Payment', 'Fulfillment', 'Tags'];
+  const rows = orders.map((o) => {
+    const name = o.customer
+      ? `${o.customer.firstName ?? ''} ${o.customer.lastName ?? ''}`.trim()
+      : 'Guest';
+    const total = o.currentTotalPriceSet.shopMoney;
+    return [
+      o.name,
+      name,
+      o.customer?.email ?? o.email ?? '',
+      new Date(o.createdAt).toLocaleDateString(),
+      `${total.currencyCode} ${total.amount}`,
+      o.displayFinancialStatus,
+      o.displayFulfillmentStatus,
+      o.tags.join('; '),
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Page ───────────────────────────────────────────────────────────────────────
@@ -124,6 +221,7 @@ export default function OrdersPage() {
   const [activeStatus, setActiveStatus] = useState<string>('');
   const [activeDays, setActiveDays] = useState<number>(30);
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortOption>('date_desc');
   const [page, setPage] = useState(1);
 
   // ── Fetch ───────────────────────────────────────────────────────────────────
@@ -163,7 +261,7 @@ export default function OrdersPage() {
     fetchOrders();
   }, [fetchOrders]);
 
-  // ── Client-side search filter ───────────────────────────────────────────────
+  // ── Client-side search + sort ───────────────────────────────────────────────
 
   const filtered = search.trim()
     ? orders.filter((o) => {
@@ -173,12 +271,14 @@ export default function OrdersPage() {
           (o.customer?.firstName ?? '').toLowerCase().includes(q) ||
           (o.customer?.lastName ?? '').toLowerCase().includes(q) ||
           (o.customer?.email ?? '').toLowerCase().includes(q) ||
-          (o.email ?? '').toLowerCase().includes(q)
+          (o.email ?? '').toLowerCase().includes(q) ||
+          o.tags.some((t) => t.toLowerCase().includes(q))
         );
       })
     : orders;
 
-  const displayCount = filtered.length;
+  const sorted = sortOrders(filtered, sort);
+  const displayCount = sorted.length;
   const hasMore = total >= PAGE_SIZE * page;
 
   function loadMore() {
@@ -202,16 +302,29 @@ export default function OrdersPage() {
             {loading ? 'Loading…' : `${displayCount} order${displayCount !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <button
-          onClick={() => fetchOrders(true)}
-          disabled={loading}
-          className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
-        >
-          <span className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}>
-            refresh
-          </span>
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          {!loading && sorted.length > 0 && (
+            <button
+              onClick={() => exportCsv(sorted)}
+              className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+            >
+              <span className="material-symbols-outlined text-base">download</span>
+              Export CSV
+            </button>
+          )}
+          <button
+            onClick={() => fetchOrders(true)}
+            disabled={loading}
+            className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <span
+              className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}
+            >
+              refresh
+            </span>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* ── Status tabs ────────────────────────────────────────────── */}
@@ -246,6 +359,19 @@ export default function OrdersPage() {
           ))}
         </select>
 
+        {/* Sort */}
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          className="bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-[#9ca3af] focus:text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+        >
+          {SORT_OPTIONS.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-xl pointer-events-none">
@@ -254,7 +380,7 @@ export default function OrdersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by order # or customer…"
+            placeholder="Search by order #, customer, email or tag…"
             className="w-full bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl pl-12 pr-10 py-2.5 text-sm outline-none transition-colors"
           />
           {search && (
@@ -286,25 +412,28 @@ export default function OrdersPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#1f2d4e]">
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Order
                   </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Customer
                   </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Date
                   </th>
-                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-center text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
+                    Items
+                  </th>
+                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Total
                   </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Payment
                   </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Fulfillment
                   </th>
-                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-3">
+                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Actions
                   </th>
                 </tr>
@@ -312,9 +441,9 @@ export default function OrdersPage() {
               <tbody className="divide-y divide-[#1f2d4e]">
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
-                ) : filtered.length === 0 ? (
+                ) : sorted.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-16">
+                    <td colSpan={8} className="text-center py-16">
                       <div className="flex flex-col items-center gap-3">
                         <span className="material-symbols-outlined text-[#374151] text-4xl">
                           receipt_long
@@ -328,34 +457,87 @@ export default function OrdersPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((order) => {
+                  sorted.map((order) => {
                     const numericId = order.id.replace('gid://shopify/Order/', '');
                     const customerName = order.customer
                       ? `${order.customer.firstName ?? ''} ${order.customer.lastName ?? ''}`.trim()
                       : null;
                     const customerDisplay =
                       customerName || order.customer?.email || order.email || '—';
-                    const total = order.currentTotalPriceSet.shopMoney;
+                    const money = order.currentTotalPriceSet.shopMoney;
+                    const itemCount = order.lineItems.edges.reduce(
+                      (sum, e) => sum + e.node.quantity,
+                      0,
+                    );
+                    const hasNote = !!order.note;
+                    const riskLevel = order.riskLevel ?? '';
 
                     return (
                       <tr key={order.id} className="hover:bg-[#1f2d4e]/20 transition-colors">
                         {/* Order */}
-                        <td className="px-5 py-4">
-                          <Link
-                            href={`/admin/orders/${numericId}`}
-                            className="text-[#d4a843] hover:text-[#e4c06a] font-semibold text-sm transition-colors"
-                          >
-                            {order.name}
-                          </Link>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link
+                              href={`/admin/orders/${numericId}`}
+                              className="text-[#d4a843] hover:text-[#e4c06a] font-semibold text-sm transition-colors"
+                            >
+                              {order.name}
+                            </Link>
+                            {hasNote && (
+                              <span
+                                title="Has internal note"
+                                className="material-symbols-outlined text-sm text-[#6366f1]"
+                              >
+                                sticky_note_2
+                              </span>
+                            )}
+                            {order.hasTimelineComment && (
+                              <span
+                                title="Has timeline comment"
+                                className="material-symbols-outlined text-sm text-[#6b7280]"
+                              >
+                                comment
+                              </span>
+                            )}
+                          </div>
+                          {/* Risk badge */}
+                          {riskLevel && riskLevel !== 'LOW' && (
+                            <div className="mt-1">
+                              <RiskBadge level={riskLevel} />
+                            </div>
+                          )}
+                          {/* Tags */}
+                          {order.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {order.tags.slice(0, 3).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1f2d4e] text-[#6b7280]"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              {order.tags.length > 3 && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1f2d4e] text-[#4b5563]">
+                                  +{order.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </td>
 
                         {/* Customer */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <p className="text-[#e5e7eb] text-sm">{customerDisplay}</p>
+                          {order.customer?.email && customerName && (
+                            <p className="text-[#4b5563] text-xs mt-0.5 truncate max-w-[160px]">
+                              {order.customer.email}
+                            </p>
+                          )}
                         </td>
 
                         {/* Date */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <span
                             className="text-[#9ca3af] text-sm cursor-default"
                             title={new Date(order.createdAt).toLocaleString()}
@@ -364,25 +546,30 @@ export default function OrdersPage() {
                           </span>
                         </td>
 
+                        {/* Items */}
+                        <td className="px-4 py-4 text-center">
+                          <span className="text-[#9ca3af] text-sm">{itemCount}</span>
+                        </td>
+
                         {/* Total */}
-                        <td className="px-5 py-4 text-right">
+                        <td className="px-4 py-4 text-right">
                           <span className="text-[#e5e7eb] text-sm font-medium">
-                            {formatCurrency(total.amount, total.currencyCode)}
+                            {formatCurrency(money.amount, money.currencyCode)}
                           </span>
                         </td>
 
                         {/* Payment */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <PaymentBadge status={order.displayFinancialStatus} />
                         </td>
 
                         {/* Fulfillment */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <FulfillmentBadge status={order.displayFulfillmentStatus} />
                         </td>
 
                         {/* Actions */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <div className="flex items-center justify-end">
                             <Link
                               href={`/admin/orders/${numericId}`}
@@ -403,7 +590,7 @@ export default function OrdersPage() {
         )}
 
         {/* Load more */}
-        {!loading && !error && hasMore && filtered.length > 0 && (
+        {!loading && !error && hasMore && sorted.length > 0 && (
           <div className="border-t border-[#1f2d4e] p-4 flex justify-center">
             <button
               onClick={loadMore}

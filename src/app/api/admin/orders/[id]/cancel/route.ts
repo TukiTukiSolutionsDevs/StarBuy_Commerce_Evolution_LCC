@@ -31,6 +31,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       reason: string;
       restock: boolean;
       refund: boolean;
+      notifyCustomer?: boolean;
     };
 
     const result = await cancelOrder(id, body.reason, body.restock, body.refund);

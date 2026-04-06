@@ -24,10 +24,25 @@ export type ProductInventory = {
   variants: Array<{
     variantId: string;
     variantTitle: string;
+    sku: string;
+    barcode: string | null;
     inventoryItemId: string;
+    tracked: boolean;
     levels: InventoryLevel[];
   }>;
 };
+
+export type InventoryAdjustmentReason =
+  | 'correction'
+  | 'cycle_count_available'
+  | 'damaged'
+  | 'promotion_or_exchange'
+  | 'received'
+  | 'restock'
+  | 'safety_stock'
+  | 'shrinkage'
+  | 'quality_control'
+  | 'other';
 
 // ─── Get Inventory Levels ──────────────────────────────────────────────────────
 
@@ -43,8 +58,11 @@ export async function getInventoryLevels(productId: string): Promise<ProductInve
             node {
               id
               title
+              sku
+              barcode
               inventoryItem {
                 id
+                tracked
                 inventoryLevels(first: 10) {
                   edges {
                     node {
@@ -52,7 +70,7 @@ export async function getInventoryLevels(productId: string): Promise<ProductInve
                         id
                         name
                       }
-                      quantities(names: ["available", "on_hand", "committed"]) {
+                      quantities(names: ["available", "on_hand", "committed", "incoming"]) {
                         name
                         quantity
                       }
@@ -75,8 +93,11 @@ export async function getInventoryLevels(productId: string): Promise<ProductInve
           node: {
             id: string;
             title: string;
+            sku: string;
+            barcode: string | null;
             inventoryItem: {
               id: string;
+              tracked: boolean;
               inventoryLevels: {
                 edges: Array<{
                   node: InventoryLevel;
@@ -98,7 +119,10 @@ export async function getInventoryLevels(productId: string): Promise<ProductInve
     variants: data.product.variants.edges.map((e) => ({
       variantId: e.node.id,
       variantTitle: e.node.title,
+      sku: e.node.sku ?? '',
+      barcode: e.node.barcode ?? null,
       inventoryItemId: e.node.inventoryItem.id,
+      tracked: e.node.inventoryItem.tracked,
       levels: e.node.inventoryItem.inventoryLevels.edges.map((l) => l.node),
     })),
   };
@@ -116,6 +140,7 @@ export async function setInventoryByItemId(
   locationId: string,
   value: number,
   mode: 'set' | 'adjust' = 'set',
+  reason: InventoryAdjustmentReason = 'correction',
 ): Promise<{ success: boolean; message: string }> {
   const itemGid = inventoryItemId.startsWith('gid://')
     ? inventoryItemId
@@ -147,7 +172,7 @@ export async function setInventoryByItemId(
       variables: {
         input: {
           name: 'available',
-          reason: 'correction',
+          reason,
           changes: [
             {
               inventoryItemId: itemGid,
@@ -194,7 +219,7 @@ export async function setInventoryByItemId(
     variables: {
       input: {
         name: 'available',
-        reason: 'correction',
+        reason,
         quantities: [
           {
             inventoryItemId: itemGid,

@@ -31,9 +31,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       trackingNumber?: string;
       trackingUrl?: string;
       company?: string;
+      notifyCustomer?: boolean;
     };
 
-    const result = await createFulfillment(id, body.trackingNumber, body.trackingUrl, body.company);
+    const result = await createFulfillment(
+      id,
+      body.trackingNumber,
+      body.trackingUrl,
+      body.company,
+      body.notifyCustomer ?? true,
+    );
 
     if (result.userErrors.length > 0) {
       return Response.json(

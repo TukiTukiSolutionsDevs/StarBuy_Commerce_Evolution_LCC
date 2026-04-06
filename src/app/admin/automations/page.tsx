@@ -7,7 +7,7 @@
  * automation rules. Matches the Activity page design language.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useToast } from '@/components/ui/useToast';
 import type {
   AutomationRule,
@@ -675,6 +675,7 @@ export default function AutomationsPage() {
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
 
   // Modal state
   const [modalRule, setModalRule] = useState<Partial<AutomationRule> | null>(null);
@@ -773,6 +774,17 @@ export default function AutomationsPage() {
 
   const enabledCount = rules.filter((r) => r.enabled).length;
 
+  const filteredRules = useMemo(() => {
+    if (!search.trim()) return rules;
+    const q = search.toLowerCase();
+    return rules.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q) ||
+        r.trigger.type.toLowerCase().includes(q),
+    );
+  }, [rules, search]);
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-5">
       {/* ── Header ───────────────────────────────────────────────────── */}
@@ -798,6 +810,28 @@ export default function AutomationsPage() {
           <span className="material-symbols-outlined text-lg">add</span>
           New Rule
         </button>
+      </div>
+
+      {/* ── Search ───────────────────────────────────────────────────── */}
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-lg pointer-events-none">
+          search
+        </span>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search rules by name, description, or trigger…"
+          className="w-full bg-[#111827] border border-[#1f2d4e] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#9ca3af] transition-colors"
+          >
+            <span className="material-symbols-outlined text-base">close</span>
+          </button>
+        )}
       </div>
 
       {/* ── Stats summary ────────────────────────────────────────────── */}
@@ -857,8 +891,21 @@ export default function AutomationsPage() {
               Create First Rule
             </button>
           </div>
+        ) : filteredRules.length === 0 ? (
+          <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl flex flex-col items-center justify-center py-16 text-center px-6">
+            <span className="material-symbols-outlined text-[#1f2d4e] text-5xl mb-4">
+              search_off
+            </span>
+            <p className="text-[#6b7280] text-sm font-medium">No rules match your search</p>
+            <button
+              onClick={() => setSearch('')}
+              className="mt-3 text-[#d4a843] text-xs hover:underline"
+            >
+              Clear search
+            </button>
+          </div>
         ) : (
-          rules.map((rule) => (
+          filteredRules.map((rule) => (
             <RuleCard
               key={rule.id}
               rule={rule}

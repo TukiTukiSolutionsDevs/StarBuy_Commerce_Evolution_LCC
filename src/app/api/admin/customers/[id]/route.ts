@@ -63,6 +63,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       phone?: string;
       tags?: string[];
       note?: string;
+      acceptsMarketing?: boolean;
     };
 
     const result = await updateCustomer(id, body);

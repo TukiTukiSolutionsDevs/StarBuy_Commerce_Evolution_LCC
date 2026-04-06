@@ -431,7 +431,15 @@ export const createDiscountTool = tool({
     }),
   ),
   execute: async (input) => {
-    return await discounts.createDiscountCode(input);
+    return await discounts.createDiscountCode({
+      title: input.title,
+      code: input.code,
+      type: 'percentage',
+      value: input.percentage,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      usageLimit: input.usageLimit,
+    });
   },
 });
 

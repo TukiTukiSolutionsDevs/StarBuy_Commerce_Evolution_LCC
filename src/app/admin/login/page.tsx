@@ -7,6 +7,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,17 +77,24 @@ export default function AdminLoginPage() {
                 <input
                   ref={inputRef}
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
                   autoFocus
-                  className="w-full bg-[#0f1729] border border-[#1f2d4e] text-white placeholder-[#374151] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] transition-colors"
+                  className="w-full bg-[#0f1729] border border-[#1f2d4e] text-white placeholder-[#374151] rounded-xl px-4 pr-10 py-3 text-sm focus:outline-none focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] transition-colors"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-xl">
-                  lock
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#9ca3af] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-xl">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
               </div>
             </div>
 

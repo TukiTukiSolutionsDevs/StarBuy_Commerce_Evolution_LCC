@@ -42,10 +42,12 @@ export async function GET(request: NextRequest) {
 type CreateDiscountBody = {
   title: string;
   code: string;
-  percentage: number;
+  type: 'percentage' | 'fixed';
+  value: number;
   startsAt?: string;
   endsAt?: string;
   usageLimit?: number;
+  onePerCustomer?: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -62,17 +64,22 @@ export async function POST(request: NextRequest) {
     if (!body.code?.trim()) {
       return Response.json({ error: 'Code is required' }, { status: 400 });
     }
-    if (typeof body.percentage !== 'number' || body.percentage < 1 || body.percentage > 100) {
+    if (typeof body.value !== 'number' || body.value <= 0) {
+      return Response.json({ error: 'Value must be a positive number' }, { status: 400 });
+    }
+    if (body.type === 'percentage' && (body.value < 1 || body.value > 100)) {
       return Response.json({ error: 'Percentage must be between 1 and 100' }, { status: 400 });
     }
 
     const result = await createDiscountCode({
       title: body.title.trim(),
       code: body.code.trim().toUpperCase(),
-      percentage: body.percentage,
+      type: body.type ?? 'percentage',
+      value: body.value,
       startsAt: body.startsAt,
       endsAt: body.endsAt,
       usageLimit: body.usageLimit,
+      onePerCustomer: body.onePerCustomer,
     });
 
     if (result.userErrors.length > 0) {

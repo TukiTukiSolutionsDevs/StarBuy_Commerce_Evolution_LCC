@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
         appliedDisjunctively: boolean;
         rules: Array<{ column: string; relation: string; condition: string }>;
       };
+      seo?: { title: string; description: string };
+      sortOrder?: string;
     };
 
     if (!body.title) {
@@ -59,6 +61,8 @@ export async function POST(request: NextRequest) {
       descriptionHtml: body.descriptionHtml,
       image: body.image,
       ruleSet: body.ruleSet,
+      seo: body.seo,
+      sortOrder: body.sortOrder,
     });
 
     if (result.userErrors.length > 0) {

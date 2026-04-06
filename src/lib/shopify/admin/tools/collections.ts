@@ -15,9 +15,17 @@ export type AdminCollection = {
   title: string;
   handle: string;
   description: string;
+  descriptionHtml: string;
   productsCount: { count: number };
   image: { url: string; altText: string | null } | null;
   updatedAt: string;
+  // NEW fields
+  sortOrder: string;
+  ruleSet: {
+    appliedDisjunctively: boolean;
+    rules: Array<{ column: string; relation: string; condition: string }>;
+  } | null;
+  seo: { title: string | null; description: string | null };
 };
 
 // ─── List Collections ──────────────────────────────────────────────────────────
@@ -32,9 +40,24 @@ export async function listCollections(limit: number = 20): Promise<AdminCollecti
             title
             handle
             description
+            descriptionHtml
             productsCount { count }
             image { url altText }
             updatedAt
+            sortOrder
+            ruleSet {
+              appliedDisjunctively
+              rules {
+                column
+                relation
+                condition
+              }
+            }
+            seo {
+              title
+              description
+            }
+            
           }
         }
       }
@@ -142,6 +165,8 @@ export type CollectionInput = {
     appliedDisjunctively: boolean;
     rules: Array<{ column: string; relation: string; condition: string }>;
   };
+  seo?: { title: string; description: string };
+  sortOrder?: string;
 };
 
 export async function createCollection(
@@ -155,9 +180,17 @@ export async function createCollection(
           title
           handle
           description
+          descriptionHtml
           productsCount { count }
           image { url altText }
           updatedAt
+          sortOrder
+          ruleSet {
+            appliedDisjunctively
+            rules { column relation condition }
+          }
+          seo { title description }
+          publishedOnCurrentPublication
         }
         userErrors { field message }
       }
@@ -188,6 +221,8 @@ export type CollectionUpdateInput = {
     appliedDisjunctively: boolean;
     rules: Array<{ column: string; relation: string; condition: string }>;
   };
+  seo?: { title: string; description: string };
+  sortOrder?: string;
 };
 
 export async function updateCollection(
@@ -201,9 +236,17 @@ export async function updateCollection(
           title
           handle
           description
+          descriptionHtml
           productsCount { count }
           image { url altText }
           updatedAt
+          sortOrder
+          ruleSet {
+            appliedDisjunctively
+            rules { column relation condition }
+          }
+          seo { title description }
+          publishedOnCurrentPublication
         }
         userErrors { field message }
       }

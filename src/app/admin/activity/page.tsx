@@ -5,9 +5,10 @@
  *
  * Real-time log of all webhook events, user actions, automations, and system events.
  * Auto-refreshes every 30s. Events are expandable for JSON details.
+ * Features: search, date range filter, per-type stats, clear.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useToast } from '@/components/ui/useToast';
 import type { ActivityEvent } from '@/lib/webhooks/activity-log';
 
@@ -49,9 +50,29 @@ function formatTopicBadge(topic: string): string {
 
 // ─── Event Row ─────────────────────────────────────────────────────────────────
 
-function EventRow({ event }: { event: ActivityEvent }) {
+function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
   const [expanded, setExpanded] = useState(false);
   const color = SEVERITY_COLORS[event.severity] ?? '#6b7280';
+
+  // Highlight matching text in summary
+  function highlightText(text: string) {
+    if (!query.trim()) return <span>{text}</span>;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    return (
+      <>
+        {parts.map((part, i) =>
+          regex.test(part) ? (
+            <mark key={i} className="bg-[#d4a843]/25 text-[#d4a843] rounded px-0.5">
+              {part}
+            </mark>
+          ) : (
+            <span key={i}>{part}</span>
+          ),
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="border-b border-[#1f2d4e] last:border-b-0">
@@ -71,7 +92,7 @@ function EventRow({ event }: { event: ActivityEvent }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-[#e5e7eb] text-sm leading-snug">{event.summary}</p>
+          <p className="text-[#e5e7eb] text-sm leading-snug">{highlightText(event.summary)}</p>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {/* Topic badge */}
             <span
@@ -146,6 +167,11 @@ export default function ActivityPage() {
   const [clearing, setClearing] = useState(false);
   const [activeType, setActiveType] = useState<string>('');
 
+  // ── Search & date filter state ─────────────────────────────────────────────
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
   const fetchEvents = useCallback(async () => {
@@ -196,6 +222,77 @@ export default function ActivityPage() {
     }
   }
 
+  // ── Client-side filtering (search + date) ─────────────────────────────────
+
+  const filtered = useMemo(() => {
+    let result = events;
+
+    // Search filter
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (e) =>
+          e.summary.toLowerCase().includes(q) ||
+          e.topic.toLowerCase().includes(q) ||
+          e.type.toLowerCase().includes(q),
+      );
+    }
+
+    // Date from
+    if (dateFrom) {
+      const from = new Date(dateFrom).getTime();
+      result = result.filter((e) => e.timestamp >= from);
+    }
+
+    // Date to — include the whole "to" day
+    if (dateTo) {
+      const to = new Date(dateTo).getTime() + 86_400_000 - 1;
+      result = result.filter((e) => e.timestamp <= to);
+    }
+
+    return result;
+  }, [events, search, dateFrom, dateTo]);
+
+  // ── Per-type counts for stats ──────────────────────────────────────────────
+
+  const stats = useMemo(() => {
+    const all = events;
+    return [
+      {
+        label: 'Total',
+        value: all.length,
+        icon: 'all_inbox',
+        color: '#9ca3af',
+      },
+      {
+        label: 'Webhooks',
+        value: all.filter((e) => e.type === 'webhook').length,
+        icon: 'webhook',
+        color: '#6b8cff',
+      },
+      {
+        label: 'User Actions',
+        value: all.filter((e) => e.type === 'user_action').length,
+        icon: 'person',
+        color: '#10b981',
+      },
+      {
+        label: 'Automations',
+        value: all.filter((e) => e.type === 'automation').length,
+        icon: 'smart_toy',
+        color: '#d4a843',
+      },
+      {
+        label: 'Errors',
+        value: all.filter((e) => e.severity === 'error').length,
+        icon: 'error',
+        color: '#ef4444',
+      },
+    ];
+  }, [events]);
+
+  const hasFilters = search.trim() || dateFrom || dateTo;
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
@@ -210,7 +307,11 @@ export default function ActivityPage() {
             Activity Feed
           </h1>
           <p className="text-[#6b7280] text-sm mt-1">
-            {loading ? 'Loading…' : `${events.length} event${events.length !== 1 ? 's' : ''}`}
+            {loading
+              ? 'Loading…'
+              : hasFilters
+                ? `${filtered.length} of ${events.length} event${events.length !== 1 ? 's' : ''}`
+                : `${events.length} event${events.length !== 1 ? 's' : ''}`}
           </p>
         </div>
 
@@ -245,6 +346,26 @@ export default function ActivityPage() {
         </div>
       </div>
 
+      {/* ── Stats row ────────────────────────────────────────────────── */}
+      {!loading && events.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-[#111827] border border-[#1f2d4e] rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+            >
+              <span className="material-symbols-outlined text-lg" style={{ color: stat.color }}>
+                {stat.icon}
+              </span>
+              <div>
+                <p className="text-white text-base font-bold leading-none">{stat.value}</p>
+                <p className="text-[#6b7280] text-[10px] font-medium mt-0.5">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Filter bar ───────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
         {FILTER_TABS.map(({ value, label, icon }) => (
@@ -263,22 +384,106 @@ export default function ActivityPage() {
         ))}
       </div>
 
+      {/* ── Search + Date range ──────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        {/* Search */}
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-lg pointer-events-none">
+            search
+          </span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search events, topics…"
+            className="w-full bg-[#111827] border border-[#1f2d4e] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#9ca3af] transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">close</span>
+            </button>
+          )}
+        </div>
+
+        {/* Date from */}
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-base pointer-events-none">
+            calendar_today
+          </span>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            title="From date"
+            className="bg-[#111827] border border-[#1f2d4e] rounded-xl pl-9 pr-3 py-2.5 text-sm text-[#9ca3af] focus:outline-none focus:border-[#d4a843]/50 transition-colors w-40 [color-scheme:dark]"
+          />
+        </div>
+
+        {/* Date to */}
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-base pointer-events-none">
+            event
+          </span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            title="To date"
+            className="bg-[#111827] border border-[#1f2d4e] rounded-xl pl-9 pr-3 py-2.5 text-sm text-[#9ca3af] focus:outline-none focus:border-[#d4a843]/50 transition-colors w-40 [color-scheme:dark]"
+          />
+        </div>
+
+        {/* Clear filters */}
+        {hasFilters && (
+          <button
+            onClick={() => {
+              setSearch('');
+              setDateFrom('');
+              setDateTo('');
+            }}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] rounded-xl text-sm text-[#6b7280] hover:text-[#9ca3af] transition-all"
+          >
+            <span className="material-symbols-outlined text-base">filter_alt_off</span>
+            Clear
+          </button>
+        )}
+      </div>
+
       {/* ── Event list ───────────────────────────────────────────────── */}
       <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => <SkeletonEvent key={i} />)
-        ) : events.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-6">
             <span className="material-symbols-outlined text-[#1f2d4e] text-5xl mb-4">
-              notifications_active
+              {hasFilters ? 'search_off' : 'notifications_active'}
             </span>
-            <p className="text-[#6b7280] text-sm font-medium">No activity yet</p>
-            <p className="text-[#374151] text-xs mt-1 max-w-sm">
-              Events will appear here when webhooks arrive or actions are performed in the admin.
+            <p className="text-[#6b7280] text-sm font-medium">
+              {hasFilters ? 'No events match your filters' : 'No activity yet'}
             </p>
+            <p className="text-[#374151] text-xs mt-1 max-w-sm">
+              {hasFilters
+                ? 'Try adjusting your search or date range.'
+                : 'Events will appear here when webhooks arrive or actions are performed in the admin.'}
+            </p>
+            {hasFilters && (
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setDateFrom('');
+                  setDateTo('');
+                }}
+                className="mt-4 text-[#d4a843] text-xs hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
-          events.map((event) => <EventRow key={event.id} event={event} />)
+          filtered.map((event) => <EventRow key={event.id} event={event} query={search} />)
         )}
       </div>
 

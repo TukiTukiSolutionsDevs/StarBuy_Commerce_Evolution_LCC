@@ -3,13 +3,14 @@
 /**
  * Admin Customer Profile Page
  *
- * Full customer detail with editable tags, contact info, address, and stats.
+ * Full customer detail: contact info, editable notes, marketing consent toggle,
+ * addresses, tags manager, purchase stats, quick actions.
  */
 
 import { use, useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/useToast';
-import type { AdminCustomer } from '@/lib/shopify/admin/tools/customers';
+import type { AdminCustomer, AdminAddress } from '@/lib/shopify/admin/tools/customers';
 
 // ─── Types ───────────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,18 @@ function formatDate(iso: string): string {
     day: 'numeric',
     year: 'numeric',
   }).format(new Date(iso));
+}
+
+function formatAddressLine(addr: AdminAddress): string {
+  const parts = [
+    addr.address1,
+    addr.address2,
+    addr.city,
+    addr.province,
+    addr.zip,
+    addr.country,
+  ].filter(Boolean);
+  return parts.join(', ') || '—';
 }
 
 // ─── State Badge ──────────────────────────────────────────────────────────────────
@@ -205,7 +218,7 @@ function TagsManager({
             }
           }}
           placeholder="Add a tag…"
-          className="flex-1 bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2 text-xs outline-none transition-colors"
+          className="flex-1 bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2 text-xs outline-none transition-colors"
         />
         <button
           onClick={addTag}
@@ -238,6 +251,174 @@ function TagsManager({
           )}
         </button>
       )}
+    </div>
+  );
+}
+
+// ─── Notes Editor ─────────────────────────────────────────────────────────────────
+
+function NotesEditor({
+  initial,
+  customerId,
+  onSuccess,
+}: {
+  initial: string | null;
+  customerId: string;
+  onSuccess: (note: string) => void;
+}) {
+  const { toast } = useToast();
+  const [note, setNote] = useState(initial ?? '');
+  const [saving, setSaving] = useState(false);
+  const dirty = note !== (initial ?? '');
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${customerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note }),
+      });
+      const data = (await res.json()) as { customer?: AdminCustomer; error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Save failed');
+      onSuccess(note);
+      toast.success('Note updated');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save note');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Add a note about this customer…"
+        rows={4}
+        className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2.5 text-sm outline-none transition-colors resize-none"
+      />
+      {dirty && (
+        <button
+          onClick={save}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] text-[#0a0f1e] font-semibold rounded-xl py-2 text-xs transition-colors"
+        >
+          {saving ? (
+            <>
+              <span className="material-symbols-outlined text-sm animate-spin">
+                progress_activity
+              </span>
+              Saving…
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-sm">save</span>
+              Save Note
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Marketing Toggle ─────────────────────────────────────────────────────────────
+
+function MarketingToggle({
+  initial,
+  customerId,
+  onSuccess,
+}: {
+  initial: boolean;
+  customerId: string;
+  onSuccess: (val: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [value, setValue] = useState(initial);
+  const [saving, setSaving] = useState(false);
+
+  async function toggle() {
+    const next = !value;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${customerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acceptsMarketing: next }),
+      });
+      const data = (await res.json()) as { customer?: AdminCustomer; error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Update failed');
+      setValue(next);
+      onSuccess(next);
+      toast.success(next ? 'Customer subscribed to marketing' : 'Customer unsubscribed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update marketing preference');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-[#e5e7eb] text-sm font-medium">
+          {value ? 'Subscribed' : 'Not subscribed'}
+        </p>
+        <p className="text-[#6b7280] text-xs mt-0.5">
+          {value
+            ? 'Customer receives marketing emails'
+            : 'Customer does not receive marketing emails'}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        onClick={toggle}
+        disabled={saving}
+        className={`relative w-11 h-6 rounded-full transition-colors flex-none disabled:opacity-50 ${
+          value ? 'bg-[#10b981]' : 'bg-[#1f2d4e]'
+        }`}
+      >
+        {saving ? (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="material-symbols-outlined text-xs text-white animate-spin">
+              progress_activity
+            </span>
+          </span>
+        ) : (
+          <span
+            className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+              value ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ─── Address Card ─────────────────────────────────────────────────────────────────
+
+function AddressBlock({ address, isDefault }: { address: AdminAddress; isDefault?: boolean }) {
+  const name = [address.firstName, address.lastName].filter(Boolean).join(' ');
+  return (
+    <div
+      className={`rounded-xl p-3 border ${
+        isDefault ? 'border-[#d4a843]/40 bg-[#d4a843]/5' : 'border-[#1f2d4e] bg-[#0a0f1e]/50'
+      }`}
+    >
+      {isDefault && (
+        <span className="text-[#d4a843] text-[10px] font-semibold uppercase tracking-wider mb-1 block">
+          Default
+        </span>
+      )}
+      {name && <p className="text-[#e5e7eb] text-xs font-medium">{name}</p>}
+      {address.company && <p className="text-[#9ca3af] text-xs">{address.company}</p>}
+      <p className="text-[#9ca3af] text-xs mt-0.5">{formatAddressLine(address)}</p>
+      {address.phone && <p className="text-[#9ca3af] text-xs mt-0.5">{address.phone}</p>}
     </div>
   );
 }
@@ -305,10 +486,16 @@ export default function CustomerProfilePage({ params }: PageProps) {
     ? [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.email
     : '';
 
+  // Deduplicate addresses — defaultAddress may already be in addresses[]
+  const allAddresses = customer?.addresses ?? [];
+  const extraAddresses = customer?.defaultAddress
+    ? allAddresses.filter((a) => a.id !== customer.defaultAddress?.id)
+    : allAddresses;
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <Link
           href="/admin/customers"
           className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#111827] border border-[#1f2d4e] text-[#6b7280] hover:text-white hover:border-[#374151] transition-all"
@@ -345,7 +532,16 @@ export default function CustomerProfilePage({ params }: PageProps) {
         )}
 
         {customer && (
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            {customer.acceptsMarketing && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-medium px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: '#10b98118', color: '#10b981' }}
+              >
+                <span className="material-symbols-outlined text-xs">mark_email_read</span>
+                Marketing
+              </span>
+            )}
             <StateBadge state={customer.state} />
           </div>
         )}
@@ -359,7 +555,7 @@ export default function CustomerProfilePage({ params }: PageProps) {
           <Card title="Contact Info" icon="contact_page">
             {loading ? (
               <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
+                {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="flex justify-between py-2 border-b border-[#1f2d4e]/50">
                     <Skeleton className="w-16 h-3" />
                     <Skeleton className="w-32 h-3" />
@@ -387,32 +583,45 @@ export default function CustomerProfilePage({ params }: PageProps) {
                   }
                 />
                 <InfoRow label="Phone" value={customer.phone ?? '—'} />
-                <InfoRow label="Member since" value={formatDate(customer.createdAt)} />
+                <InfoRow label="Customer since" value={formatDate(customer.createdAt)} />
                 <InfoRow label="Last updated" value={formatDate(customer.updatedAt)} />
               </div>
             ) : null}
           </Card>
 
-          {/* Default Address */}
-          <Card title="Default Address" icon="location_on">
+          {/* Addresses */}
+          <Card title="Addresses" icon="location_on">
             {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex justify-between py-2 border-b border-[#1f2d4e]/50">
-                    <Skeleton className="w-16 h-3" />
-                    <Skeleton className="w-32 h-3" />
-                  </div>
-                ))}
+              <div className="space-y-2">
+                <Skeleton className="h-20 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
               </div>
             ) : customer?.defaultAddress ? (
-              <div>
-                <InfoRow label="Street" value={customer.defaultAddress.address1 ?? '—'} />
-                <InfoRow label="City" value={customer.defaultAddress.city ?? '—'} />
-                <InfoRow label="Country" value={customer.defaultAddress.country ?? '—'} />
+              <div className="space-y-2">
+                <AddressBlock address={customer.defaultAddress} isDefault />
+                {extraAddresses.map((addr) => (
+                  <AddressBlock key={addr.id} address={addr} />
+                ))}
+                {allAddresses.length === 0 && extraAddresses.length === 0 && (
+                  <p className="text-[#374151] text-xs italic">No additional addresses</p>
+                )}
               </div>
             ) : (
               <p className="text-[#374151] text-xs italic">No address on file</p>
             )}
+          </Card>
+
+          {/* Notes */}
+          <Card title="Notes" icon="sticky_note_2">
+            {loading ? (
+              <Skeleton className="h-24 rounded-xl" />
+            ) : customer ? (
+              <NotesEditor
+                initial={customer.note}
+                customerId={id}
+                onSuccess={(note) => setCustomer((prev) => (prev ? { ...prev, note } : prev))}
+              />
+            ) : null}
           </Card>
 
           {/* Tags */}
@@ -457,13 +666,15 @@ export default function CustomerProfilePage({ params }: PageProps) {
                 <InfoRow
                   label="Orders placed"
                   value={
-                    <span className="text-[#d4a843] font-semibold">{customer.ordersCount}</span>
+                    <span className="font-semibold" style={{ color: '#d4a843' }}>
+                      {customer.ordersCount}
+                    </span>
                   }
                 />
                 <InfoRow
                   label="Total spent"
                   value={
-                    <span className="text-[#10b981] font-semibold">
+                    <span className="font-semibold" style={{ color: '#10b981' }}>
                       {formatMoney(
                         customer.totalSpentV2.amount,
                         customer.totalSpentV2.currencyCode,
@@ -476,6 +687,27 @@ export default function CustomerProfilePage({ params }: PageProps) {
                   value={customer.ordersCount > 1 ? 'Returning' : 'New'}
                 />
               </div>
+            ) : null}
+          </Card>
+
+          {/* Email Marketing */}
+          <Card title="Email Marketing" icon="mark_email_read">
+            {loading ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="w-24 h-3" />
+                  <Skeleton className="w-40 h-2.5" />
+                </div>
+                <Skeleton className="w-11 h-6 rounded-full" />
+              </div>
+            ) : customer ? (
+              <MarketingToggle
+                initial={customer.acceptsMarketing}
+                customerId={id}
+                onSuccess={(val) =>
+                  setCustomer((prev) => (prev ? { ...prev, acceptsMarketing: val } : prev))
+                }
+              />
             ) : null}
           </Card>
 

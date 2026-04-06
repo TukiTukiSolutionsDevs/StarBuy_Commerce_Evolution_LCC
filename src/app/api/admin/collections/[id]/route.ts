@@ -31,6 +31,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         appliedDisjunctively: boolean;
         rules: Array<{ column: string; relation: string; condition: string }>;
       };
+      seo?: { title: string; description: string };
+      sortOrder?: string;
     };
 
     // Ensure id is GID format

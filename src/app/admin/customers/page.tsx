@@ -3,7 +3,7 @@
 /**
  * Admin Customers Page
  *
- * Full customer management: search, stats, sortable table, customer profiles.
+ * Full customer management: search, filters, stats, sortable table, create modal.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -15,6 +15,7 @@ import type { AdminCustomer } from '@/lib/shopify/admin/tools/customers';
 
 type SortField = 'name' | 'ordersCount' | 'totalSpent' | 'createdAt';
 type SortDir = 'asc' | 'desc';
+type FilterType = 'all' | 'new' | 'returning' | 'has_orders' | 'no_orders' | 'subscribed';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────────
 
@@ -72,8 +73,8 @@ function StateBadge({ state }: { state: string }) {
 
 function TagsCell({ tags }: { tags: string[] }) {
   if (tags.length === 0) return <span className="text-[#374151] text-xs">—</span>;
-  const visible = tags.slice(0, 3);
-  const extra = tags.length - 3;
+  const visible = tags.slice(0, 2);
+  const extra = tags.length - 2;
   return (
     <div className="flex flex-wrap gap-1">
       {visible.map((t) => (
@@ -175,7 +176,9 @@ function StatCard({
       </div>
       <div>
         <p className="text-[#6b7280] text-xs">{label}</p>
-        <p className="text-white font-semibold text-sm mt-0.5">{value}</p>
+        <p className="font-semibold text-sm mt-0.5" style={{ color: '#ffffff' }}>
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -211,13 +214,18 @@ function DeleteModal({
             <span className="material-symbols-outlined text-[#ef4444] text-xl">person_remove</span>
           </div>
           <div>
-            <p className="text-white font-semibold">Delete Customer</p>
+            <p style={{ color: '#ffffff' }} className="font-semibold">
+              Delete Customer
+            </p>
             <p className="text-[#6b7280] text-xs">This action cannot be undone</p>
           </div>
         </div>
         <p className="text-[#9ca3af] text-sm mb-6">
           Are you sure you want to delete{' '}
-          <span className="text-white font-medium">&ldquo;{name}&rdquo;</span>?
+          <span style={{ color: '#ffffff' }} className="font-medium">
+            &ldquo;{name}&rdquo;
+          </span>
+          ?
         </p>
         <div className="flex gap-3">
           <button
@@ -252,6 +260,268 @@ function DeleteModal({
   );
 }
 
+// ─── Create Customer Modal ────────────────────────────────────────────────────────
+
+function CreateCustomerModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    note: '',
+    acceptsMarketing: false,
+    tags: '',
+  });
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  function handleChange(field: keyof typeof form, value: string | boolean) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.email.trim()) {
+      toast.error('Email is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const tags = form.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const res = await fetch('/api/admin/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: form.firstName.trim() || undefined,
+          lastName: form.lastName.trim() || undefined,
+          email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+          note: form.note.trim() || undefined,
+          acceptsMarketing: form.acceptsMarketing,
+          tags: tags.length > 0 ? tags : undefined,
+        }),
+      });
+      const data = (await res.json()) as { customer?: AdminCustomer; error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create');
+      const name = [form.firstName, form.lastName].filter(Boolean).join(' ') || form.email;
+      toast.success(`Customer "${name}" created`);
+      onCreated();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create customer');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const labelClass = 'block text-[#9ca3af] text-xs font-medium mb-1.5';
+  const inputClass =
+    'w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2.5 text-sm outline-none transition-colors';
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg shadow-2xl shadow-black/60 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#d4a843]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#d4a843] text-base">person_add</span>
+            </div>
+            <h2
+              className="font-semibold text-base"
+              style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+            >
+              Add Customer
+            </h2>
+          </div>
+          <button onClick={onClose} className="text-[#6b7280] hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Name row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>First name</label>
+              <input
+                value={form.firstName}
+                onChange={(e) => handleChange('firstName', e.target.value)}
+                placeholder="Jane"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Last name</label>
+              <input
+                value={form.lastName}
+                onChange={(e) => handleChange('lastName', e.target.value)}
+                placeholder="Doe"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className={labelClass}>
+              Email <span className="text-[#ef4444]">*</span>
+            </label>
+            <input
+              type="email"
+              required
+              value={form.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              placeholder="jane@example.com"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label className={labelClass}>Phone</label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              placeholder="+1 555 000 0000"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className={labelClass}>Tags (comma-separated)</label>
+            <input
+              value={form.tags}
+              onChange={(e) => handleChange('tags', e.target.value)}
+              placeholder="vip, wholesale, influencer"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Note */}
+          <div>
+            <label className={labelClass}>Note</label>
+            <textarea
+              value={form.note}
+              onChange={(e) => handleChange('note', e.target.value)}
+              placeholder="Internal note about this customer…"
+              rows={3}
+              className={`${inputClass} resize-none`}
+            />
+          </div>
+
+          {/* Marketing consent */}
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.acceptsMarketing}
+              onClick={() => handleChange('acceptsMarketing', !form.acceptsMarketing)}
+              className={`relative w-10 h-5 rounded-full transition-colors flex-none ${
+                form.acceptsMarketing ? 'bg-[#10b981]' : 'bg-[#1f2d4e]'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  form.acceptsMarketing ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            <span className="text-[#9ca3af] text-sm">Customer accepts email marketing</span>
+          </label>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || !form.email.trim()}
+              className="flex-1 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:text-[#6b7280] text-[#0a0f1e] font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <span className="material-symbols-outlined text-base animate-spin">
+                    progress_activity
+                  </span>
+                  Creating…
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-base">person_add</span>
+                  Create Customer
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Filter Pill ──────────────────────────────────────────────────────────────────
+
+function FilterPill({
+  label,
+  active,
+  count,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  count?: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+        active
+          ? 'bg-[#d4a843] text-[#0a0f1e]'
+          : 'bg-[#1f2d4e] text-[#9ca3af] hover:text-white hover:bg-[#263d6e]'
+      }`}
+    >
+      {label}
+      {count !== undefined && (
+        <span
+          className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+            active ? 'bg-[#0a0f1e]/20 text-[#0a0f1e]' : 'bg-[#0a0f1e]/40 text-[#6b7280]'
+          }`}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CustomersPage() {
@@ -263,6 +533,8 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AdminCustomer | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -310,7 +582,31 @@ export default function CustomersPage() {
     }
   }
 
-  const sorted = [...customers].sort((a, b) => {
+  // ── Filter counts ──────────────────────────────────────────────────────────────
+
+  const filterCounts: Record<FilterType, number> = {
+    all: customers.length,
+    new: customers.filter((c) => c.ordersCount <= 1).length,
+    returning: customers.filter((c) => c.ordersCount > 1).length,
+    has_orders: customers.filter((c) => c.ordersCount > 0).length,
+    no_orders: customers.filter((c) => c.ordersCount === 0).length,
+    subscribed: customers.filter((c) => c.acceptsMarketing).length,
+  };
+
+  // ── Apply filter ──────────────────────────────────────────────────────────────
+
+  const filtered = customers.filter((c) => {
+    if (activeFilter === 'new') return c.ordersCount <= 1;
+    if (activeFilter === 'returning') return c.ordersCount > 1;
+    if (activeFilter === 'has_orders') return c.ordersCount > 0;
+    if (activeFilter === 'no_orders') return c.ordersCount === 0;
+    if (activeFilter === 'subscribed') return c.acceptsMarketing;
+    return true;
+  });
+
+  // ── Sort ──────────────────────────────────────────────────────────────────────
+
+  const sorted = [...filtered].sort((a, b) => {
     if (!sortField) return 0;
     let cmp = 0;
     if (sortField === 'name') {
@@ -342,7 +638,7 @@ export default function CustomersPage() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 
-  const returning = customers.filter((c) => c.ordersCount > 1).length;
+  const subscribed = customers.filter((c) => c.acceptsMarketing).length;
 
   const currency = customers[0]?.totalSpentV2.currencyCode ?? 'USD';
   const avgSpentFormatted = new Intl.NumberFormat('en-US', {
@@ -393,6 +689,13 @@ export default function CustomersPage() {
               : `${customers.length} customer${customers.length !== 1 ? 's' : ''}`}
           </p>
         </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#d4a843] hover:bg-[#e4c06a] text-[#0a0f1e] font-semibold text-sm transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">person_add</span>
+          Add Customer
+        </button>
       </div>
 
       {/* Stats Row */}
@@ -405,7 +708,12 @@ export default function CustomersPage() {
           color="#d4a843"
         />
         <StatCard icon="person_add" label="New this month" value={thisMonth} color="#10b981" />
-        <StatCard icon="repeat" label="Returning" value={returning} color="#8b5cf6" />
+        <StatCard
+          icon="mark_email_read"
+          label="Email subscribers"
+          value={subscribed}
+          color="#8b5cf6"
+        />
       </div>
 
       {/* Search */}
@@ -428,6 +736,30 @@ export default function CustomersPage() {
           </button>
         )}
       </div>
+
+      {/* Filters */}
+      {!loading && customers.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { key: 'all', label: 'All' },
+              { key: 'new', label: 'New' },
+              { key: 'returning', label: 'Returning' },
+              { key: 'has_orders', label: 'Has orders' },
+              { key: 'no_orders', label: 'No orders' },
+              { key: 'subscribed', label: 'Subscribed' },
+            ] as { key: FilterType; label: string }[]
+          ).map(({ key, label }) => (
+            <FilterPill
+              key={key}
+              label={label}
+              active={activeFilter === key}
+              count={filterCounts[key]}
+              onClick={() => setActiveFilter(key)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
@@ -473,10 +805,10 @@ export default function CustomersPage() {
                     onSort={toggleSort}
                   />
                   <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Location
+                    Status
                   </th>
                   <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Status
+                    Marketing
                   </th>
                   <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
                     Tags
@@ -497,8 +829,20 @@ export default function CustomersPage() {
                           people
                         </span>
                         <p className="text-[#6b7280] text-sm">
-                          {search ? 'No customers match your search' : 'No customers yet'}
+                          {search
+                            ? 'No customers match your search'
+                            : activeFilter !== 'all'
+                              ? 'No customers match this filter'
+                              : 'No customers yet'}
                         </p>
+                        {activeFilter !== 'all' && (
+                          <button
+                            onClick={() => setActiveFilter('all')}
+                            className="text-[#d4a843] text-xs hover:text-[#e4c06a] transition-colors"
+                          >
+                            Clear filter
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -510,10 +854,6 @@ export default function CustomersPage() {
                     );
                     const fullName =
                       [customer.firstName, customer.lastName].filter(Boolean).join(' ') || '—';
-                    const location =
-                      [customer.defaultAddress?.city, customer.defaultAddress?.country]
-                        .filter(Boolean)
-                        .join(', ') || '—';
                     const numId = extractNumericId(customer.id);
 
                     return (
@@ -528,7 +868,17 @@ export default function CustomersPage() {
                               {initials}
                             </div>
                             <div>
-                              <p className="text-white text-sm font-medium">{fullName}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-white text-sm font-medium">{fullName}</p>
+                                {customer.note && (
+                                  <span
+                                    className="material-symbols-outlined text-[#6b7280] text-sm"
+                                    title="Has note"
+                                  >
+                                    sticky_note_2
+                                  </span>
+                                )}
+                              </div>
                               {customer.phone && (
                                 <p className="text-[#6b7280] text-xs">{customer.phone}</p>
                               )}
@@ -558,14 +908,26 @@ export default function CustomersPage() {
                           </span>
                         </td>
 
-                        {/* Location */}
-                        <td className="px-4 py-4">
-                          <span className="text-[#9ca3af] text-sm">{location}</span>
-                        </td>
-
                         {/* Status */}
                         <td className="px-4 py-4">
                           <StateBadge state={customer.state} />
+                        </td>
+
+                        {/* Marketing consent */}
+                        <td className="px-4 py-4">
+                          {customer.acceptsMarketing ? (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: '#10b98118', color: '#10b981' }}
+                            >
+                              <span className="material-symbols-outlined text-xs">
+                                mark_email_read
+                              </span>
+                              Subscribed
+                            </span>
+                          ) : (
+                            <span className="text-[#374151] text-xs">—</span>
+                          )}
                         </td>
 
                         {/* Tags */}
@@ -609,6 +971,14 @@ export default function CustomersPage() {
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
           loading={deleteLoading}
+        />
+      )}
+
+      {/* Create Customer Modal */}
+      {showCreate && (
+        <CreateCustomerModal
+          onClose={() => setShowCreate(false)}
+          onCreated={() => fetchCustomers(search)}
         />
       )}
     </div>

@@ -10,6 +10,20 @@ import { adminFetch } from '../client';
 
 type UserError = { field: string[] | null; message: string };
 
+export type AdminAddress = {
+  id: string;
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  province: string | null;
+  country: string | null;
+  zip: string | null;
+  phone: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  company: string | null;
+};
+
 export type AdminCustomer = {
   id: string;
   firstName: string | null;
@@ -17,6 +31,8 @@ export type AdminCustomer = {
   email: string;
   phone: string | null;
   tags: string[];
+  note: string | null;
+  acceptsMarketing: boolean;
   numberOfOrders: number;
   amountSpent: { amount: string; currencyCode: string };
   /** @deprecated Alias for numberOfOrders — for backward compatibility */
@@ -27,13 +43,23 @@ export type AdminCustomer = {
   updatedAt: string;
   state: string;
   verifiedEmail: boolean;
-  defaultAddress: {
-    id: string;
-    address1: string | null;
-    city: string | null;
-    country: string | null;
-  } | null;
+  defaultAddress: AdminAddress | null;
+  addresses: AdminAddress[];
 };
+
+const ADDRESS_FIELDS = `
+  id
+  address1
+  address2
+  city
+  province
+  country
+  zip
+  phone
+  firstName
+  lastName
+  company
+`;
 
 const CUSTOMER_FRAGMENT = `
   fragment CustomerFields on Customer {
@@ -43,6 +69,8 @@ const CUSTOMER_FRAGMENT = `
     email
     phone
     tags
+    note
+    acceptsMarketing
     numberOfOrders
     amountSpent { amount currencyCode }
     createdAt
@@ -50,10 +78,14 @@ const CUSTOMER_FRAGMENT = `
     state
     verifiedEmail
     defaultAddress {
-      id
-      address1
-      city
-      country
+      ${ADDRESS_FIELDS}
+    }
+    addresses(first: 10) {
+      edges {
+        node {
+          ${ADDRESS_FIELDS}
+        }
+      }
     }
   }
 `;
@@ -84,12 +116,26 @@ export async function searchCustomers(
   return data.customers.edges.map((e) => mapCustomerCompat(e.node));
 }
 
-/** Add backward-compatible aliases for renamed fields */
+/** Add backward-compatible aliases for renamed fields and flatten addresses */
 function mapCustomerCompat(c: Record<string, unknown>): AdminCustomer {
-  const customer = c as AdminCustomer;
+  const customer = c as AdminCustomer & {
+    addresses?: { edges?: Array<{ node: AdminAddress }> } | AdminAddress[];
+  };
   // API 2026-04 renamed ordersCount → numberOfOrders, totalSpentV2 → amountSpent
   customer.ordersCount = customer.numberOfOrders ?? 0;
   customer.totalSpentV2 = customer.amountSpent ?? { amount: '0', currencyCode: 'USD' };
+
+  // Flatten addresses from GraphQL connection to plain array
+  const rawAddresses = customer.addresses as
+    | { edges?: Array<{ node: AdminAddress }> }
+    | AdminAddress[]
+    | undefined;
+  if (rawAddresses && !Array.isArray(rawAddresses) && rawAddresses.edges) {
+    customer.addresses = rawAddresses.edges.map((e) => e.node);
+  } else if (!customer.addresses) {
+    customer.addresses = [];
+  }
+
   return customer;
 }
 
@@ -123,6 +169,8 @@ type CreateCustomerInput = {
   email: string;
   phone?: string;
   tags?: string[];
+  note?: string;
+  acceptsMarketing?: boolean;
 };
 
 export async function createCustomer(
@@ -152,7 +200,9 @@ export async function createCustomer(
 
 // ─── Update ────────────────────────────────────────────────────────────────────
 
-type UpdateCustomerFields = Partial<Omit<CreateCustomerInput, 'email'> & { email: string }>;
+type UpdateCustomerFields = Partial<
+  Omit<CreateCustomerInput, 'email'> & { email: string; note: string; acceptsMarketing: boolean }
+>;
 
 export async function updateCustomer(
   id: string,

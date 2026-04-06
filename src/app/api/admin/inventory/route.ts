@@ -11,6 +11,7 @@ import {
   getInventoryLevels,
   setInventoryQuantity,
   setInventoryByItemId,
+  type InventoryAdjustmentReason,
 } from '@/lib/shopify/admin/tools/inventory';
 import { searchProducts } from '@/lib/shopify/admin/tools/products';
 import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
@@ -73,6 +74,9 @@ export async function GET(request: NextRequest) {
           return {
             variantId: e.node.id,
             variantTitle: e.node.title,
+            sku: variantInventory?.sku ?? '',
+            barcode: variantInventory?.barcode ?? null,
+            tracked: variantInventory?.tracked ?? true,
             inventoryItemId: variantInventory?.inventoryItemId ?? null,
             inventoryQuantity: e.node.inventoryQuantity ?? 0,
             levels: variantInventory?.levels ?? [],
@@ -102,6 +106,8 @@ export async function PATCH(request: NextRequest) {
       locationId?: string;
       quantity?: number; // absolute value
       delta?: number; // relative adjustment
+      reason?: InventoryAdjustmentReason;
+      note?: string; // optional internal note (logged only)
       // Option B: update all variants of a product (legacy)
       productId?: string;
     };
@@ -118,7 +124,19 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      const result = await setInventoryByItemId(body.inventoryItemId, body.locationId, value, mode);
+      const reason: InventoryAdjustmentReason = body.reason ?? 'correction';
+
+      if (body.note) {
+        console.info(`[api/admin/inventory PATCH] Note: ${body.note}`);
+      }
+
+      const result = await setInventoryByItemId(
+        body.inventoryItemId,
+        body.locationId,
+        value,
+        mode,
+        reason,
+      );
 
       if (!result.success) {
         return Response.json({ error: result.message }, { status: 422 });
