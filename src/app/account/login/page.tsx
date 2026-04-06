@@ -23,12 +23,8 @@ export default async function LoginPage() {
       <div className="mx-auto max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-heading text-3xl font-bold text-[var(--color-primary)]">
-            Welcome Back
-          </h1>
-          <p className="mt-2 text-[var(--color-text-secondary)]">
-            Sign in to your Starbuy account
-          </p>
+          <h1 className="font-heading text-3xl font-bold text-[#1B2A5E]">Welcome Back</h1>
+          <p className="mt-2 text-[var(--color-text-secondary)]">Sign in to your Starbuy account</p>
         </div>
 
         {/* Card */}

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // ─── Proper social media SVG icons ────────────────────────────────────────────
 function InstagramIcon() {
@@ -97,7 +98,13 @@ export function Footer() {
         {/* Brand column */}
         <div className="col-span-2 md:col-span-1">
           <Link href="/" className="mb-6 block" aria-label="Starbuy">
-            <img src="/StarBuy.png" alt="StarBuy" className="h-12 w-auto" />
+            <Image
+              src="/StarBuy.png"
+              alt="StarBuy"
+              width={72}
+              height={48}
+              className="h-12 w-auto"
+            />
           </Link>
           <p className="text-slate-300 mb-6 max-w-xs leading-relaxed">
             Smart shopping, trusted quality. Bringing the best trends directly to your doorstep with

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getMenu } from '@/lib/shopify';
 import { AnnouncementBar } from './AnnouncementBar';
 import { HeaderClient } from './HeaderClient';
@@ -77,10 +78,7 @@ export async function Header() {
     <header className="sticky top-0 z-50 w-full">
       <AnnouncementBar />
 
-      <nav
-        className="bg-white shadow-md border-b border-gray-200"
-        aria-label="Main navigation"
-      >
+      <nav className="bg-white shadow-md border-b border-gray-200" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* LEFT: hamburger (mobile only) + Logo */}
@@ -88,12 +86,15 @@ export async function Header() {
               {/* Hamburger + mobile menu — rendered in HeaderClient */}
               <HeaderClient items={navItems} side="left" />
 
-              <Link
-                href="/"
-                className="flex items-center"
-                aria-label="Starbuy — Go to homepage"
-              >
-                <img src="/StarBuy.png" alt="StarBuy" className="h-10 w-auto" />
+              <Link href="/" className="flex items-center" aria-label="Starbuy — Go to homepage">
+                <Image
+                  src="/StarBuy.png"
+                  alt="StarBuy"
+                  width={60}
+                  height={40}
+                  className="h-10 w-auto"
+                  priority
+                />
               </Link>
             </div>
 

@@ -41,7 +41,8 @@ export default async function OrdersPage() {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
-                  {[customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'My Account'}
+                  {[customer.firstName, customer.lastName].filter(Boolean).join(' ') ||
+                    'My Account'}
                 </p>
                 <p className="truncate text-xs text-[var(--color-text-secondary)]">
                   {customer.email}
@@ -56,9 +57,7 @@ export default async function OrdersPage() {
         <div className="lg:col-span-3 space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h1 className="font-heading text-2xl font-bold text-[var(--color-text-primary)]">
-              Order History
-            </h1>
+            <h1 className="font-heading text-2xl font-bold text-[#1B2A5E]">Order History</h1>
             <Link
               href="/account"
               className="text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"

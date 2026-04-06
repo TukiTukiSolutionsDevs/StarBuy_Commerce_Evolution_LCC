@@ -21,7 +21,7 @@ export function ContactForm() {
   const [errorMsg, setErrorMsg] = useState('');
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -39,22 +39,45 @@ export function ContactForm() {
 
     setStatus('loading');
 
-    // MVP: log to console (no backend yet)
-    console.log('[ContactForm] Submission:', form);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
 
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 800));
+      const data = (await res.json()) as { success: boolean; error?: string };
 
-    setStatus('success');
-    setForm({ name: '', email: '', subject: '', message: '' });
+      if (!data.success) {
+        setStatus('error');
+        setErrorMsg(data.error ?? 'Something went wrong. Please try again.');
+        return;
+      }
+
+      setStatus('success');
+      setForm({ name: '', email: '', subject: '', message: '' });
+    } catch {
+      setStatus('error');
+      setErrorMsg('Network error. Please check your connection and try again.');
+    }
   }
 
   if (status === 'success') {
     return (
       <div className="rounded-[var(--radius-lg)] bg-green-50 border border-green-200 p-8 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-          <svg className="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          <svg
+            className="h-7 w-7 text-green-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+            />
           </svg>
         </div>
         <h3 className="font-heading text-xl font-bold text-green-800 mb-2">Message Sent!</h3>
@@ -173,13 +196,7 @@ export function ContactForm() {
         />
       </div>
 
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        loading={status === 'loading'}
-      >
+      <Button type="submit" variant="primary" size="lg" fullWidth loading={status === 'loading'}>
         {status === 'loading' ? 'Sending…' : 'Send Message'}
       </Button>
     </form>

@@ -12,7 +12,7 @@ export function NewsletterSection() {
     if (!email) return;
 
     // TODO: Integrate with Klaviyo or email provider
-    console.log('Newsletter signup:', email);
+    console.log('[newsletter] signup:', email);
     setStatus('success');
     setEmail('');
   }
@@ -38,9 +38,7 @@ export function NewsletterSection() {
                 check_circle
               </span>
               <p className="font-bold text-lg">You&apos;re in!</p>
-              <p className="text-slate-500 text-sm mt-1">
-                Check your inbox for a welcome email.
-              </p>
+              <p className="text-slate-500 text-sm mt-1">Check your inbox for a welcome email.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">

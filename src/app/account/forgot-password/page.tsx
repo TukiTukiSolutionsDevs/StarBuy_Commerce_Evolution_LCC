@@ -14,9 +14,7 @@ export default function ForgotPasswordPage() {
       <div className="mx-auto max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-heading text-3xl font-bold text-[var(--color-primary)]">
-            Reset Password
-          </h1>
+          <h1 className="font-heading text-3xl font-bold text-[#1B2A5E]">Reset Password</h1>
           <p className="mt-2 text-[var(--color-text-secondary)]">
             Enter your email and we&apos;ll send you a recovery link
           </p>

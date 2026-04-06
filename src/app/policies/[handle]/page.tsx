@@ -105,20 +105,18 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
 
         {/* Policy content */}
         <article className="lg:col-span-3">
-          <h1 className="font-heading text-4xl font-bold text-[var(--color-primary)] mb-8">
-            {policy.title}
-          </h1>
+          <h1 className="font-heading text-4xl font-bold text-[#1B2A5E] mb-8">{policy.title}</h1>
 
           {policy.body ? (
             <div
               className={[
                 'prose prose-lg max-w-none',
-                'text-[var(--color-text-primary)]',
-                '[&_h1]:font-heading [&_h1]:text-[var(--color-primary)]',
-                '[&_h2]:font-heading [&_h2]:text-[var(--color-primary)]',
-                '[&_h3]:font-heading [&_h3]:text-[var(--color-text-primary)]',
-                '[&_a]:text-[var(--color-primary)] [&_a:hover]:text-[var(--color-primary-light)]',
-                '[&_strong]:text-[var(--color-text-primary)]',
+                'text-gray-700',
+                '[&_h1]:font-heading [&_h1]:text-[#1B2A5E]',
+                '[&_h2]:font-heading [&_h2]:text-[#1B2A5E]',
+                '[&_h3]:font-heading [&_h3]:text-[#1B2A5E]',
+                '[&_a]:text-[#1B2A5E] [&_a:hover]:text-[#2a3f7e]',
+                '[&_strong]:text-gray-900',
               ].join(' ')}
               dangerouslySetInnerHTML={{ __html: policy.body }}
             />

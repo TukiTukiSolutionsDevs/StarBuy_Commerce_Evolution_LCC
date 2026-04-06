@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { ShopifyMenuItem } from '@/lib/shopify/types';
 
 type MobileMenuProps = {
@@ -11,10 +12,42 @@ type MobileMenuProps = {
 };
 
 const FALLBACK_ITEMS = [
-  { id: '1', title: 'Shop', url: '/collections/all', type: 'COLLECTION', resourceId: null, tags: [], items: [] },
-  { id: '2', title: 'Trending', url: '/collections/trending', type: 'COLLECTION', resourceId: null, tags: [], items: [] },
-  { id: '3', title: 'New Arrivals', url: '/collections/new-arrivals', type: 'COLLECTION', resourceId: null, tags: [], items: [] },
-  { id: '4', title: 'Deals', url: '/collections/deals', type: 'COLLECTION', resourceId: null, tags: [], items: [] },
+  {
+    id: '1',
+    title: 'Shop',
+    url: '/collections/all',
+    type: 'COLLECTION',
+    resourceId: null,
+    tags: [],
+    items: [],
+  },
+  {
+    id: '2',
+    title: 'Trending',
+    url: '/collections/trending',
+    type: 'COLLECTION',
+    resourceId: null,
+    tags: [],
+    items: [],
+  },
+  {
+    id: '3',
+    title: 'New Arrivals',
+    url: '/collections/new-arrivals',
+    type: 'COLLECTION',
+    resourceId: null,
+    tags: [],
+    items: [],
+  },
+  {
+    id: '4',
+    title: 'Deals',
+    url: '/collections/deals',
+    type: 'COLLECTION',
+    resourceId: null,
+    tags: [],
+    items: [],
+  },
 ];
 
 export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
@@ -62,7 +95,7 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-          <img src="/StarBuy.png" alt="StarBuy" className="h-9 w-auto" />
+          <Image src="/StarBuy.png" alt="StarBuy" width={54} height={36} className="h-9 w-auto" />
           <button
             onClick={onClose}
             aria-label="Close menu"
@@ -121,8 +154,20 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
             onClick={onClose}
             className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+              />
             </svg>
             My Account
           </Link>
@@ -131,8 +176,20 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
             onClick={onClose}
             className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+              />
             </svg>
             Cart
           </Link>
