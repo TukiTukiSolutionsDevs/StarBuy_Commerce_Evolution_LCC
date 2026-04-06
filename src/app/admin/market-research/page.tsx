@@ -107,7 +107,7 @@ function ResultCard({
     <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-5 space-y-4 hover:border-[#374151] transition-colors">
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-[#f9fafb] text-base font-bold leading-snug flex-1 drop-shadow-sm">
+        <h3 className="text-base font-bold leading-snug flex-1" style={{ color: '#f9fafb' }}>
           {result.title}
         </h3>
         <span
@@ -121,7 +121,15 @@ function ResultCard({
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-center gap-0.5">
           <div
-            className={`text-4xl font-black ${scoreTextColor(result.scores.overall)} drop-shadow-lg`}
+            className="text-4xl font-black"
+            style={{
+              color:
+                result.scores.overall >= 70
+                  ? '#10b981'
+                  : result.scores.overall >= 40
+                    ? '#d4a843'
+                    : '#ef4444',
+            }}
           >
             {Math.round(result.scores.overall)}
           </div>
@@ -577,8 +585,8 @@ export default function MarketResearchPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Market Intelligence
           </h1>
@@ -716,8 +724,8 @@ export default function MarketResearchPage() {
                 query_stats
               </span>
               <h2
-                className="text-white text-base font-semibold"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                className="text-base font-semibold"
+                style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
               >
                 Researching market…
               </h2>
@@ -768,7 +776,7 @@ export default function MarketResearchPage() {
       {!searching && displayedResults.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[#f9fafb] text-lg font-bold">
+            <h2 className="text-lg font-bold" style={{ color: '#f9fafb' }}>
               Results for &ldquo;{activeSession?.query}&rdquo;
             </h2>
             <span className="text-[#6b7280] text-sm">
@@ -804,8 +812,8 @@ export default function MarketResearchPage() {
       {/* ── Research History ──────────────────────────────────────────── */}
       <div className="space-y-3">
         <h2
-          className="text-white text-base font-semibold"
-          style={{ fontFamily: 'var(--font-heading)' }}
+          className="text-base font-semibold"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
         >
           Research History
         </h2>
