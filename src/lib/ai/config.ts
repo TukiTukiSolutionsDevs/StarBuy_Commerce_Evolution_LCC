@@ -25,6 +25,7 @@ export type AIConfig = {
     hasClientSecret: boolean;
     connected: boolean;
   };
+  searchModes: SearchModes;
 };
 
 export type AIConfigFull = AIConfig & {
@@ -36,6 +37,13 @@ export type AIConfigFull = AIConfig & {
   };
 };
 
+// ─── Search modes config ─────────────────────────────────────────────────────────
+
+export type SearchModes = {
+  free: boolean;
+  tavily: boolean;
+};
+
 // ─── Saved config (provider + model selection only) ─────────────────────────────
 
 type SavedConfig = {
@@ -43,6 +51,7 @@ type SavedConfig = {
   model: string;
   ollamaBaseUrl: string;
   ollamaModel: string;
+  searchModes: SearchModes;
 };
 
 const CONFIG_PATH = getDataDir('.admin-ai-config.json');
@@ -52,6 +61,7 @@ const DEFAULT_CONFIG: SavedConfig = {
   model: 'claude-sonnet-4-5',
   ollamaBaseUrl: 'http://localhost:11434',
   ollamaModel: 'llama3.1:8b',
+  searchModes: { free: true, tavily: false },
 };
 
 // ─── Models per provider ────────────────────────────────────────────────────────
@@ -105,6 +115,7 @@ export function getFullConfig(): AIConfigFull {
   return {
     provider: saved.provider,
     model: saved.model,
+    searchModes: saved.searchModes,
     ollama: {
       baseUrl: saved.ollamaBaseUrl,
       model: saved.ollamaModel,

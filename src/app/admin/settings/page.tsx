@@ -6,7 +6,6 @@ import { useToast } from '@/components/ui/useToast';
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 type Provider = 'claude' | 'openai' | 'gemini' | 'ollama';
-type SearchMode = 'free' | 'tavily';
 
 type ProviderInfo = {
   configured: boolean;
@@ -41,7 +40,7 @@ type Config = {
   };
   providers: Record<Provider, ProviderInfo>;
   storeInfo: StoreInfo | null;
-  apiKeyStatus?: Record<'claude' | 'openai' | 'gemini', ApiKeyStatus>;
+  apiKeyStatus?: Record<'claude' | 'openai' | 'gemini' | 'tavily', ApiKeyStatus>;
 };
 
 // ─── Provider Metadata ─────────────────────────────────────────────────────────
@@ -190,6 +189,39 @@ function StatusDot({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
+// ─── Toggle Component ──────────────────────────────────────────────────────────
+
+function Toggle({
+  enabled,
+  onChange,
+  size = 'md',
+}: {
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+  size?: 'sm' | 'md';
+}) {
+  const w = size === 'sm' ? 'w-10 h-[22px]' : 'w-12 h-[26px]';
+  const dot = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+  const move = size === 'sm' ? 'translate-x-[18px]' : 'translate-x-[22px]';
+
+  return (
+    <button
+      role="switch"
+      aria-checked={enabled}
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex ${w} items-center rounded-full transition-colors duration-200 focus:outline-none ${
+        enabled ? 'bg-[#10b981]' : 'bg-[#374151]'
+      }`}
+    >
+      <span
+        className={`inline-block ${dot} rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+          enabled ? move : 'translate-x-[3px]'
+        }`}
+      />
+    </button>
+  );
+}
+
 // ─── Info Row Component ────────────────────────────────────────────────────────
 
 function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
@@ -245,7 +277,7 @@ export default function SettingsPage() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   // Market Research state
-  const [searchMode, setSearchMode] = useState<SearchMode>('free');
+  const [searchModes, setSearchModes] = useState({ free: true, tavily: false });
   const [tavilyKey, setTavilyKey] = useState('');
   const [showTavilyKey, setShowTavilyKey] = useState(false);
   const [tavilyGuideOpen, setTavilyGuideOpen] = useState(false);
@@ -262,12 +294,13 @@ export default function SettingsPage() {
   useEffect(() => {
     fetch('/api/admin/settings')
       .then((r) => r.json())
-      .then((data: Config) => {
+      .then((data: Config & { searchModes?: { free: boolean; tavily: boolean } }) => {
         setConfig(data);
         setSelectedProvider(data.provider);
         setSelectedModel(data.model);
         setOllamaUrl(data.ollama.baseUrl);
         setOllamaModel(data.ollama.model);
+        if (data.searchModes) setSearchModes(data.searchModes);
       })
       .catch(() => toast.error('Failed to load settings'))
       .finally(() => setLoading(false));
@@ -361,6 +394,22 @@ export default function SettingsPage() {
       toast.error('Failed to save Tavily key');
     } finally {
       setSavingKeys(false);
+    }
+  }
+
+  // ─── Search Modes Save ────────────────────────────────────────────────────────
+
+  async function handleSaveSearchModes(modes: { free: boolean; tavily: boolean }) {
+    setSearchModes(modes);
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchModes: modes }),
+      });
+      toast.success('Search mode updated');
+    } catch {
+      toast.error('Failed to save search mode');
     }
   }
 
@@ -760,11 +809,12 @@ export default function SettingsPage() {
                 <button
                   key={p}
                   onClick={() => handleProviderChange(p)}
-                  className={`relative text-left rounded-xl p-4 border-2 transition-all ${
+                  className={`relative text-left rounded-xl p-4 border-2 transition-all overflow-hidden ${
                     isSelected
                       ? 'border-[#d4a843] bg-[#d4a843]/5'
                       : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
                   }`}
+                  style={isSelected ? { boxShadow: `inset 4px 0 0 ${meta.color}` } : undefined}
                 >
                   {/* Status badge */}
                   <div className="absolute top-3 right-3">
@@ -803,7 +853,22 @@ export default function SettingsPage() {
                         {meta.icon}
                       </span>
                     </div>
-                    <div className="text-white font-medium text-sm">{meta.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-white font-medium text-sm">{meta.name}</div>
+                      {/* Toggle acts as radio — clicking enables this provider */}
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleProviderChange(p);
+                        }}
+                      >
+                        <Toggle
+                          enabled={isSelected}
+                          onChange={() => handleProviderChange(p)}
+                          size="sm"
+                        />
+                      </span>
+                    </div>
                   </div>
 
                   <p className="text-[#6b7280] text-xs leading-relaxed">{meta.description}</p>
@@ -1215,180 +1280,242 @@ export default function SettingsPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 5 — Market Research Configuration
       ════════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
         <SectionHeader
-          icon="manage_search"
-          iconColor="text-[#6366f1]"
-          title="Market Research Configuration"
-          description="Choose how the Market Intelligence feature searches the web for product data"
+          icon="query_stats"
+          iconColor="text-[#f59e0b]"
+          title="🔍 Market Research — The Eyes"
+          description="How the Market Intelligence Agent searches the internet for winning products"
         />
 
-        <div className="p-6 space-y-4">
-          {/* Search Mode Cards */}
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-6">
+          {/* Explanation box */}
+          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-base">🧠</span>
+              <span className="text-white text-sm font-semibold">AI Model (Brain)</span>
+              <span className="text-[#d4a843] text-sm">+</span>
+              <span className="text-base">🔍</span>
+              <span className="text-white text-sm font-semibold">Search Tool (Eyes)</span>
+              <span className="text-[#d4a843] text-sm">=</span>
+              <span className="text-base">🏆</span>
+              <span className="text-white text-sm font-semibold">Winning Products</span>
+            </div>
+            <p className="text-[#6b7280] text-xs leading-relaxed">
+              The AI model analyzes and scores products. The search tool brings fresh data from the
+              internet. Together they find the best products to sell in your store.
+            </p>
+          </div>
+
+          {/* Two cards side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Free Search Card */}
-            <button
-              type="button"
-              onClick={() => setSearchMode('free')}
-              className={`relative text-left rounded-xl p-4 border-2 transition-all ${
-                searchMode === 'free'
-                  ? 'border-[#10b981] bg-[#10b981]/5'
-                  : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
+            <div
+              className={`border rounded-2xl p-5 transition-all ${
+                searchModes.free
+                  ? 'bg-[#111827] border-[#10b981]/50 shadow-[0_0_20px_rgba(16,185,129,0.08)]'
+                  : 'bg-[#0d1526]/50 border-[#1f2d4e]/50 opacity-50'
               }`}
             >
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-xl">🆓</span>
-                <span className="text-[10px] bg-[#10b981]/10 text-[#10b981] px-2 py-0.5 rounded-full font-medium">
-                  No API key needed
-                </span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#10b981]">public</span>
+                  <h3 className="text-white text-sm font-semibold">Free Search</h3>
+                </div>
+                <Toggle
+                  enabled={searchModes.free}
+                  onChange={(v) => {
+                    if (!v && !searchModes.tavily) {
+                      toast.error('At least one search mode must be enabled');
+                      return;
+                    }
+                    handleSaveSearchModes({ ...searchModes, free: v });
+                  }}
+                />
               </div>
-              <p className="text-sm text-white font-medium mb-1">Free Search</p>
-              <p className="text-[10px] text-[#6b7280] leading-relaxed mb-3">
-                Uses DuckDuckGo web scraping for product research. Good for getting started, but
-                results may be limited.
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#10b981]/10 text-[#10b981] text-[10px] font-medium mb-3">
+                🆓 No cost — works immediately
+              </span>
+              <p className="text-[#6b7280] text-xs leading-relaxed mb-3">
+                Uses DuckDuckGo web scraping for product research. No API key needed.
               </p>
-              <div className="space-y-1">
-                <p className="text-[10px] text-[#10b981]">✓ Free — no setup required</p>
-                <p className="text-[10px] text-[#10b981]">✓ Works immediately</p>
-                <p className="text-[10px] text-[#374151]">✗ Slower, may get rate-limited</p>
-                <p className="text-[10px] text-[#374151]">✗ Less accurate results</p>
-              </div>
-            </button>
+              <ul className="space-y-1.5 text-xs">
+                <li className="flex items-center gap-2 text-[#10b981]">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  No API key needed
+                </li>
+                <li className="flex items-center gap-2 text-[#10b981]">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  Works immediately
+                </li>
+                <li className="flex items-center gap-2 text-[#d4a843]">
+                  <span className="material-symbols-outlined text-sm">warning</span>
+                  Slower results
+                </li>
+                <li className="flex items-center gap-2 text-[#d4a843]">
+                  <span className="material-symbols-outlined text-sm">warning</span>
+                  May miss some data sources
+                </li>
+              </ul>
+            </div>
 
             {/* Tavily Pro Card */}
-            <button
-              type="button"
-              onClick={() => setSearchMode('tavily')}
-              className={`relative text-left rounded-xl p-4 border-2 transition-all ${
-                searchMode === 'tavily'
-                  ? 'border-[#6366f1] bg-[#6366f1]/5'
-                  : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
+            <div
+              className={`border rounded-2xl p-5 transition-all ${
+                searchModes.tavily
+                  ? 'bg-[#111827] border-[#6366f1]/50 shadow-[0_0_20px_rgba(99,102,241,0.08)]'
+                  : 'bg-[#0d1526]/50 border-[#1f2d4e]/50 opacity-50'
               }`}
             >
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-xl">⚡</span>
-                <span className="text-[10px] bg-[#ef4444]/10 text-[#ef4444] px-2 py-0.5 rounded-full font-medium">
-                  API key required
-                </span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#6366f1]">bolt</span>
+                  <h3 className="text-white text-sm font-semibold">Tavily Pro</h3>
+                </div>
+                <Toggle
+                  enabled={searchModes.tavily}
+                  onChange={(v) => {
+                    if (!v && !searchModes.free) {
+                      toast.error('At least one search mode must be enabled');
+                      return;
+                    }
+                    const tavilyStatus = config?.apiKeyStatus?.tavily;
+                    if (v && !tavilyStatus?.configured) {
+                      toast.error('Add your Tavily API key first');
+                      return;
+                    }
+                    handleSaveSearchModes({ ...searchModes, tavily: v });
+                  }}
+                />
               </div>
-              <p className="text-sm text-white font-medium mb-1">Tavily Pro Search</p>
-              <p className="text-[10px] text-[#6b7280] leading-relaxed mb-3">
-                Professional search API with deep web analysis. More accurate results, faster,
-                better for serious research.
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#6366f1]/10 text-[#6366f1] text-[10px] font-medium mb-3">
+                ⚡ Professional — deep &amp; accurate
+              </span>
+              <p className="text-[#6b7280] text-xs leading-relaxed mb-3">
+                Professional search API with structured results and AI summaries. Best accuracy for
+                product research.
               </p>
-              <div className="space-y-1">
-                <p className="text-[10px] text-[#10b981]">✓ Fast, accurate, structured results</p>
-                <p className="text-[10px] text-[#10b981]">✓ Includes answer summaries</p>
-                <p className="text-[10px] text-[#374151]">✗ ~$0.01 per search</p>
-                <p className="text-[10px] text-[#374151]">✗ ~$0.12 per full research session</p>
-              </div>
-            </button>
-          </div>
+              <ul className="space-y-1.5 text-xs">
+                <li className="flex items-center gap-2 text-[#10b981]">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  1,000 free searches/month
+                </li>
+                <li className="flex items-center gap-2 text-[#10b981]">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  Deep structured results
+                </li>
+                <li className="flex items-center gap-2 text-[#10b981]">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  Best accuracy for market research
+                </li>
+                <li className="flex items-center gap-2 text-[#9ca3af]">
+                  <span className="material-symbols-outlined text-sm">info</span>
+                  ~$0.01/search after free tier
+                </li>
+              </ul>
 
-          {/* Tavily Setup (expanded when tavily mode selected) */}
-          {searchMode === 'tavily' && (
-            <div className="bg-[#0d1526] rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm text-[#6366f1]">bolt</span>
-                <span className="text-sm text-white font-medium">Tavily API Key</span>
-              </div>
-
-              <SetupGuide
-                open={tavilyGuideOpen}
-                onToggle={() => setTavilyGuideOpen((v) => !v)}
-                steps={[
-                  'Go to <a href="https://tavily.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">tavily.com</a> and click <strong>"Get API Key"</strong>',
-                  'Create a free account — <strong>1,000 free searches/month</strong> included',
-                  'Copy your API key from the dashboard',
-                  'Paste it in the field below and click Save',
-                ]}
-                pricing="~$0.01 per search. ~$0.12 per full research session (12 searches avg)."
-                pricingNote="1,000 free searches/month on the free tier — enough for ~83 research sessions!"
-              />
-
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showTavilyKey ? 'text' : 'password'}
-                    value={tavilyKey}
-                    onChange={(e) => setTavilyKey(e.target.value)}
-                    placeholder="tvly-..."
-                    className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] text-white rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
-                  />
+              {/* Tavily API key section */}
+              <div className="mt-4 pt-4 border-t border-[#1f2d4e]">
+                <p className="text-[#6b7280] text-[10px] mb-3">
+                  API Key{' '}
+                  {config?.apiKeyStatus?.tavily?.configured ? (
+                    <span className="text-[#10b981]">
+                      ✓ configured ({config.apiKeyStatus.tavily.source})
+                    </span>
+                  ) : (
+                    <span className="text-[#ef4444]">✗ not configured</span>
+                  )}
+                </p>
+                <SetupGuide
+                  open={tavilyGuideOpen}
+                  onToggle={() => setTavilyGuideOpen((v) => !v)}
+                  steps={[
+                    'Go to <a href="https://tavily.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">tavily.com</a> and click <strong>"Get API Key"</strong>',
+                    'Create a free account — <strong>1,000 free searches/month</strong> included',
+                    'Copy your API key from the dashboard',
+                    'Paste it in the field below and click Save',
+                  ]}
+                  pricing="~$0.01 per search. ~$0.12 per full research session (12 searches avg)."
+                  pricingNote="1,000 free searches/month on the free tier — enough for ~83 research sessions!"
+                />
+                <div className="flex gap-2 mt-3">
+                  <div className="relative flex-1">
+                    <input
+                      type={showTavilyKey ? 'text' : 'password'}
+                      value={tavilyKey}
+                      onChange={(e) => setTavilyKey(e.target.value)}
+                      placeholder="tvly-..."
+                      className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] text-white rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTavilyKey((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {showTavilyKey ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setShowTavilyKey((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+                    onClick={handleTestTavily}
+                    disabled={testing === 'tavily'}
+                    className="bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#6366f1] border border-[#6366f1]/20 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base">
-                      {showTavilyKey ? 'visibility_off' : 'visibility'}
-                    </span>
+                    {testing === 'tavily' ? (
+                      <span className="material-symbols-outlined text-base animate-spin">
+                        progress_activity
+                      </span>
+                    ) : (
+                      <span className="material-symbols-outlined text-base">bolt</span>
+                    )}
+                    Test
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveTavilyKey}
+                    disabled={savingKeys || !tavilyKey.trim()}
+                    className="bg-[#1f2d4e] hover:bg-[#2a3d5e] disabled:opacity-40 text-[#d4a843] border border-[#d4a843]/30 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5"
+                  >
+                    {savingKeys ? (
+                      <span className="material-symbols-outlined text-base animate-spin">
+                        progress_activity
+                      </span>
+                    ) : (
+                      <span className="material-symbols-outlined text-base">save</span>
+                    )}
+                    Save
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleTestTavily}
-                  disabled={testing === 'tavily'}
-                  className="bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#6366f1] border border-[#6366f1]/20 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                >
-                  {testing === 'tavily' ? (
-                    <span className="material-symbols-outlined text-base animate-spin">
-                      progress_activity
+                {tavilyTest && (
+                  <div
+                    className={`mt-2 text-xs flex items-center gap-1 ${tavilyTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
+                  >
+                    <span className="material-symbols-outlined text-sm">
+                      {tavilyTest.ok ? 'check_circle' : 'error'}
                     </span>
-                  ) : (
-                    <span className="material-symbols-outlined text-base">bolt</span>
-                  )}
-                  Test
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveTavilyKey}
-                  disabled={savingKeys || !tavilyKey.trim()}
-                  className="bg-[#1f2d4e] hover:bg-[#2a3d5e] disabled:opacity-40 text-[#d4a843] border border-[#d4a843]/30 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2"
-                >
-                  {savingKeys ? (
-                    <span className="material-symbols-outlined text-base animate-spin">
-                      progress_activity
-                    </span>
-                  ) : (
-                    <span className="material-symbols-outlined text-base">save</span>
-                  )}
-                  Save
-                </button>
+                    {tavilyTest.msg}
+                  </div>
+                )}
+                <p className="text-[10px] text-[#374151] font-mono mt-2">Env: TAVILY_API_KEY</p>
               </div>
-
-              {tavilyTest && (
-                <div
-                  className={`text-xs flex items-center gap-1 ${tavilyTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
-                >
-                  <span className="material-symbols-outlined text-sm">
-                    {tavilyTest.ok ? 'check_circle' : 'error'}
-                  </span>
-                  {tavilyTest.msg}
-                </div>
-              )}
-
-              <p className="text-[10px] text-[#374151] font-mono">Env: TAVILY_API_KEY</p>
             </div>
-          )}
+          </div>
 
-          {/* Mode info pill */}
-          <div
-            className={`flex items-center gap-2 text-xs px-4 py-2 rounded-xl ${
-              searchMode === 'free'
-                ? 'bg-[#10b981]/5 text-[#10b981] border border-[#10b981]/20'
-                : 'bg-[#6366f1]/5 text-[#6366f1] border border-[#6366f1]/20'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">
-              {searchMode === 'free' ? 'check_circle' : 'bolt'}
-            </span>
-            {searchMode === 'free'
-              ? 'Market Intelligence will use DuckDuckGo (free mode). No key needed.'
-              : 'Market Intelligence will use Tavily Pro when a key is configured.'}
+          {/* Active modes summary */}
+          <div className="mt-4 flex items-center gap-2 text-[#6b7280] text-xs">
+            <span className="material-symbols-outlined text-sm">info</span>
+            Active:{' '}
+            {[searchModes.free && 'Free Search', searchModes.tavily && 'Tavily Pro']
+              .filter(Boolean)
+              .join(' + ') || 'None'}
+            {searchModes.free &&
+              searchModes.tavily &&
+              ' — you can choose per-session in Market Research'}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 7 — Environment Variables Reference

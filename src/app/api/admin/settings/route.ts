@@ -6,7 +6,7 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { getFullConfig, saveConfig, type AIProvider } from '@/lib/ai/config';
+import { getFullConfig, saveConfig, type AIProvider, type SearchModes } from '@/lib/ai/config';
 import { getApiKeyStatus, setApiKey, type ApiKeyProvider } from '@/lib/ai/api-keys';
 import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
@@ -101,13 +101,14 @@ export async function PUT(request: NextRequest) {
       ollamaBaseUrl?: string;
       ollamaModel?: string;
       apiKeys?: { claude?: string; openai?: string; gemini?: string; tavily?: string };
+      searchModes?: SearchModes;
     };
 
     // Handle API key saves
     if (body.apiKeys) {
-      const providers: ApiKeyProvider[] = ['claude', 'openai', 'gemini'];
+      const providers: ApiKeyProvider[] = ['claude', 'openai', 'gemini', 'tavily'];
       for (const p of providers) {
-        const key = body.apiKeys[p];
+        const key = body.apiKeys[p as keyof typeof body.apiKeys];
         if (key !== undefined) {
           setApiKey(p, key);
         }
@@ -120,11 +121,13 @@ export async function PUT(request: NextRequest) {
       model?: string;
       ollamaBaseUrl?: string;
       ollamaModel?: string;
+      searchModes?: SearchModes;
     } = {};
     if (body.provider !== undefined) configUpdate.provider = body.provider;
     if (body.model !== undefined) configUpdate.model = body.model;
     if (body.ollamaBaseUrl !== undefined) configUpdate.ollamaBaseUrl = body.ollamaBaseUrl;
     if (body.ollamaModel !== undefined) configUpdate.ollamaModel = body.ollamaModel;
+    if (body.searchModes !== undefined) configUpdate.searchModes = body.searchModes;
 
     const updated = saveConfig(configUpdate);
     const apiKeyStatus = getApiKeyStatus();
