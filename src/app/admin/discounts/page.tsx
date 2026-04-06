@@ -541,8 +541,8 @@ export default function DiscountsPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Discounts
           </h1>

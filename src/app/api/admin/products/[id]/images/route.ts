@@ -11,30 +11,22 @@ import {
   uploadProductImage,
   deleteProductImage,
 } from '@/lib/shopify/admin/tools/images';
+import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-// ─── Auth ──────────────────────────────────────────────────────────────────────
+// ─── Auth (same as all other admin routes) ─────────────────────────────────────
 
-function isAdmin(request: NextRequest): boolean {
-  const password = process.env.ADMIN_CHAT_PASSWORD;
-  if (!password) return false;
-  const token = request.cookies.get('admin_token')?.value;
+async function isAdmin(request: NextRequest): Promise<boolean> {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
   if (!token) return false;
-  const expected = Buffer.from(
-    `starbuy-admin:${password}:${process.env.NODE_ENV}`
-  ).toString('base64');
-  return token === expected;
+  return (await verifyAdminToken(token)) !== null;
 }
 
 // ─── GET — List images ─────────────────────────────────────────────────────────
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!isAdmin(request))
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdmin(request))) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
 
@@ -42,21 +34,14 @@ export async function GET(
     const images = await getProductImages(id);
     return Response.json(images);
   } catch (err) {
-    return Response.json(
-      { error: (err as Error).message },
-      { status: 500 }
-    );
+    return Response.json({ error: (err as Error).message }, { status: 500 });
   }
 }
 
 // ─── POST — Upload image ───────────────────────────────────────────────────────
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!isAdmin(request))
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdmin(request))) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
 
@@ -73,16 +58,13 @@ export async function POST(
     if (!allowed.includes(file.type)) {
       return Response.json(
         { error: `Invalid file type: ${file.type}. Allowed: ${allowed.join(', ')}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      return Response.json(
-        { error: 'File too large. Max 10MB.' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'File too large. Max 10MB.' }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -94,16 +76,13 @@ export async function POST(
         mimeType: file.type,
         fileSize: file.size,
       },
-      buffer
+      buffer,
     );
 
     return Response.json(media);
   } catch (err) {
     console.error('[api/admin/products/images] Upload error:', err);
-    return Response.json(
-      { error: (err as Error).message },
-      { status: 500 }
-    );
+    return Response.json({ error: (err as Error).message }, { status: 500 });
   }
 }
 
@@ -111,10 +90,9 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  if (!isAdmin(request))
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isAdmin(request))) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
 
@@ -127,9 +105,6 @@ export async function DELETE(
     const deleted = await deleteProductImage(id, body.mediaId);
     return Response.json({ deleted });
   } catch (err) {
-    return Response.json(
-      { error: (err as Error).message },
-      { status: 500 }
-    );
+    return Response.json({ error: (err as Error).message }, { status: 500 });
   }
 }

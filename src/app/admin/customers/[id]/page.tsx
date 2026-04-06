@@ -90,8 +90,8 @@ function Card({
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-[#6b7280] text-base">{icon}</span>
           <h3
-            className="text-white font-semibold text-sm"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="font-semibold text-sm"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             {title}
           </h3>
@@ -334,8 +334,8 @@ export default function CustomerProfilePage({ params }: PageProps) {
             </div>
             <div>
               <h1
-                className="text-xl font-bold text-white"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                className="text-xl font-bold"
+                style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
               >
                 {fullName}
               </h1>

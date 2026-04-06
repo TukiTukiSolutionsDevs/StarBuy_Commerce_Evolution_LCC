@@ -181,8 +181,8 @@ function MetafieldModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#1f2d4e] sticky top-0 bg-[#111827] z-10">
           <h2
-            className="text-white font-bold text-lg"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="font-bold text-lg"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             {mode === 'create' ? 'Add Metafield' : 'Edit Metafield'}
           </h2>
@@ -323,8 +323,8 @@ function ConfirmDeleteModal({
           </div>
           <div>
             <h2
-              className="text-white font-bold text-lg mb-1"
-              style={{ fontFamily: 'var(--font-heading)' }}
+              className="font-bold text-lg mb-1"
+              style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
             >
               Delete Metafield
             </h2>
@@ -548,8 +548,8 @@ export default function ProductMetafieldsPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Metafields
           </h1>

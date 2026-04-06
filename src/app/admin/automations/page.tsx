@@ -328,8 +328,8 @@ function RuleModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
           <h2
-            className="text-white text-lg font-bold"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-lg font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             {isEdit ? 'Edit Automation' : 'New Automation'}
           </h2>
@@ -779,8 +779,8 @@ export default function AutomationsPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Automations
           </h1>

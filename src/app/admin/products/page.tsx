@@ -427,7 +427,10 @@ function Modal({
     >
       <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl shadow-black/60">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
-          <h2 className="text-white font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h2
+            className="font-semibold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+          >
             {title}
           </h2>
           <button
@@ -861,8 +864,8 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Products
           </h1>

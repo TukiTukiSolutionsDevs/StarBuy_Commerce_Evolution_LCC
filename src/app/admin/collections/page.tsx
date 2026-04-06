@@ -109,8 +109,8 @@ function CollectionCard({
       {/* Info */}
       <div className="p-5">
         <h3
-          className="text-white font-semibold text-sm mb-1 group-hover:text-[#d4a843] transition-colors line-clamp-1"
-          style={{ fontFamily: 'var(--font-heading)' }}
+          className="font-semibold text-sm mb-1 group-hover:text-[#d4a843] transition-colors line-clamp-1"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
         >
           {collection.title}
         </h3>
@@ -239,8 +239,8 @@ function CollectionModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#1f2d4e]">
           <h2
-            className="text-white font-bold text-lg"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="font-bold text-lg"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             {mode === 'create' ? 'New Collection' : 'Edit Collection'}
           </h2>
@@ -385,8 +385,8 @@ function ConfirmDeleteModal({
           </div>
           <div>
             <h2
-              className="text-white font-bold text-lg mb-1"
-              style={{ fontFamily: 'var(--font-heading)' }}
+              className="font-bold text-lg mb-1"
+              style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
             >
               Delete Collection
             </h2>
@@ -557,8 +557,8 @@ export default function CollectionsPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Collections
           </h1>

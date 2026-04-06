@@ -101,7 +101,10 @@ function Modal({
     >
       <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl shadow-black/60">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
-          <h2 className="text-white font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+          <h2
+            className="font-semibold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+          >
             {title}
           </h2>
           <button
@@ -538,8 +541,8 @@ function InfoCard({
       <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#1f2d4e]">
         <span className="material-symbols-outlined text-[#d4a843] text-base">{icon}</span>
         <h3
-          className="text-white text-sm font-semibold"
-          style={{ fontFamily: 'var(--font-heading)' }}
+          className="text-sm font-semibold"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
         >
           {title}
         </h3>
@@ -622,8 +625,8 @@ export default function OrderDetailPage() {
           ) : order ? (
             <div className="flex items-center gap-3 flex-wrap">
               <h1
-                className="text-2xl font-bold text-white"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                className="text-2xl font-bold"
+                style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
               >
                 Order {order.name}
               </h1>

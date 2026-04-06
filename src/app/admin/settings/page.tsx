@@ -541,7 +541,10 @@ export default function SettingsPage() {
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* ── Page Header ──────────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-heading)' }}>
+        <h1
+          className="text-2xl font-bold"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+        >
           Settings
         </h1>
         <p className="text-[#6b7280] text-sm mt-1">
