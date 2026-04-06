@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { getProducts } from '@/lib/shopify';
 import { ProductCard } from '@/components/ui/ProductCard';
@@ -25,12 +26,48 @@ export const metadata: Metadata = {
 
 // ─── Static category data ─────────────────────────────────────────────────────
 const CATEGORIES = [
-  { icon: 'devices', name: 'Electronics', handle: 'electronics' },
-  { icon: 'apparel', name: 'Fashion', handle: 'fashion' },
-  { icon: 'home', name: 'Home & Garden', handle: 'home-garden' },
-  { icon: 'face_3', name: 'Beauty', handle: 'beauty' },
-  { icon: 'fitness_center', name: 'Sports', handle: 'sports' },
-  { icon: 'smart_toy', name: 'Toys & Games', handle: 'toys' },
+  {
+    icon: 'devices',
+    name: 'Electronics',
+    handle: 'electronics',
+    gradient: 'from-blue-500 to-indigo-600',
+    iconColor: 'text-blue-100',
+  },
+  {
+    icon: 'apparel',
+    name: 'Fashion',
+    handle: 'fashion',
+    gradient: 'from-pink-500 to-rose-600',
+    iconColor: 'text-pink-100',
+  },
+  {
+    icon: 'home',
+    name: 'Home & Garden',
+    handle: 'home-garden',
+    gradient: 'from-emerald-500 to-teal-600',
+    iconColor: 'text-emerald-100',
+  },
+  {
+    icon: 'face_3',
+    name: 'Beauty',
+    handle: 'beauty',
+    gradient: 'from-purple-500 to-fuchsia-600',
+    iconColor: 'text-purple-100',
+  },
+  {
+    icon: 'fitness_center',
+    name: 'Sports',
+    handle: 'sports',
+    gradient: 'from-orange-500 to-red-600',
+    iconColor: 'text-orange-100',
+  },
+  {
+    icon: 'smart_toy',
+    name: 'Toys & Games',
+    handle: 'toys',
+    gradient: 'from-amber-400 to-yellow-500',
+    iconColor: 'text-amber-100',
+  },
 ];
 
 const TRUST_ITEMS = [
@@ -94,8 +131,7 @@ export default async function HomePage() {
                 ✦ Trending Collection 2026
               </span>
               <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight font-[var(--font-heading)]">
-                Discover What&apos;s{' '}
-                <span className="text-amber-400">Trending</span>
+                Discover What&apos;s <span className="text-amber-400">Trending</span>
               </h1>
               <p className="text-xl md:text-2xl mb-10 text-white/80 leading-relaxed">
                 Curated products at unbeatable prices — delivered to your door.
@@ -116,25 +152,109 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: Product showcase grid */}
-            <div className="hidden md:grid grid-cols-2 gap-4" aria-hidden="true">
-              <div className="space-y-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center aspect-square border border-white/5">
-                  <span className="material-symbols-outlined text-7xl text-white/40">headphones</span>
+            {/* Right: Trending products mini-grid */}
+            {products.length >= 2 ? (
+              <div className="hidden md:grid grid-cols-2 gap-4" aria-hidden="true">
+                <div className="space-y-4">
+                  {[products[0], products[1]].map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/products/${p.handle}`}
+                      className="group relative block rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300"
+                    >
+                      <div className="aspect-square relative bg-white/10">
+                        {p.featuredImage ? (
+                          <Image
+                            src={p.featuredImage.url}
+                            alt={p.featuredImage.altText ?? p.title}
+                            fill
+                            sizes="160px"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-white/10">
+                            <span className="material-symbols-outlined text-5xl text-white/30">
+                              shopping_bag
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                        <p className="text-white text-xs font-bold line-clamp-1">{p.title}</p>
+                        <p className="text-[#D4A843] text-xs font-semibold">
+                          {new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: p.priceRange.minVariantPrice.currencyCode,
+                          }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-                <div className="bg-[#D4A843]/20 backdrop-blur-sm rounded-2xl p-6 flex items-center justify-center aspect-[4/3] border border-[#D4A843]/20">
-                  <span className="material-symbols-outlined text-6xl text-[#D4A843]/60">watch</span>
+                <div className="space-y-4 pt-8">
+                  {[products[2] ?? products[0], products[3] ?? products[1]].map((p) => (
+                    <Link
+                      key={p.id + '-b'}
+                      href={`/products/${p.handle}`}
+                      className="group relative block rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300"
+                    >
+                      <div className="aspect-square relative bg-white/10">
+                        {p.featuredImage ? (
+                          <Image
+                            src={p.featuredImage.url}
+                            alt={p.featuredImage.altText ?? p.title}
+                            fill
+                            sizes="160px"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-white/10">
+                            <span className="material-symbols-outlined text-5xl text-white/30">
+                              shopping_bag
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                        <p className="text-white text-xs font-bold line-clamp-1">{p.title}</p>
+                        <p className="text-[#D4A843] text-xs font-semibold">
+                          {new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: p.priceRange.minVariantPrice.currencyCode,
+                          }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
-              <div className="space-y-4 pt-8">
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 flex items-center justify-center aspect-[4/3] border border-white/5">
-                  <span className="material-symbols-outlined text-6xl text-white/30">photo_camera</span>
+            ) : (
+              /* Fallback decorative grid when no products are available */
+              <div className="hidden md:grid grid-cols-2 gap-4" aria-hidden="true">
+                <div className="space-y-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center aspect-square border border-white/5">
+                    <span className="material-symbols-outlined text-7xl text-white/40">
+                      headphones
+                    </span>
+                  </div>
+                  <div className="bg-[#D4A843]/20 backdrop-blur-sm rounded-2xl p-6 flex items-center justify-center aspect-[4/3] border border-[#D4A843]/20">
+                    <span className="material-symbols-outlined text-6xl text-[#D4A843]/60">
+                      watch
+                    </span>
+                  </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center aspect-square border border-white/5">
-                  <span className="material-symbols-outlined text-7xl text-white/40">styler</span>
+                <div className="space-y-4 pt-8">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 flex items-center justify-center aspect-[4/3] border border-white/5">
+                    <span className="material-symbols-outlined text-6xl text-white/30">
+                      photo_camera
+                    </span>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center aspect-square border border-white/5">
+                    <span className="material-symbols-outlined text-7xl text-white/40">styler</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -161,11 +281,14 @@ export default async function HomePage() {
               <Link
                 key={cat.handle}
                 href={`/collections/${cat.handle}`}
-                className="group relative bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                className="group relative bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5"
               >
-                <div className="aspect-square bg-gradient-to-br from-[#1B2A5E]/5 to-[#1B2A5E]/10 flex items-center justify-center group-hover:from-[#1B2A5E] group-hover:to-[#2a3f7e] transition-all duration-300">
+                <div
+                  className={`aspect-square bg-gradient-to-br ${cat.gradient} flex items-center justify-center`}
+                >
                   <span
-                    className="material-symbols-outlined text-[#1B2A5E] text-5xl group-hover:text-white group-hover:scale-110 transition-all duration-300"
+                    className={`material-symbols-outlined ${cat.iconColor} text-5xl group-hover:scale-110 transition-transform duration-300`}
+                    style={{ fontVariationSettings: "'FILL' 1" }}
                     aria-hidden="true"
                   >
                     {cat.icon}
@@ -236,8 +359,8 @@ export default async function HomePage() {
                 Up to 50% Off — Limited Time Deals
               </h2>
               <p className="text-white/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
-                Save big on your favorite electronics, apparel, and home essentials. While
-                supplies last.
+                Save big on your favorite electronics, apparel, and home essentials. While supplies
+                last.
               </p>
               <Link
                 href="/collections/deals"
@@ -256,19 +379,23 @@ export default async function HomePage() {
           <h2 className="text-3xl font-extrabold text-[#1A1A2E] text-center mb-16 font-[var(--font-heading)]">
             Why Shop With Starbuy?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {TRUST_ITEMS.map((item) => (
-              <div key={item.title} className="text-center">
-                <div className="w-16 h-16 bg-[#F8F9FC] rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <div
+                key={item.title}
+                className="text-center group bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:border-[#D4A843]/40 hover:shadow-md transition-all duration-300"
+              >
+                <div className="w-16 h-16 bg-[#1B2A5E]/5 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:bg-[#1B2A5E] transition-colors duration-300">
                   <span
-                    className="material-symbols-outlined text-[#1B2A5E] text-3xl"
+                    className="material-symbols-outlined text-[#1B2A5E] text-3xl group-hover:text-[#D4A843] transition-colors duration-300"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
                 </div>
-                <h3 className="font-bold text-lg mb-2 text-[#1A1A2E]">{item.title}</h3>
-                <p className="text-slate-500 text-sm">{item.description}</p>
+                <h3 className="font-bold text-base mb-2 text-[#1A1A2E]">{item.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>

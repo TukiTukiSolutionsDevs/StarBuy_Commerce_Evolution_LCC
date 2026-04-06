@@ -22,27 +22,33 @@ export default async function CollectionsPage() {
     <Container as="main" className="py-12">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+        <ol className="flex items-center gap-2 text-sm text-slate-500">
           <li>
-            <Link href="/" className="hover:text-[var(--color-primary)] transition-colors">
+            <Link href="/" className="hover:text-[#1B2A5E] transition-colors">
               Home
             </Link>
           </li>
-          <li aria-hidden="true">/</li>
-          <li className="text-[var(--color-text-primary)] font-medium">Collections</li>
+          <li aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
+          </li>
+          <li className="text-[#1B2A5E] font-medium">Collections</li>
         </ol>
       </nav>
 
-      <h1 className="font-heading text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl">
+      <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)] mb-2">
         All Collections
       </h1>
-      <p className="mt-2 text-[var(--color-text-secondary)]">
-        Browse our curated product categories
-      </p>
+      <p className="text-slate-500">Browse our curated product categories</p>
 
       {collections.length === 0 ? (
-        <div className="mt-12 rounded-[var(--radius-lg)] border border-dashed border-gray-300 py-16 text-center">
-          <p className="text-[var(--color-text-secondary)]">No collections available yet.</p>
+        <div className="mt-12 rounded-2xl border border-dashed border-gray-300 py-16 text-center">
+          <span
+            className="material-symbols-outlined text-5xl text-gray-300 mb-4 block"
+            aria-hidden="true"
+          >
+            category
+          </span>
+          <p className="text-slate-500">No collections available yet.</p>
         </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -50,7 +56,7 @@ export default async function CollectionsPage() {
             <Link
               key={collection.id}
               href={`/collections/${collection.handle}`}
-              className="group relative overflow-hidden rounded-[var(--radius-lg)] bg-gray-100 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow"
+              className="group relative overflow-hidden rounded-2xl bg-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
             >
               <div className="aspect-[4/3] relative">
                 {collection.image ? (
@@ -70,7 +76,11 @@ export default async function CollectionsPage() {
                       stroke="currentColor"
                       strokeWidth={1}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+                      />
                     </svg>
                   </div>
                 )}
@@ -79,9 +89,7 @@ export default async function CollectionsPage() {
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h2 className="font-heading text-lg font-bold text-white">
-                  {collection.title}
-                </h2>
+                <h2 className="font-heading text-lg font-bold text-white">{collection.title}</h2>
                 {collection.description && (
                   <p className="mt-1 text-xs text-white/70 line-clamp-2">
                     {collection.description}
@@ -89,8 +97,18 @@ export default async function CollectionsPage() {
                 )}
                 <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-secondary)]">
                   Shop now
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                    />
                   </svg>
                 </span>
               </div>

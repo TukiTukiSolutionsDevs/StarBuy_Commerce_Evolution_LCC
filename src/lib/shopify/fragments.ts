@@ -37,6 +37,14 @@ export const PRODUCT_CARD_FRAGMENT = `
     }
     tags
     vendor
+    variants(first: 1) {
+      edges {
+        node {
+          id
+          availableForSale
+        }
+      }
+    }
   }
 `;
 

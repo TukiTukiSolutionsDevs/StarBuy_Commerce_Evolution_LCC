@@ -77,10 +77,19 @@ export type ShopifyProductCard = {
   featuredImage: ShopifyImage | null;
   tags: string[];
   vendor: string;
+  /** First variant — used for quick Add to Cart from listing cards */
+  variants: {
+    edges: Array<{
+      node: {
+        id: string;
+        availableForSale: boolean;
+      };
+    }>;
+  };
 };
 
 /** Full product with all details */
-export type ShopifyProduct = ShopifyProductCard & {
+export type ShopifyProduct = Omit<ShopifyProductCard, 'variants' | 'priceRange'> & {
   description: string;
   descriptionHtml: string;
   productType: string;

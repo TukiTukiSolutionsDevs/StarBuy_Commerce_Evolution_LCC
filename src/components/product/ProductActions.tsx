@@ -23,7 +23,7 @@ export function ProductActions({ product }: ProductActionsProps) {
   const defaultVariant = variants[0];
 
   const [selectedVariant, setSelectedVariant] = useState<ShopifyProductVariant | undefined>(
-    defaultVariant
+    defaultVariant,
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -35,8 +35,7 @@ export function ProductActions({ product }: ProductActionsProps) {
       : null);
 
   const hasDiscount =
-    currentCompareAt &&
-    parseFloat(currentCompareAt.amount) > parseFloat(currentPrice.amount);
+    currentCompareAt && parseFloat(currentCompareAt.amount) > parseFloat(currentPrice.amount);
 
   const hasOptions =
     product.options.length > 0 &&
@@ -52,7 +51,7 @@ export function ProductActions({ product }: ProductActionsProps) {
       ? Math.round(
           ((parseFloat(currentCompareAt.amount) - parseFloat(currentPrice.amount)) /
             parseFloat(currentCompareAt.amount)) *
-            100
+            100,
         )
       : 0;
 
@@ -104,14 +103,38 @@ export function ProductActions({ product }: ProductActionsProps) {
         )}
       </div>
 
+      {/* Availability indicator */}
+      {selectedVariant && (
+        <div className="flex items-center gap-2">
+          {selectedVariant.availableForSale ? (
+            <>
+              <span
+                className="inline-block h-2 w-2 rounded-full bg-emerald-500"
+                aria-hidden="true"
+              />
+              <span className="text-sm font-medium text-emerald-600">
+                {selectedVariant.quantityAvailable != null &&
+                selectedVariant.quantityAvailable <= 10 &&
+                selectedVariant.quantityAvailable > 0
+                  ? `Only ${selectedVariant.quantityAvailable} left in stock`
+                  : 'In Stock — Ready to Ship'}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="inline-block h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
+              <span className="text-sm font-medium text-red-600">Out of Stock</span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Shipping note — Stitch style */}
       <div className="flex items-center gap-3 p-4 bg-[#F8F9FC] rounded-lg border border-slate-100">
         <span className="material-symbols-outlined text-[#1B2A5E]" aria-hidden="true">
           local_shipping
         </span>
-        <span className="text-sm font-medium text-[#1A1A2E]">
-          Free shipping on orders over $50
-        </span>
+        <span className="text-sm font-medium text-[#1A1A2E]">Free shipping on orders over $50</span>
       </div>
     </div>
   );

@@ -22,21 +22,23 @@ export function CartPageContent() {
     <Container as="main" className="py-8 sm:py-12">
       {/* Breadcrumbs */}
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+        <ol className="flex items-center gap-2 text-sm text-slate-500">
           <li>
-            <Link href="/" className="hover:text-[var(--color-primary)] transition-colors">
+            <Link href="/" className="hover:text-[#1B2A5E] transition-colors">
               Home
             </Link>
           </li>
-          <li aria-hidden="true">/</li>
-          <li className="text-[var(--color-text-primary)] font-medium">Shopping Cart</li>
+          <li aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
+          </li>
+          <li className="text-[#1B2A5E] font-medium">Shopping Cart</li>
         </ol>
       </nav>
 
-      <h1 className="font-heading text-3xl font-bold text-[var(--color-text-primary)] sm:text-4xl mb-8">
+      <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)] mb-8">
         Shopping Cart
         {totalQuantity != null && totalQuantity > 0 && (
-          <span className="ml-3 text-lg font-normal text-[var(--color-text-secondary)]">
+          <span className="ml-3 text-lg font-normal text-slate-500">
             ({totalQuantity} {totalQuantity === 1 ? 'item' : 'items'})
           </span>
         )}
@@ -44,27 +46,22 @@ export function CartPageContent() {
 
       {cartLines.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-          <svg
-            className="h-24 w-24 text-gray-200"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-          </svg>
+          <span className="material-symbols-outlined text-[96px] text-gray-200" aria-hidden="true">
+            shopping_cart
+          </span>
           <div>
-            <h2 className="font-heading text-xl font-bold text-[var(--color-text-primary)] mb-2">
+            <h2 className="text-xl font-bold text-[#1B2A5E] font-[var(--font-heading)] mb-2">
               Your cart is empty
             </h2>
-            <p className="text-[var(--color-text-secondary)] mb-6">
-              Looks like you haven&apos;t added anything yet.
-            </p>
+            <p className="text-slate-500 mb-6">Looks like you haven&apos;t added anything yet.</p>
           </div>
           <Link
             href="/collections/all"
-            className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--color-primary-light)] transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#1B2A5E] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2a3f7e] transition-colors"
           >
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              storefront
+            </span>
             Start Shopping
           </Link>
         </div>
@@ -78,14 +75,19 @@ export function CartPageContent() {
                 const lineId = line.id;
                 const qty = line.quantity ?? 1;
                 const merch = line.merchandise;
-                const productTitle = ('product' in merch && merch.product && 'title' in merch.product)
-                  ? (merch.product as { title: string; handle?: string }).title
-                  : (merch.title ?? '');
-                const productHandle = ('product' in merch && merch.product && 'handle' in merch.product)
-                  ? (merch.product as { handle: string }).handle
-                  : null;
+                const productTitle =
+                  'product' in merch && merch.product && 'title' in merch.product
+                    ? (merch.product as { title: string; handle?: string }).title
+                    : (merch.title ?? '');
+                const productHandle =
+                  'product' in merch && merch.product && 'handle' in merch.product
+                    ? (merch.product as { handle: string }).handle
+                    : null;
                 const variantTitle = merch.title ?? '';
-                const imgData = 'image' in merch ? (merch.image as { url?: string; altText?: string | null } | null | undefined) : null;
+                const imgData =
+                  'image' in merch
+                    ? (merch.image as { url?: string; altText?: string | null } | null | undefined)
+                    : null;
                 const imgUrl = imgData?.url;
                 const imgAlt = imgData?.altText ?? variantTitle;
                 const lineTotal = line.cost?.totalAmount;
@@ -104,8 +106,18 @@ export function CartPageContent() {
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-gray-300">
-                          <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159" />
+                          <svg
+                            className="h-10 w-10"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={1}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159"
+                            />
                           </svg>
                         </div>
                       )}
@@ -155,7 +167,13 @@ export function CartPageContent() {
                             className="flex h-9 w-9 items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50"
                             aria-label="Decrease quantity"
                           >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
                               <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
                             </svg>
                           </button>
@@ -168,8 +186,18 @@ export function CartPageContent() {
                             className="flex h-9 w-9 items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50"
                             aria-label="Increase quantity"
                           >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 4v16m8-8H4"
+                              />
                             </svg>
                           </button>
                         </div>
@@ -189,45 +217,45 @@ export function CartPageContent() {
 
             <Link
               href="/collections/all"
-              className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium text-[#1B2A5E] hover:text-[#2a3f7e] transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                arrow_back
+              </span>
               Continue Shopping
             </Link>
           </div>
 
           {/* Order summary */}
           <div>
-            <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-6 shadow-[var(--shadow-card)]">
-              <h2 className="font-heading text-lg font-bold text-[var(--color-text-primary)] mb-4">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sticky top-24">
+              <h2 className="text-lg font-bold text-[#1B2A5E] font-[var(--font-heading)] mb-4">
                 Order Summary
               </h2>
 
               <dl className="space-y-3">
                 {cost?.subtotalAmount?.amount && cost?.subtotalAmount?.currencyCode && (
                   <div className="flex justify-between text-sm">
-                    <dt className="text-[var(--color-text-secondary)]">Subtotal</dt>
-                    <dd className="font-medium">
+                    <dt className="text-slate-500">Subtotal</dt>
+                    <dd className="font-semibold text-[#1A1A2E]">
                       {formatMoney(cost.subtotalAmount.amount, cost.subtotalAmount.currencyCode)}
                     </dd>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <dt className="text-[var(--color-text-secondary)]">Shipping</dt>
-                  <dd className="font-medium text-[var(--color-success)]">Calculated at checkout</dd>
+                  <dt className="text-slate-500">Shipping</dt>
+                  <dd className="font-medium text-emerald-600">Calculated at checkout</dd>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <dt className="text-[var(--color-text-secondary)]">Taxes</dt>
-                  <dd className="font-medium">Calculated at checkout</dd>
+                  <dt className="text-slate-500">Taxes</dt>
+                  <dd className="font-medium text-slate-500">Calculated at checkout</dd>
                 </div>
 
                 <div className="border-t border-gray-200 pt-3">
                   {cost?.totalAmount?.amount && cost?.totalAmount?.currencyCode && (
                     <div className="flex justify-between">
-                      <dt className="text-base font-bold">Total</dt>
-                      <dd className="text-base font-bold text-[var(--color-primary)]">
+                      <dt className="text-base font-bold text-[#1A1A2E]">Total</dt>
+                      <dd className="text-base font-bold text-[#1B2A5E]">
                         {formatMoney(cost.totalAmount.amount, cost.totalAmount.currencyCode)}
                       </dd>
                     </div>
@@ -238,20 +266,31 @@ export function CartPageContent() {
               {checkoutUrl ? (
                 <a
                   href={checkoutUrl}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] py-3.5 text-sm font-bold text-white hover:bg-[var(--color-primary-light)] transition-colors"
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#1B2A5E] py-3.5 text-sm font-bold text-white hover:bg-[#2a3f7e] transition-colors active:scale-[0.98]"
                 >
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    lock
+                  </span>
                   Proceed to Checkout
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
+                  {isLoading && (
+                    <span
+                      className="material-symbols-outlined text-base animate-spin"
+                      aria-hidden="true"
+                    >
+                      progress_activity
+                    </span>
+                  )}
                 </a>
               ) : (
-                <div className="mt-6 rounded-[var(--radius-md)] bg-gray-100 py-3.5 text-center text-sm text-[var(--color-text-secondary)]">
-                  Initializing cart...
+                <div className="mt-6 rounded-lg bg-gray-100 py-3.5 text-center text-sm text-slate-400">
+                  Initializing cart…
                 </div>
               )}
 
-              <p className="mt-3 text-center text-xs text-[var(--color-text-secondary)]">
+              <p className="mt-3 text-center text-xs text-slate-400 flex items-center justify-center gap-1">
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                  shield
+                </span>
                 Secure checkout powered by Shopify
               </p>
             </div>

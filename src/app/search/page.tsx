@@ -42,6 +42,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         featuredImage: p.featuredImage,
         tags: [],
         vendor: '',
+        variants: { edges: [] },
       }));
       suggestions = results.queries?.map((s) => s.text) ?? [];
     } catch {
@@ -59,20 +60,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <Container as="main" className="py-8 sm:py-12">
       {/* Breadcrumbs */}
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+        <ol className="flex items-center gap-2 text-sm text-slate-500">
           <li>
-            <Link href="/" className="hover:text-[var(--color-primary)] transition-colors">
+            <Link href="/" className="hover:text-[#1B2A5E] transition-colors">
               Home
             </Link>
           </li>
-          <li aria-hidden="true">/</li>
-          <li className="text-[var(--color-text-primary)] font-medium">Search</li>
+          <li aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
+          </li>
+          <li className="text-[#1B2A5E] font-medium">Search</li>
         </ol>
       </nav>
 
       {/* Search form */}
       <div className="mb-8 max-w-xl">
-        <h1 className="font-heading text-3xl font-bold text-[var(--color-text-primary)] mb-4">
+        <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)] mb-4">
           Search Products
         </h1>
         <SearchForm initialQuery={q} />
@@ -98,12 +101,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {q.trim() && (
         <>
           <div className="mb-6 flex items-center justify-between">
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {hasError
-                ? 'An error occurred during search.'
-                : products.length > 0
-                ? `${products.length} result${products.length === 1 ? '' : 's'} for "${q}"`
-                : `No results found for "${q}"`}
+            <p className="text-sm text-slate-500">
+              {hasError ? (
+                'An error occurred during search.'
+              ) : products.length > 0 ? (
+                <>
+                  <span className="font-semibold text-[#1B2A5E]">{products.length}</span>
+                  {` result${products.length === 1 ? '' : 's'} for `}
+                  <span className="font-semibold text-[#1B2A5E]">&quot;{q}&quot;</span>
+                </>
+              ) : (
+                `No results found for "${q}"`
+              )}
             </p>
           </div>
 
@@ -114,37 +123,57 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               ))}
             </div>
           ) : !hasError ? (
-            <div className="rounded-[var(--radius-lg)] border border-dashed border-gray-300 py-16 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-300 mb-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1}
+            <div className="rounded-2xl border border-dashed border-gray-300 py-16 text-center">
+              <span
+                className="material-symbols-outlined text-6xl text-gray-300 mb-4 block"
+                aria-hidden="true"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <h2 className="font-heading text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+                search_off
+              </span>
+              <h2 className="text-lg font-bold text-[#1B2A5E] font-[var(--font-heading)] mb-2">
                 No products found
               </h2>
-              <p className="text-[var(--color-text-secondary)] text-sm mb-6">
-                Try adjusting your search or browse our collections.
+              <p className="text-slate-500 text-sm mb-6">
+                Try a different search term or browse our collections.
               </p>
               <Link
                 href="/collections"
-                className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-primary)] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-primary-light)] transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#1B2A5E] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2a3f7e] transition-colors"
               >
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  grid_view
+                </span>
                 Browse Collections
               </Link>
             </div>
-          ) : null}
+          ) : (
+            /* hasError — show error state */
+            <div className="rounded-2xl border border-dashed border-red-200 py-16 text-center bg-red-50/50">
+              <span
+                className="material-symbols-outlined text-6xl text-red-300 mb-4 block"
+                aria-hidden="true"
+              >
+                error_outline
+              </span>
+              <h2 className="text-lg font-bold text-red-700 font-[var(--font-heading)] mb-2">
+                Search unavailable
+              </h2>
+              <p className="text-slate-500 text-sm">
+                We couldn&apos;t complete your search. Please try again later.
+              </p>
+            </div>
+          )}
         </>
       )}
 
       {/* Empty state when no query */}
       {!q.trim() && (
-        <div className="mt-8 text-center text-[var(--color-text-secondary)]">
-          <p>Enter a search term above to find products.</p>
+        <div className="mt-12 flex flex-col items-center gap-4 py-16 text-center">
+          <span className="material-symbols-outlined text-7xl text-gray-200" aria-hidden="true">
+            manage_search
+          </span>
+          <p className="text-slate-500 font-medium">Start typing to search products</p>
+          <p className="text-sm text-slate-400">Search by product name, type, or keyword</p>
         </div>
       )}
     </Container>
