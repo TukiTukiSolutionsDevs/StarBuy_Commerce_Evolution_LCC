@@ -22,6 +22,12 @@ type StoreInfo = {
   apiVersion: string;
 };
 
+type ApiKeyStatus = {
+  configured: boolean;
+  source: 'env' | 'runtime' | null;
+  masked: string;
+};
+
 type Config = {
   provider: Provider;
   model: string;
@@ -34,6 +40,7 @@ type Config = {
   };
   providers: Record<Provider, ProviderInfo>;
   storeInfo: StoreInfo | null;
+  apiKeyStatus?: Record<'claude' | 'openai' | 'gemini', ApiKeyStatus>;
 };
 
 // ─── Provider Metadata ─────────────────────────────────────────────────────────
@@ -130,12 +137,25 @@ export default function SettingsPage() {
   const [config, setConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingKeys, setSavingKeys] = useState(false);
 
   // AI Provider state
   const [selectedProvider, setSelectedProvider] = useState<Provider>('claude');
   const [selectedModel, setSelectedModel] = useState('');
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState('llama3.1:8b');
+
+  // API Key state (inputs — never pre-filled with real values)
+  const [apiKeyInputs, setApiKeyInputs] = useState<Record<string, string>>({
+    claude: '',
+    openai: '',
+    gemini: '',
+  });
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({
+    claude: false,
+    openai: false,
+    gemini: false,
+  });
 
   // Connection test results
   const [shopifyTest, setShopifyTest] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -185,6 +205,49 @@ export default function SettingsPage() {
       toast.error('Failed to save settings');
     } finally {
       setSaving(false);
+    }
+  }
+
+  // ─── API Key Save ─────────────────────────────────────────────────────────────
+
+  async function handleSaveKeys() {
+    // Only send keys that were actually typed (non-empty)
+    const keysToSave = Object.fromEntries(
+      Object.entries(apiKeyInputs).filter(([, v]) => v.trim().length > 0),
+    );
+
+    if (Object.keys(keysToSave).length === 0) {
+      toast.error('No keys entered — type an API key to save it');
+      return;
+    }
+
+    setSavingKeys(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKeys: keysToSave }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      const data = (await res.json()) as { apiKeyStatus?: Config['apiKeyStatus'] };
+
+      // Update config with new key status so badges refresh
+      if (data.apiKeyStatus) {
+        setConfig((prev) => (prev ? { ...prev, apiKeyStatus: data.apiKeyStatus } : prev));
+      }
+
+      // Clear the inputs that were saved
+      setApiKeyInputs((prev) => {
+        const next = { ...prev };
+        for (const k of Object.keys(keysToSave)) next[k] = '';
+        return next;
+      });
+
+      toast.success('API keys saved successfully');
+    } catch {
+      toast.error('Failed to save API keys');
+    } finally {
+      setSavingKeys(false);
     }
   }
 
@@ -560,6 +623,9 @@ export default function SettingsPage() {
               const isSelected = selectedProvider === p;
               const isReady = p === 'ollama' || info.configured;
 
+              const keyStatus = p !== 'ollama' ? config.apiKeyStatus?.[p] : null;
+              const keySource = keyStatus?.source ?? null;
+
               return (
                 <button
                   key={p}
@@ -573,8 +639,18 @@ export default function SettingsPage() {
                   {/* Status badge */}
                   <div className="absolute top-3 right-3">
                     {isReady ? (
-                      <span className="flex items-center gap-1 text-[10px] text-[#10b981] bg-[#10b981]/10 px-2 py-0.5 rounded-full">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                      <span
+                        className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${
+                          keySource === 'runtime'
+                            ? 'text-[#d4a843] bg-[#d4a843]/10'
+                            : 'text-[#10b981] bg-[#10b981]/10'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            keySource === 'runtime' ? 'bg-[#d4a843]' : 'bg-[#10b981]'
+                          }`}
+                        />
                         Ready
                       </span>
                     ) : (
@@ -604,12 +680,126 @@ export default function SettingsPage() {
 
                   {!isReady && meta.envKey && (
                     <p className="text-[#374151] text-[10px] mt-2 font-mono">
-                      Add {meta.envKey} to .env.local
+                      Add key below or set {meta.envKey}
                     </p>
                   )}
                 </button>
               );
             })}
+          </div>
+
+          {/* ── API Keys ──────────────────────────────────────────────────────────── */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-medium text-[#9ca3af] flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm text-[#d4a843]">key</span>
+              API Keys
+              <span className="text-[10px] bg-[#1f2d4e] text-[#6b7280] px-2 py-0.5 rounded-full font-normal">
+                stored server-side, never exposed
+              </span>
+            </h3>
+
+            {(['claude', 'openai', 'gemini'] as const).map((p) => {
+              const meta = PROVIDER_META[p];
+              const status = config.apiKeyStatus?.[p];
+              const isKeySet = status?.configured ?? config.providers[p].configured;
+              const inputVal = apiKeyInputs[p] ?? '';
+              const isVisible = showKeys[p] ?? false;
+
+              return (
+                <div key={p} className="bg-[#0d1526] rounded-xl p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ color: meta.color }}
+                      >
+                        {meta.icon}
+                      </span>
+                      <span className="text-sm text-white font-medium">{meta.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isKeySet && status && (
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${
+                            status.source === 'runtime'
+                              ? 'bg-[#d4a843]/10 text-[#d4a843]'
+                              : 'bg-[#10b981]/10 text-[#10b981]'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              status.source === 'runtime' ? 'bg-[#d4a843]' : 'bg-[#10b981]'
+                            }`}
+                          />
+                          {status.source === 'runtime' ? 'Runtime key' : 'Env var'}
+                        </span>
+                      )}
+                      {!isKeySet && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444] flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+                          Not set
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Masked current key */}
+                  {isKeySet && status?.masked && (
+                    <p className="text-[11px] font-mono text-[#6b7280] bg-[#111827] px-3 py-1.5 rounded-lg">
+                      Current: {status.masked}
+                    </p>
+                  )}
+
+                  {/* Input for new key */}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type={isVisible ? 'text' : 'password'}
+                        value={inputVal}
+                        onChange={(e) =>
+                          setApiKeyInputs((prev) => ({ ...prev, [p]: e.target.value }))
+                        }
+                        placeholder={
+                          isKeySet
+                            ? `Enter new ${meta.name} key to replace...`
+                            : `Enter ${meta.name} API key...`
+                        }
+                        className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowKeys((prev) => ({ ...prev, [p]: !isVisible }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          {isVisible ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-[#374151] font-mono">Env: {meta.envKey}</p>
+                </div>
+              );
+            })}
+
+            {/* Save Keys Button */}
+            <div className="flex justify-end pt-1">
+              <button
+                onClick={handleSaveKeys}
+                disabled={savingKeys}
+                className="bg-[#1f2d4e] hover:bg-[#2a3d5e] disabled:bg-[#1f2d4e]/50 text-[#d4a843] border border-[#d4a843]/30 font-semibold rounded-xl px-6 py-2.5 text-sm transition-colors flex items-center gap-2"
+              >
+                {savingKeys ? (
+                  <span className="material-symbols-outlined text-base animate-spin">
+                    progress_activity
+                  </span>
+                ) : (
+                  <span className="material-symbols-outlined text-base">key</span>
+                )}
+                Save Keys
+              </button>
+            </div>
           </div>
 
           {/* Model Selection */}
@@ -722,11 +912,12 @@ export default function SettingsPage() {
                   <div className="mt-3 bg-[#ef4444]/5 border border-[#ef4444]/20 rounded-xl p-3 text-xs text-[#ef4444] flex items-start gap-2">
                     <span className="material-symbols-outlined text-sm mt-0.5">warning</span>
                     <div>
-                      <strong>API key missing.</strong> Add{' '}
+                      <strong>API key missing.</strong> Enter the key in the{' '}
+                      <strong>API Keys</strong> section above, or set{' '}
                       <code className="bg-[#ef4444]/10 px-1 rounded">
                         {activeProviderMeta.envKey}
                       </code>{' '}
-                      to your <code>.env.local</code> file and restart the server.
+                      in <code>.env.local</code>.
                     </div>
                   </div>
                 )}

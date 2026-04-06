@@ -13,6 +13,7 @@ import { streamText, stepCountIs } from 'ai';
 import type { NextRequest } from 'next/server';
 import { adminTools } from '@/lib/ai/tools';
 import { getActiveProvider } from '@/lib/ai/config';
+import { getApiKey } from '@/lib/ai/api-keys';
 import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 import { routeMessage, getAgentTools, getAgent } from '@/lib/ai/agents';
 
@@ -84,18 +85,19 @@ export async function POST(request: NextRequest) {
   const { provider, model: modelName } = getActiveProvider();
 
   // Validate API key exists (except Ollama which is local)
-  const keyMap: Record<string, string> = {
-    claude: 'ANTHROPIC_API_KEY',
-    openai: 'OPENAI_API_KEY',
-    gemini: 'GOOGLE_GENERATIVE_AI_API_KEY',
-  };
-
+  // Uses getApiKey() which checks runtime-stored keys first, then falls back to env vars
   if (provider !== 'ollama') {
-    const envKey = keyMap[provider];
-    if (!envKey || !process.env[envKey]) {
+    const key = getApiKey(provider as 'claude' | 'openai' | 'gemini');
+    if (!key) {
+      const envKeyMap: Record<string, string> = {
+        claude: 'ANTHROPIC_API_KEY',
+        openai: 'OPENAI_API_KEY',
+        gemini: 'GOOGLE_GENERATIVE_AI_API_KEY',
+      };
+      const envKey = envKeyMap[provider] ?? `${provider.toUpperCase()}_API_KEY`;
       return Response.json(
         {
-          error: `${provider.toUpperCase()} API key not configured. Add ${envKey} to .env.local or switch provider in Settings.`,
+          error: `${provider.toUpperCase()} API key not configured. Add it in Settings → API Keys or set ${envKey} in .env.local.`,
         },
         { status: 503 },
       );
@@ -145,10 +147,25 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const model = (await resolveModel(provider, modelName)) as any;
 
+    // ─── Gemini message sanitization ───────────────────────────────────────────
+    // Gemini is stricter than Claude/OpenAI: it rejects tool-result messages,
+    // system-role messages (handled by the `system` param), and non-string content.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sanitizedMessages: any[] = messages as any[];
+    if (provider === 'gemini') {
+      sanitizedMessages = (messages as any[]).filter((m) => {
+        // Keep only user/assistant roles with plain string content
+        if (m.role !== 'user' && m.role !== 'assistant') return false;
+        // Drop messages with non-string content (part arrays, tool calls, etc.)
+        if (typeof m.content !== 'string') return false;
+        return true;
+      });
+    }
+
     const result = streamText({
       model,
       system: systemPrompt,
-      messages: messages as any,
+      messages: sanitizedMessages,
       tools,
       stopWhen: stepCountIs(5),
     } as any);

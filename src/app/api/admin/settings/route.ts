@@ -7,6 +7,7 @@
 
 import type { NextRequest } from 'next/server';
 import { getFullConfig, saveConfig, type AIProvider } from '@/lib/ai/config';
+import { getApiKeyStatus, setApiKey, type ApiKeyProvider } from '@/lib/ai/api-keys';
 import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
@@ -80,8 +81,9 @@ export async function GET(request: NextRequest) {
 
   const config = getFullConfig();
   const storeInfo = await fetchStoreInfo();
+  const apiKeyStatus = getApiKeyStatus();
 
-  return Response.json({ ...config, storeInfo });
+  return Response.json({ ...config, storeInfo, apiKeyStatus });
 }
 
 // ─── PUT — update config ────────────────────────────────────────────────────────
@@ -98,10 +100,35 @@ export async function PUT(request: NextRequest) {
       model?: string;
       ollamaBaseUrl?: string;
       ollamaModel?: string;
+      apiKeys?: { claude?: string; openai?: string; gemini?: string };
     };
 
-    const updated = saveConfig(body);
-    return Response.json({ success: true, config: updated });
+    // Handle API key saves
+    if (body.apiKeys) {
+      const providers: ApiKeyProvider[] = ['claude', 'openai', 'gemini'];
+      for (const p of providers) {
+        const key = body.apiKeys[p];
+        if (key !== undefined) {
+          setApiKey(p, key);
+        }
+      }
+    }
+
+    // Handle provider/model config updates (may be sent together with apiKeys or alone)
+    const configUpdate: {
+      provider?: AIProvider;
+      model?: string;
+      ollamaBaseUrl?: string;
+      ollamaModel?: string;
+    } = {};
+    if (body.provider !== undefined) configUpdate.provider = body.provider;
+    if (body.model !== undefined) configUpdate.model = body.model;
+    if (body.ollamaBaseUrl !== undefined) configUpdate.ollamaBaseUrl = body.ollamaBaseUrl;
+    if (body.ollamaModel !== undefined) configUpdate.ollamaModel = body.ollamaModel;
+
+    const updated = saveConfig(configUpdate);
+    const apiKeyStatus = getApiKeyStatus();
+    return Response.json({ success: true, config: updated, apiKeyStatus });
   } catch (err) {
     return Response.json({ error: (err as Error).message }, { status: 400 });
   }

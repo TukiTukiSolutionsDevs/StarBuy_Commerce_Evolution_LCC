@@ -38,6 +38,7 @@ yarn-error.log*
 
 # AI & admin runtime data (generated at runtime on the VPS)
 .admin-ai-config.json
+.admin-ai-keys.json
 .admin-ai-memory/
 .admin-automations/
 .admin-activity/
