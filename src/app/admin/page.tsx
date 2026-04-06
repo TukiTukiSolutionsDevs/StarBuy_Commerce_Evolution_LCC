@@ -199,7 +199,10 @@ function KpiCard({
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-heading)' }}>
+        <p
+          className="text-3xl font-bold"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+        >
           {value}
         </p>
         {sub && <p className="text-[#6b7280] text-xs mt-1">{sub}</p>}
@@ -244,7 +247,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
-      <h2 className="text-white font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+      <h2 className="font-semibold" style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}>
         {title}
       </h2>
       {href && (
@@ -321,7 +324,10 @@ export default function AdminDashboardPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-heading)' }}>
+        <h1
+          className="text-2xl font-bold"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+        >
           Dashboard
         </h1>
         <p className="text-[#6b7280] text-sm mt-1">
@@ -392,8 +398,8 @@ export default function AdminDashboardPage() {
             <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6">
               <div className="mb-4">
                 <h2
-                  className="text-white font-semibold"
-                  style={{ fontFamily: 'var(--font-heading)' }}
+                  className="font-semibold"
+                  style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
                 >
                   Revenue (Last 7 Days)
                 </h2>
@@ -406,8 +412,8 @@ export default function AdminDashboardPage() {
             <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6">
               <div className="mb-4">
                 <h2
-                  className="text-white font-semibold"
-                  style={{ fontFamily: 'var(--font-heading)' }}
+                  className="font-semibold"
+                  style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
                 >
                   Orders by Status
                 </h2>
@@ -583,8 +589,8 @@ export default function AdminDashboardPage() {
           (data?.lowStockProducts?.length ?? 0) > 0) && (
           <div>
             <h2
-              className="text-white font-semibold mb-4"
-              style={{ fontFamily: 'var(--font-heading)' }}
+              className="font-semibold mb-4"
+              style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
             >
               Inventory Alerts
             </h2>
@@ -652,7 +658,10 @@ export default function AdminDashboardPage() {
 
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-white font-semibold mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+        <h2
+          className="font-semibold mb-4"
+          style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+        >
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
