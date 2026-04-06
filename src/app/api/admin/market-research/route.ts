@@ -30,21 +30,23 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
   return payload !== null;
 }
 
-// ─── Model Resolver (mirrors chat/route.ts) ───────────────────────────────────
+// ─── Model Resolver — passes API key explicitly for runtime keys ──────────────
 
-async function resolveModel(provider: string, modelName: string) {
+async function resolveModel(provider: string, modelName: string, apiKey?: string) {
   switch (provider) {
     case 'claude': {
-      const { anthropic } = await import('@ai-sdk/anthropic');
-      return anthropic(modelName);
+      const { createAnthropic } = await import('@ai-sdk/anthropic');
+      return createAnthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY || '' })(modelName);
     }
     case 'openai': {
-      const { openai } = await import('@ai-sdk/openai');
-      return openai(modelName);
+      const { createOpenAI } = await import('@ai-sdk/openai');
+      return createOpenAI({ apiKey: apiKey || process.env.OPENAI_API_KEY || '' })(modelName);
     }
     case 'gemini': {
-      const { google } = await import('@ai-sdk/google');
-      return google(modelName);
+      const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
+      return createGoogleGenerativeAI({
+        apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
+      })(modelName);
     }
     case 'ollama': {
       const { ollama } = await import('ollama-ai-provider');
@@ -53,6 +55,27 @@ async function resolveModel(provider: string, modelName: string) {
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }
+}
+
+// ─── Auto-detect best provider ────────────────────────────────────────────────
+
+const PRIORITY: Array<'claude' | 'openai' | 'gemini'> = ['claude', 'openai', 'gemini'];
+const DEFAULTS: Record<string, string> = {
+  claude: 'claude-sonnet-4-5',
+  openai: 'gpt-4o',
+  gemini: 'gemini-2.5-flash',
+};
+
+function autoDetect(preferred: string, preferredModel: string) {
+  if (preferred === 'ollama') return { provider: 'ollama', model: preferredModel, key: '' };
+  const k = getApiKey(preferred as 'claude' | 'openai' | 'gemini');
+  if (k) return { provider: preferred, model: preferredModel, key: k };
+  for (const p of PRIORITY) {
+    if (p === preferred) continue;
+    const key = getApiKey(p);
+    if (key) return { provider: p, model: DEFAULTS[p], key };
+  }
+  return null;
 }
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
@@ -147,27 +170,18 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'query is required' }, { status: 400 });
   }
 
-  // Get active AI provider
-  const { provider, model: modelName } = getActiveProvider();
+  // Auto-detect best provider with a configured API key
+  const { provider: configuredProvider, model: configuredModel } = getActiveProvider();
+  const resolved = autoDetect(configuredProvider, configuredModel);
 
-  // Validate API key (except Ollama)
-  if (provider !== 'ollama') {
-    const key = getApiKey(provider as 'claude' | 'openai' | 'gemini');
-    if (!key) {
-      const envKeyMap: Record<string, string> = {
-        claude: 'ANTHROPIC_API_KEY',
-        openai: 'OPENAI_API_KEY',
-        gemini: 'GOOGLE_GENERATIVE_AI_API_KEY',
-      };
-      const envKey = envKeyMap[provider] ?? `${provider.toUpperCase()}_API_KEY`;
-      return Response.json(
-        {
-          error: `${provider.toUpperCase()} API key not configured. Add it in Settings → API Keys or set ${envKey} in .env.local.`,
-        },
-        { status: 503 },
-      );
-    }
+  if (!resolved) {
+    return Response.json(
+      { error: 'No AI provider configured. Go to Settings and add at least one API key.' },
+      { status: 503 },
+    );
   }
+
+  const { provider, model: modelName, key: apiKey } = resolved;
 
   // Validate Tavily key if tavily mode is requested
   if (searchMode === 'tavily') {
@@ -198,7 +212,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const model = (await resolveModel(provider, modelName)) as any;
+    const model = (await resolveModel(provider, modelName, apiKey)) as any;
     const systemPrompt = buildSystemPrompt(query, category, sessionId);
 
     const result = streamText({

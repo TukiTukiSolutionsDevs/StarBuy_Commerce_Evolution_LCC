@@ -50,20 +50,26 @@ Guidelines:
 - When creating products, ask for missing required info before proceeding`;
 
 // ─── Model Resolver ────────────────────────────────────────────────────────────
+// Passes the API key explicitly so runtime-stored keys (from Settings UI) work.
 
-async function resolveModel(provider: string, modelName: string) {
+async function resolveModel(provider: string, modelName: string, apiKey?: string) {
   switch (provider) {
     case 'claude': {
-      const { anthropic } = await import('@ai-sdk/anthropic');
-      return anthropic(modelName);
+      const { createAnthropic } = await import('@ai-sdk/anthropic');
+      const client = createAnthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY || '' });
+      return client(modelName);
     }
     case 'openai': {
-      const { openai } = await import('@ai-sdk/openai');
-      return openai(modelName);
+      const { createOpenAI } = await import('@ai-sdk/openai');
+      const client = createOpenAI({ apiKey: apiKey || process.env.OPENAI_API_KEY || '' });
+      return client(modelName);
     }
     case 'gemini': {
-      const { google } = await import('@ai-sdk/google');
-      return google(modelName);
+      const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
+      const client = createGoogleGenerativeAI({
+        apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
+      });
+      return client(modelName);
     }
     case 'ollama': {
       const { ollama } = await import('ollama-ai-provider');
@@ -74,6 +80,35 @@ async function resolveModel(provider: string, modelName: string) {
   }
 }
 
+// ─── Auto-detect best available provider ──────────────────────────────────────
+// If the configured provider has no key, fall back to whichever provider DOES have one.
+
+const PROVIDER_PRIORITY: Array<'claude' | 'openai' | 'gemini'> = ['claude', 'openai', 'gemini'];
+const DEFAULT_MODELS: Record<string, string> = {
+  claude: 'claude-sonnet-4-5',
+  openai: 'gpt-4o',
+  gemini: 'gemini-2.5-flash',
+};
+
+function autoDetectProvider(
+  preferred: string,
+  preferredModel: string,
+): { provider: string; model: string; key: string } | null {
+  // Try preferred first
+  if (preferred === 'ollama') return { provider: 'ollama', model: preferredModel, key: '' };
+  const prefKey = getApiKey(preferred as 'claude' | 'openai' | 'gemini');
+  if (prefKey) return { provider: preferred, model: preferredModel, key: prefKey };
+
+  // Fallback: try others in priority order
+  for (const p of PROVIDER_PRIORITY) {
+    if (p === preferred) continue;
+    const key = getApiKey(p);
+    if (key) return { provider: p, model: DEFAULT_MODELS[p], key };
+  }
+
+  return null; // No provider has a key
+}
+
 // ─── POST ──────────────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
@@ -81,28 +116,21 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Get active provider from settings
-  const { provider, model: modelName } = getActiveProvider();
+  // Get active provider from settings + auto-detect if configured one has no key
+  const { provider: configuredProvider, model: configuredModel } = getActiveProvider();
+  const resolved = autoDetectProvider(configuredProvider, configuredModel);
 
-  // Validate API key exists (except Ollama which is local)
-  // Uses getApiKey() which checks runtime-stored keys first, then falls back to env vars
-  if (provider !== 'ollama') {
-    const key = getApiKey(provider as 'claude' | 'openai' | 'gemini');
-    if (!key) {
-      const envKeyMap: Record<string, string> = {
-        claude: 'ANTHROPIC_API_KEY',
-        openai: 'OPENAI_API_KEY',
-        gemini: 'GOOGLE_GENERATIVE_AI_API_KEY',
-      };
-      const envKey = envKeyMap[provider] ?? `${provider.toUpperCase()}_API_KEY`;
-      return Response.json(
-        {
-          error: `${provider.toUpperCase()} API key not configured. Add it in Settings → API Keys or set ${envKey} in .env.local.`,
-        },
-        { status: 503 },
-      );
-    }
+  if (!resolved) {
+    return Response.json(
+      {
+        error:
+          'No AI provider configured. Go to Settings and add at least one API key (Claude, OpenAI, or Gemini).',
+      },
+      { status: 503 },
+    );
   }
+
+  const { provider, model: modelName, key: apiKey } = resolved;
 
   // Parse messages
   let messages: Array<{ role: string; content: string }>;
@@ -145,7 +173,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const model = (await resolveModel(provider, modelName)) as any;
+    const model = (await resolveModel(provider, modelName, apiKey)) as any;
 
     // ─── Gemini message sanitization ───────────────────────────────────────────
     // Gemini is stricter than Claude/OpenAI: it rejects tool-result messages,

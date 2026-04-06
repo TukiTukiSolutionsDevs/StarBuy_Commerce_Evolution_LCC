@@ -256,11 +256,13 @@ export default function SettingsPage() {
     claude: '',
     openai: '',
     gemini: '',
+    tavily: '',
   });
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({
     claude: false,
     openai: false,
     gemini: false,
+    tavily: false,
   });
 
   // Connection test results
@@ -883,191 +885,122 @@ export default function SettingsPage() {
             })}
           </div>
 
-          {/* ── API Keys ──────────────────────────────────────────────────────────── */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-medium text-[#9ca3af] flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm text-[#d4a843]">key</span>
+          {/* ── API Keys ───────────────────────────────────────────────────────── */}
+          <div className="px-0 py-2 border-t border-[#1f2d4e]">
+            <h3 className="text-white text-sm font-semibold flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-[#d4a843] text-lg">key</span>
               API Keys
-              <span className="text-[10px] bg-[#1f2d4e] text-[#6b7280] px-2 py-0.5 rounded-full font-normal">
-                stored server-side, never exposed
-              </span>
             </h3>
 
-            {(['claude', 'openai', 'gemini'] as const).map((p) => {
-              const meta = PROVIDER_META[p];
-              const status = config.apiKeyStatus?.[p];
-              const isKeySet = status?.configured ?? config.providers[p].configured;
-              const inputVal = apiKeyInputs[p] ?? '';
-              const isVisible = showKeys[p] ?? false;
-
-              const GUIDE_DATA: Record<
-                'claude' | 'openai' | 'gemini',
+            <div className="space-y-3">
+              {[
                 {
-                  why: string;
-                  steps: string[];
-                  pricing: string;
-                  pricingNote: string;
-                  links: { text: string; href: string }[];
-                  recommended?: boolean;
-                }
-              > = {
-                claude: {
-                  recommended: true,
-                  why: 'Best tool calling and reasoning. Handles complex Shopify operations accurately.',
-                  steps: [
-                    'Go to <a href="https://console.anthropic.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">console.anthropic.com</a>',
-                    'Create a free account',
-                    'Go to <strong>API Keys → Create Key</strong>',
-                    'Copy the key — it starts with <code class="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">sk-ant-</code>',
-                    'Paste it in the field below',
-                  ],
-                  pricing: '$3/MTok input, $15/MTok output. ~$0.02 per chat message average.',
-                  pricingNote: '$5 free credit on signup — enough for ~250 messages.',
-                  links: [{ text: 'console.anthropic.com', href: 'https://console.anthropic.com' }],
+                  key: 'claude' as const,
+                  label: 'Claude',
+                  icon: 'psychology',
+                  color: '#d4a843',
+                  env: 'ANTHROPIC_API_KEY',
+                  placeholder: 'sk-ant-...',
                 },
-                openai: {
-                  why: 'GPT-4o is fast and reliable for general tasks. Good alternative to Claude.',
-                  steps: [
-                    'Go to <a href="https://platform.openai.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">platform.openai.com</a>',
-                    'Create a free account',
-                    'Go to <strong>API Keys → Create new secret key</strong>',
-                    'Copy the key — it starts with <code class="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">sk-</code>',
-                    'Paste it in the field below',
-                  ],
-                  pricing: '$2.50/MTok input, $10/MTok output. ~$0.01 per chat message average.',
-                  pricingNote: '$5 free credit on signup.',
-                  links: [{ text: 'platform.openai.com', href: 'https://platform.openai.com' }],
+                {
+                  key: 'openai' as const,
+                  label: 'OpenAI',
+                  icon: 'auto_awesome',
+                  color: '#10b981',
+                  env: 'OPENAI_API_KEY',
+                  placeholder: 'sk-...',
                 },
-                gemini: {
-                  why: 'Good for image analysis and multimodal tasks. Very generous free tier.',
-                  steps: [
-                    'Go to <a href="https://aistudio.google.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">aistudio.google.com</a>',
-                    'Sign in with your Google account',
-                    'Click <strong>"Get API Key" → Create API key</strong>',
-                    'Copy the key',
-                    'Paste it in the field below',
-                  ],
-                  pricing: 'Free tier: 15 RPM, 1 million tokens/min. Paid: $0.075/MTok.',
-                  pricingNote: 'Very generous — 15 requests/minute completely free!',
-                  links: [{ text: 'aistudio.google.com', href: 'https://aistudio.google.com' }],
+                {
+                  key: 'gemini' as const,
+                  label: 'Gemini',
+                  icon: 'diamond',
+                  color: '#6366f1',
+                  env: 'GOOGLE_GENERATIVE_AI_API_KEY',
+                  placeholder: 'AIza...',
                 },
-              };
+                {
+                  key: 'tavily' as const,
+                  label: 'Tavily',
+                  icon: 'travel_explore',
+                  color: '#f59e0b',
+                  env: 'TAVILY_API_KEY',
+                  placeholder: 'tvly-...',
+                },
+              ].map((p) => {
+                const status = config?.apiKeyStatus?.[p.key];
+                return (
+                  <div key={p.key} className="flex items-center gap-3">
+                    {/* Icon */}
+                    <span
+                      className="material-symbols-outlined text-lg flex-none"
+                      style={{ color: p.color }}
+                    >
+                      {p.icon}
+                    </span>
 
-              const guide = GUIDE_DATA[p];
+                    {/* Name + status */}
+                    <div className="w-20 flex-none">
+                      <span className="text-white text-xs font-medium">{p.label}</span>
+                      <div className="mt-0.5">
+                        {status?.configured ? (
+                          <span className="text-[10px] text-[#10b981]">
+                            ✓ {status.source === 'runtime' ? 'UI' : 'env'}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-[#374151]">not set</span>
+                        )}
+                      </div>
+                    </div>
 
-              return (
-                <div key={p} className="bg-[#0d1526] rounded-xl p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="material-symbols-outlined text-sm"
-                        style={{ color: meta.color }}
-                      >
-                        {meta.icon}
+                    {/* Current masked key (if exists) */}
+                    {status?.configured && status.masked && (
+                      <span className="text-[10px] text-[#374151] font-mono flex-none w-28 truncate">
+                        {status.masked}
                       </span>
-                      <span className="text-sm text-white font-medium">{meta.name}</span>
-                      {guide.recommended && (
-                        <span className="bg-[#d4a843]/10 text-[#d4a843] text-[10px] px-2 py-0.5 rounded-full font-medium">
-                          ⭐ Recommended
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isKeySet && status && (
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${
-                            status.source === 'runtime'
-                              ? 'bg-[#d4a843]/10 text-[#d4a843]'
-                              : 'bg-[#10b981]/10 text-[#10b981]'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              status.source === 'runtime' ? 'bg-[#d4a843]' : 'bg-[#10b981]'
-                            }`}
-                          />
-                          {status.source === 'runtime' ? 'Runtime key' : 'Env var'}
-                        </span>
-                      )}
-                      {!isKeySet && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444] flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
-                          Not set
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    )}
 
-                  {/* Why this provider */}
-                  <p className="text-[10px] text-[#6b7280] italic">{guide.why}</p>
-
-                  {/* Setup Guide (collapsible) */}
-                  <SetupGuide
-                    open={guideOpen[p] ?? false}
-                    onToggle={() => setGuideOpen((prev) => ({ ...prev, [p]: !prev[p] }))}
-                    steps={guide.steps}
-                    pricing={guide.pricing}
-                    pricingNote={guide.pricingNote}
-                    links={guide.links}
-                  />
-
-                  {/* Masked current key */}
-                  {isKeySet && status?.masked && (
-                    <p className="text-[11px] font-mono text-[#6b7280] bg-[#111827] px-3 py-1.5 rounded-lg">
-                      Current: {status.masked}
-                    </p>
-                  )}
-
-                  {/* Input for new key */}
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
+                    {/* Input */}
+                    <div className="flex-1 relative">
                       <input
-                        type={isVisible ? 'text' : 'password'}
-                        value={inputVal}
+                        type={showKeys[p.key] ? 'text' : 'password'}
+                        value={apiKeyInputs[p.key] ?? ''}
                         onChange={(e) =>
-                          setApiKeyInputs((prev) => ({ ...prev, [p]: e.target.value }))
+                          setApiKeyInputs((prev) => ({ ...prev, [p.key]: e.target.value }))
                         }
                         placeholder={
-                          isKeySet
-                            ? `Enter new ${meta.name} key to replace...`
-                            : `Enter ${meta.name} API key...`
+                          status?.configured ? 'Enter new key to replace...' : p.placeholder
                         }
-                        className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
+                        className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 font-mono pr-8"
                       />
                       <button
-                        type="button"
-                        onClick={() => setShowKeys((prev) => ({ ...prev, [p]: !isVisible }))}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#9ca3af] transition-colors"
+                        onClick={() => setShowKeys((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#6b7280]"
                       >
-                        <span className="material-symbols-outlined text-base">
-                          {isVisible ? 'visibility_off' : 'visibility'}
+                        <span className="material-symbols-outlined text-sm">
+                          {showKeys[p.key] ? 'visibility_off' : 'visibility'}
                         </span>
                       </button>
                     </div>
                   </div>
-
-                  <p className="text-[10px] text-[#374151] font-mono">Env: {meta.envKey}</p>
-                </div>
-              );
-            })}
-
-            {/* Save Keys Button */}
-            <div className="flex justify-end pt-1">
-              <button
-                onClick={handleSaveKeys}
-                disabled={savingKeys}
-                className="bg-[#1f2d4e] hover:bg-[#2a3d5e] disabled:bg-[#1f2d4e]/50 text-[#d4a843] border border-[#d4a843]/30 font-semibold rounded-xl px-6 py-2.5 text-sm transition-colors flex items-center gap-2"
-              >
-                {savingKeys ? (
-                  <span className="material-symbols-outlined text-base animate-spin">
-                    progress_activity
-                  </span>
-                ) : (
-                  <span className="material-symbols-outlined text-base">key</span>
-                )}
-                Save Keys
-              </button>
+                );
+              })}
             </div>
+
+            {/* Single save button */}
+            <button
+              onClick={handleSaveKeys}
+              disabled={savingKeys || !Object.values(apiKeyInputs).some((v) => v?.trim())}
+              className="mt-4 flex items-center gap-2 bg-[#d4a843] hover:bg-[#b8922e] disabled:bg-[#d4a843]/30 text-[#0a0f1e] font-semibold text-xs rounded-lg px-4 py-2 transition-all"
+            >
+              <span className="material-symbols-outlined text-sm">save</span>
+              Save All Keys
+            </button>
+
+            {/* Tip */}
+            <p className="text-[#374151] text-[10px] mt-2">
+              Keys are stored securely on the server. You only need ONE AI key to start (Claude
+              recommended). Tavily is optional — enables pro market research.
+            </p>
           </div>
 
           {/* Model Selection */}
