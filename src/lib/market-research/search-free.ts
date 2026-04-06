@@ -1,10 +1,17 @@
 /**
- * Free Web Search — No API key required
+ * Free Search Mode — AI Knowledge-Based Analysis
  *
- * Uses the DuckDuckGo HTML endpoint to fetch search results.
- * Parses the raw HTML with regex — no external parser dependencies.
+ * DuckDuckGo and other search engines block automated scraping.
+ * Instead, this mode returns a prompt that tells the AI to use its
+ * own extensive training knowledge to analyze products.
  *
- * Designed to be respectful: adds a small delay between calls.
+ * The AI models (Gemini 3.1, Claude, GPT) have deep knowledge about:
+ * - Product trends and categories
+ * - Dropshipping suppliers and pricing
+ * - Market dynamics and competition
+ * - Consumer behavior and viral products
+ *
+ * For REAL-TIME web data, use Tavily Pro mode.
  */
 
 // ─── Types ───────────────────────────────────────────────────────────────────────
@@ -15,98 +22,19 @@ export type SearchResult = {
   snippet: string;
 };
 
-// ─── HTML parser ─────────────────────────────────────────────────────────────────
-
-function parseResults(html: string): SearchResult[] {
-  const results: SearchResult[] = [];
-
-  // DuckDuckGo HTML search results follow this structure:
-  // <h2 class="result__title"><a class="result__a" href="...">Title</a></h2>
-  // <a class="result__snippet" ...>Snippet text</a>
-  //
-  // We extract up to 10 results using regex.
-  // Extract title blocks and snippet blocks separately
-  const titleMatches: Array<{ url: string; title: string }> = [];
-  const snippetMatches: string[] = [];
-
-  // Extract titles and URLs
-  let tMatch: RegExpExecArray | null;
-  const titleRe = /<a[^>]+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
-  while ((tMatch = titleRe.exec(html)) !== null) {
-    const url = tMatch[1];
-    // Strip any inner HTML tags from title
-    const title = tMatch[2].replace(/<[^>]+>/g, '').trim();
-    if (url && title) {
-      titleMatches.push({ url, title });
-    }
-  }
-
-  // Extract snippets
-  let sMatch: RegExpExecArray | null;
-  const snippetRe = /<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
-  while ((sMatch = snippetRe.exec(html)) !== null) {
-    const snippet = sMatch[1].replace(/<[^>]+>/g, '').trim();
-    if (snippet) {
-      snippetMatches.push(snippet);
-    }
-  }
-
-  // Pair titles with snippets
-  const count = Math.min(titleMatches.length, snippetMatches.length);
-  for (let i = 0; i < count; i++) {
-    results.push({
-      title: titleMatches[i].title,
-      url: titleMatches[i].url,
-      snippet: snippetMatches[i],
-    });
-  }
-
-  // If pairing failed (HTML structure changed), try alternate extraction
-  if (results.length === 0 && titleMatches.length > 0) {
-    for (const tm of titleMatches) {
-      results.push({ title: tm.title, url: tm.url, snippet: '' });
-    }
-  }
-
-  return results;
-}
-
-// ─── Delay helper ────────────────────────────────────────────────────────────────
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 // ─── Public API ──────────────────────────────────────────────────────────────────
 
 /**
- * Search the web using DuckDuckGo HTML endpoint.
- * No API key required. Returns up to `maxResults` results.
- * On failure returns an empty array (never throws).
+ * Free mode search — returns AI knowledge prompt instead of web results.
+ * The AI model will use its training data to provide analysis.
  */
-export async function searchWeb(query: string, maxResults = 5): Promise<SearchResult[]> {
-  // Be respectful — small delay between requests
-  await sleep(300);
-
-  try {
-    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; StarBuyBot/1.0)',
-        Accept: 'text/html',
-      },
-    });
-
-    if (!res.ok) {
-      console.warn(`[search-free] DuckDuckGo returned ${res.status} for query: ${query}`);
-      return [];
-    }
-
-    const html = await res.text();
-    const results = parseResults(html);
-    return results.slice(0, maxResults);
-  } catch (err) {
-    console.warn(`[search-free] fetch error for query "${query}":`, err);
-    return [];
-  }
+export async function searchWeb(query: string, _maxResults = 5): Promise<SearchResult[]> {
+  // Return a structured prompt that instructs the AI to use its own knowledge
+  return [
+    {
+      title: `AI Knowledge Analysis: ${query}`,
+      url: 'ai-knowledge://internal',
+      snippet: `[FREE MODE] Web scraping is unavailable. Use your extensive training knowledge to analyze "${query}" for dropshipping potential. Consider: trending products in this niche, typical supplier prices on AliExpress/CJDropshipping, competition levels on Amazon/Shopify stores, social media virality indicators, and consumer demand patterns. Base your scores on your knowledge of the market as of your training data cutoff. Be specific with product names, estimated prices, and market signals you know about.`,
+    },
+  ];
 }
