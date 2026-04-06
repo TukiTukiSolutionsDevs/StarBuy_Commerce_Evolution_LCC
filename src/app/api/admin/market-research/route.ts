@@ -88,16 +88,24 @@ Your job is to research winning products for the following request:
 ${category ? `- Category: "${category}"` : ''}
 - Session ID: ${sessionId}
 
+Note: The user's query may be in any language (English, Spanish, etc.). Always understand the intent and research products accordingly, but write your output in English.
+
 ## Research Methodology
 
-Follow this EXACT sequence for each promising product candidate you identify:
+Follow this EXACT sequence. You MUST call the tools in order:
 
-1. **searchTrends** — Search for trending products in this niche
-2. **searchTikTokTrends** — Check TikTok viral potential
-3. **searchCompetition** — Analyze competition and market saturation
-4. **searchSupplierPrices** — Find wholesale costs on AliExpress/CJDropshipping
-5. **searchReviews** — Get customer feedback and product quality signals
-6. **saveResearchResult** — Save scored results to session (sessionId: "${sessionId}")
+1. **searchTrends** — Search for trending products in this niche (searchMode: "free")
+2. **searchTikTokTrends** — Check TikTok viral potential (searchMode: "free")
+3. **searchCompetition** — Analyze competition and market saturation (searchMode: "free")
+4. **searchSupplierPrices** — Find wholesale costs on AliExpress/CJDropshipping (searchMode: "free")
+5. **searchReviews** — Get customer feedback and product quality signals (searchMode: "free")
+6. **saveResearchResult** — CRITICAL: You MUST call this tool for EACH product you recommend. Session ID: "${sessionId}"
+
+## CRITICAL RULE: You MUST call saveResearchResult
+
+After analyzing products, you MUST call the saveResearchResult tool for each product.
+Do NOT just write about products — you MUST save them using the tool.
+If you skip saveResearchResult, the user sees ZERO results.
 
 ## Scoring Guidelines (0-100)
 
@@ -116,13 +124,17 @@ Follow this EXACT sequence for each promising product candidate you identify:
 
 ## Output Format
 
-After all research is complete, write a structured summary:
-- Total products analyzed
-- Top recommendations with key metrics
-- Market insights for the niche
-- Risk factors identified
+After saving all products with saveResearchResult, write a brief summary:
 
-Be systematic, data-driven, and concise. Use the tools in the sequence above.`;
+#### 1. Product Name
+- Overall: XX/100 | Trend: XX | Demand: XX | Competition: XX | Margin: XX
+- Supplier: $X-Y | Retail: $X-Y | Margin: ~XX%
+- Recommendation: hot/promising/saturated/pass
+- Why: Brief reasoning
+
+Repeat for each product (aim for 3-5 products minimum).
+
+Be systematic, data-driven, and concise. Always call the tools.`;
 }
 
 // ─── Extract Products from AI Summary Text ────────────────────────────────────
@@ -132,18 +144,36 @@ Be systematic, data-driven, and concise. Use the tools in the sequence above.`;
 function extractProductsFromSummary(summary: string): ResearchResult[] {
   const products: ResearchResult[] = [];
 
-  // Split by product headers: "#### 1." or "### 1." or "**1." etc
-  const sections = summary.split(/(?=####?\s*\d+[\.\):]|(?=\*\*\d+[\.\):])|(?=\d+\.\s+\*\*))/);
+  // Split by product headers — very aggressive matching:
+  // "#### 1." "### 1." "**1." "1. **" "1." (at line start) "Product 1:" etc
+  const sections = summary.split(
+    /(?=####?\s*\d+[\.\):]|(?=\*\*\d+[\.\):])|(?=\d+\.\s+\*\*)|(?=^#{1,4}\s+.+$)|(?=^\d+\.\s+[A-Z]))/m,
+  );
 
   for (const section of sections) {
-    if (section.trim().length < 50) continue;
+    if (section.trim().length < 30) continue;
 
-    // Extract title: first bold text or header text
-    const titleMatch = section.match(/(?:#{2,4}\s*\d+[\.\):]\s*)(.*?)(?:\n|$)/);
-    const altTitleMatch = section.match(/\*\*\d*[\.\):]*\s*(.*?)\*\*/);
-    const title = (titleMatch?.[1] ?? altTitleMatch?.[1] ?? '').replace(/\*+/g, '').trim();
+    // Extract title — multiple patterns from most to least specific
+    const titlePatterns = [
+      /(?:#{2,4}\s*\d*[\.\):]*\s*)(.*?)(?:\n|$)/, // ### 1. Title
+      /\*\*\d*[\.\):]*\s*(.*?)\*\*/, // **1. Title**
+      /\d+\.\s+\*\*(.*?)\*\*/, // 1. **Title**
+      /\d+[\.\)]\s+([A-Z][^\n]{3,60})/, // 1. Title (uppercase start)
+      /^([A-Z][A-Za-z\s\-\/]{5,60})$/m, // Standalone title line
+    ];
+
+    let title = '';
+    for (const pat of titlePatterns) {
+      const m = section.match(pat);
+      if (m?.[1]) {
+        title = m[1].replace(/\*+/g, '').trim();
+        break;
+      }
+    }
 
     if (!title || title.length < 3) continue;
+    // Skip non-product headers
+    if (/^(summary|conclusion|overview|risk|market|total|note)/i.test(title)) continue;
 
     // Extract scores
     const trendMatch = section.match(/[Tt]rend[:\s]*(\d+)/);

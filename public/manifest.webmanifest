@@ -1,0 +1,21 @@
+{
+  "name": "StarBuy — Trending Products",
+  "short_name": "StarBuy",
+  "description": "Shop trending products, electronics, fashion, and more at StarBuy.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1e",
+  "theme_color": "#d4a843",
+  "icons": [
+    {
+      "src": "/StarBuy.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/StarBuy.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
