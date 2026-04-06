@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getProducts, getCollections } from '@/lib/shopify';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://starbuy.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://starbuyevolucion.com';
 
 export const revalidate = 3600; // Re-generate every hour
 

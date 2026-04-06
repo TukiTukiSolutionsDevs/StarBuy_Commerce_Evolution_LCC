@@ -11,33 +11,19 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
+  setProductPrice,
 } from '@/lib/shopify/admin/tools/products';
+import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
-
-// ─── Auth helper ───────────────────────────────────────────────────────────────
-
-function makeExpectedToken(password: string): string {
-  const payload = `starbuy-admin:${password}:${process.env.NODE_ENV}`;
-  return Buffer.from(payload).toString('base64');
-}
-
-function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_CHAT_PASSWORD;
-  if (!adminPassword) return false;
-
-  const token = request.cookies.get('admin_token')?.value;
-  if (!token) return false;
-
-  return token === makeExpectedToken(adminPassword);
-}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 // ─── GET ───────────────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest, context: RouteContext) {
-  if (!isAdminAuthenticated(request)) {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (!token || !(await verifyAdminToken(token))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -59,31 +45,57 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // ─── PATCH ─────────────────────────────────────────────────────────────────────
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  if (!isAdminAuthenticated(request)) {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (!token || !(await verifyAdminToken(token))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { id } = await context.params;
-    const body = await request.json() as {
+    const body = (await request.json()) as {
       title?: string;
       descriptionHtml?: string;
       vendor?: string;
       productType?: string;
       tags?: string[];
       status?: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
+      price?: string;
     };
 
-    const result = await updateProduct(id, body);
+    const { price, ...productFields } = body;
 
-    if (result.userErrors.length > 0) {
-      return Response.json(
-        { error: result.userErrors.map((e) => e.message).join(', ') },
-        { status: 422 }
-      );
+    // Only call updateProduct if there are non-price fields to update
+    if (Object.keys(productFields).length > 0) {
+      const result = await updateProduct(id, productFields);
+
+      if (result.userErrors.length > 0) {
+        return Response.json(
+          { error: result.userErrors.map((e) => e.message).join(', ') },
+          { status: 422 },
+        );
+      }
     }
 
-    return Response.json({ product: result.product });
+    // If a price update is requested, fetch the product to get the variant ID
+    if (price !== undefined) {
+      const product = await getProductById(id);
+      if (!product) {
+        return Response.json({ error: 'Product not found' }, { status: 404 });
+      }
+      const variantId = product.variants.edges[0]?.node.id;
+      if (variantId) {
+        const priceResult = await setProductPrice(variantId, price);
+        if (priceResult.userErrors.length > 0) {
+          return Response.json(
+            { error: priceResult.userErrors.map((e) => e.message).join(', ') },
+            { status: 422 },
+          );
+        }
+      }
+    }
+
+    const refreshed = await getProductById(id);
+    return Response.json({ product: refreshed });
   } catch (err) {
     console.error('[api/admin/products/[id] PATCH]', err);
     return Response.json({ error: 'Failed to update product' }, { status: 500 });
@@ -93,7 +105,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 // ─── DELETE ────────────────────────────────────────────────────────────────────
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  if (!isAdminAuthenticated(request)) {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (!token || !(await verifyAdminToken(token))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -104,7 +117,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     if (result.userErrors.length > 0) {
       return Response.json(
         { error: result.userErrors.map((e) => e.message).join(', ') },
-        { status: 422 }
+        { status: 422 },
       );
     }
 

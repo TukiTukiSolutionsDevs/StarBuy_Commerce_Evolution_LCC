@@ -45,7 +45,7 @@ type CreateDiscountInput = {
 };
 
 export async function createDiscountCode(
-  input: CreateDiscountInput
+  input: CreateDiscountInput,
 ): Promise<{ discount: AdminDiscount | null; userErrors: UserError[] }> {
   const mutation = `
     mutation CreateDiscountCode($discount: DiscountCodeBasicInput!) {
@@ -149,11 +149,34 @@ export async function createDiscountCode(
   return { discount, userErrors: userErrors };
 }
 
+// ─── Delete Discount Code ─────────────────────────────────────────────────────
+
+export async function deleteDiscount(
+  id: string,
+): Promise<{ deleted: boolean; userErrors: UserError[] }> {
+  const mutation = `
+    mutation DeleteDiscount($id: ID!) {
+      discountCodeDelete(id: $id) {
+        deletedCodeDiscountId
+        userErrors { field message code }
+      }
+    }
+  `;
+
+  const data = await adminFetch<{
+    discountCodeDelete: {
+      deletedCodeDiscountId: string | null;
+      userErrors: UserError[];
+    };
+  }>({ query: mutation, variables: { id } });
+
+  const { deletedCodeDiscountId, userErrors } = data.discountCodeDelete;
+  return { deleted: !!deletedCodeDiscountId, userErrors };
+}
+
 // ─── List Active Discounts ─────────────────────────────────────────────────────
 
-export async function listDiscounts(
-  limit: number = 20
-): Promise<AdminDiscount[]> {
+export async function listDiscounts(limit: number = 20): Promise<AdminDiscount[]> {
   const gql = `
     query ListDiscounts($first: Int!) {
       codeDiscountNodes(first: $first, sortKey: CREATED_AT, reverse: true) {

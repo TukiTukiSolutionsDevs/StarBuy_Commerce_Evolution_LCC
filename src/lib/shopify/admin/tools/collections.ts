@@ -22,9 +22,7 @@ export type AdminCollection = {
 
 // ─── List Collections ──────────────────────────────────────────────────────────
 
-export async function listCollections(
-  limit: number = 20
-): Promise<AdminCollection[]> {
+export async function listCollections(limit: number = 20): Promise<AdminCollection[]> {
   const gql = `
     query ListCollections($first: Int!) {
       collections(first: $first, sortKey: TITLE) {
@@ -54,7 +52,7 @@ export async function listCollections(
 
 export async function addProductToCollection(
   productId: string,
-  collectionId: string
+  collectionId: string,
 ): Promise<{ success: boolean; userErrors: UserError[] }> {
   const productGid = productId.startsWith('gid://')
     ? productId
@@ -96,7 +94,7 @@ export async function addProductToCollection(
 
 export async function removeProductFromCollection(
   productId: string,
-  collectionId: string
+  collectionId: string,
 ): Promise<{ success: boolean; userErrors: UserError[] }> {
   const productGid = productId.startsWith('gid://')
     ? productId
@@ -131,5 +129,127 @@ export async function removeProductFromCollection(
   return {
     success: !!data.collectionRemoveProducts.job,
     userErrors: data.collectionRemoveProducts.userErrors,
+  };
+}
+
+// ─── Create Collection ─────────────────────────────────────────────────────────
+
+export type CollectionInput = {
+  title: string;
+  descriptionHtml?: string;
+  image?: { src: string; altText?: string };
+  ruleSet?: {
+    appliedDisjunctively: boolean;
+    rules: Array<{ column: string; relation: string; condition: string }>;
+  };
+};
+
+export async function createCollection(
+  input: CollectionInput,
+): Promise<{ collection: AdminCollection | null; userErrors: UserError[] }> {
+  const mutation = `
+    mutation CreateCollection($input: CollectionInput!) {
+      collectionCreate(input: $input) {
+        collection {
+          id
+          title
+          handle
+          description
+          productsCount { count }
+          image { url altText }
+          updatedAt
+        }
+        userErrors { field message }
+      }
+    }
+  `;
+
+  const data = await adminFetch<{
+    collectionCreate: {
+      collection: AdminCollection | null;
+      userErrors: UserError[];
+    };
+  }>({ query: mutation, variables: { input } });
+
+  return {
+    collection: data.collectionCreate.collection,
+    userErrors: data.collectionCreate.userErrors,
+  };
+}
+
+// ─── Update Collection ─────────────────────────────────────────────────────────
+
+export type CollectionUpdateInput = {
+  id: string;
+  title?: string;
+  descriptionHtml?: string;
+  image?: { src: string; altText?: string } | null;
+  ruleSet?: {
+    appliedDisjunctively: boolean;
+    rules: Array<{ column: string; relation: string; condition: string }>;
+  };
+};
+
+export async function updateCollection(
+  input: CollectionUpdateInput,
+): Promise<{ collection: AdminCollection | null; userErrors: UserError[] }> {
+  const mutation = `
+    mutation UpdateCollection($input: CollectionInput!) {
+      collectionUpdate(input: $input) {
+        collection {
+          id
+          title
+          handle
+          description
+          productsCount { count }
+          image { url altText }
+          updatedAt
+        }
+        userErrors { field message }
+      }
+    }
+  `;
+
+  const data = await adminFetch<{
+    collectionUpdate: {
+      collection: AdminCollection | null;
+      userErrors: UserError[];
+    };
+  }>({ query: mutation, variables: { input } });
+
+  return {
+    collection: data.collectionUpdate.collection,
+    userErrors: data.collectionUpdate.userErrors,
+  };
+}
+
+// ─── Delete Collection ─────────────────────────────────────────────────────────
+
+export async function deleteCollection(
+  collectionId: string,
+): Promise<{ deleted: boolean; userErrors: UserError[] }> {
+  const gid = collectionId.startsWith('gid://')
+    ? collectionId
+    : `gid://shopify/Collection/${collectionId}`;
+
+  const mutation = `
+    mutation DeleteCollection($input: CollectionDeleteInput!) {
+      collectionDelete(input: $input) {
+        deletedCollectionId
+        userErrors { field message }
+      }
+    }
+  `;
+
+  const data = await adminFetch<{
+    collectionDelete: {
+      deletedCollectionId: string | null;
+      userErrors: UserError[];
+    };
+  }>({ query: mutation, variables: { input: { id: gid } } });
+
+  return {
+    deleted: !!data.collectionDelete.deletedCollectionId,
+    userErrors: data.collectionDelete.userErrors,
   };
 }

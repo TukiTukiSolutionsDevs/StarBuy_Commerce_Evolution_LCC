@@ -4,7 +4,7 @@
  * Admin Chat Widget — Floating panel
  *
  * A floating chat button + panel overlay.
- * The panel reuses the chat logic from AdminChat but in a compact widget format.
+ * 3 tabs: Chat | History | Actions
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -12,12 +12,31 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import type { UIMessage } from 'ai';
 
+import ChatHistory from './ChatHistory';
+import ActionLog from './ActionLog';
+import SuggestedPrompts from './SuggestedPrompts';
+
+// ─── Agent Info Map ─────────────────────────────────────────────────────────────
+
+const AGENT_INFO: Record<string, { name: string; icon: string; color: string }> = {
+  catalog: { name: 'Catalog Agent', icon: 'inventory_2', color: '#d4a843' },
+  orders: { name: 'Orders Agent', icon: 'receipt_long', color: '#10b981' },
+  customers: { name: 'Customers Agent', icon: 'people', color: '#6b8cff' },
+  pricing: { name: 'Pricing Agent', icon: 'sell', color: '#f59e0b' },
+  analytics: { name: 'Analytics Agent', icon: 'insights', color: '#8b5cf6' },
+  operations: { name: 'Operations Agent', icon: 'warehouse', color: '#ef4444' },
+  shopify: { name: 'Shopify Expert', icon: 'store', color: '#96bf48' },
+  orchestrator: { name: 'Assistant', icon: 'smart_toy', color: '#d4a843' },
+};
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface ChatWidgetProps {
   isOpen: boolean;
   onToggle: () => void;
 }
+
+type Tab = 'chat' | 'history' | 'actions';
 
 // ─── Tool Call Card (compact) ──────────────────────────────────────────────────
 
@@ -65,6 +84,42 @@ function ToolCallBadge({ toolCall }: { toolCall: ToolCallResult }) {
   );
 }
 
+// ─── Agent Badge ────────────────────────────────────────────────────────────────
+
+/**
+ * Tries to infer agent from message tool calls (first tool name prefix).
+ * Falls back to "orchestrator" (= Assistant) for plain text responses.
+ */
+function resolveAgent(message: UIMessage): { name: string; icon: string; color: string } {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parts = (message.parts as any[]) ?? [];
+
+  for (const part of parts) {
+    const partType = part.type as string;
+    if (!partType?.startsWith('tool-') && partType !== 'tool-invocation') continue;
+    const toolName: string = part.toolName ?? '';
+    const matchedKey = Object.keys(AGENT_INFO).find((k) => toolName.toLowerCase().startsWith(k));
+    if (matchedKey) return AGENT_INFO[matchedKey];
+  }
+
+  return AGENT_INFO.orchestrator;
+}
+
+function AgentBadge({ message }: { message: UIMessage }) {
+  const agent = resolveAgent(message);
+  return (
+    <div
+      className="flex items-center gap-1 text-[10px] font-medium mb-1 px-1"
+      style={{ color: agent.color }}
+    >
+      <span className="material-symbols-outlined" style={{ fontSize: '11px' }}>
+        {agent.icon}
+      </span>
+      {agent.name}
+    </div>
+  );
+}
+
 // ─── Message Bubble ─────────────────────────────────────────────────────────────
 
 function MessageBubble({ message }: { message: UIMessage }) {
@@ -88,12 +143,15 @@ function MessageBubble({ message }: { message: UIMessage }) {
           isUser ? 'bg-[#d4a843] text-[#0a0f1e]' : 'bg-[#1b2a5e] text-[#d4a843]'
         }`}
       >
-        <span className="material-symbols-outlined text-sm">
-          {isUser ? 'person' : 'smart_toy'}
-        </span>
+        <span className="material-symbols-outlined text-sm">{isUser ? 'person' : 'smart_toy'}</span>
       </div>
 
-      <div className={`flex-1 max-w-[85%] ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-1.5`}>
+      <div
+        className={`flex-1 max-w-[85%] ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-1.5`}
+      >
+        {/* Agent badge — only for assistant messages */}
+        {!isUser && <AgentBadge message={message} />}
+
         {textContent && (
           <div
             className={`rounded-xl px-3 py-2 text-xs leading-relaxed ${
@@ -151,81 +209,84 @@ function MessageBubble({ message }: { message: UIMessage }) {
   );
 }
 
-// ─── Chat Panel ─────────────────────────────────────────────────────────────────
+// ─── Tab Bar ────────────────────────────────────────────────────────────────────
 
-function ChatPanel({ onClose }: { onClose: () => void }) {
-  const transport = useMemo(
-    () => new DefaultChatTransport({ api: '/api/admin/chat' }),
-    []
-  );
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'chat', label: 'Chat', icon: 'chat' },
+  { id: 'history', label: 'History', icon: 'history' },
+  { id: 'actions', label: 'Actions', icon: 'terminal' },
+];
 
-  const { messages, sendMessage, status, error } = useChat({ transport });
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  const isLoading = status === 'streaming' || status === 'submitted';
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  useEffect(() => {
-    // Focus on open
-    setTimeout(() => inputRef.current?.focus(), 100);
-  }, []);
-
-  function handleSend() {
-    const text = input.trim();
-    if (!text || isLoading) return;
-    sendMessage({ text });
-    setInput('');
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-    if (e.key === 'Escape') {
-      onClose();
-    }
-  }
-
+function TabBar({
+  active,
+  onChange,
+  actionCount,
+}: {
+  active: Tab;
+  onChange: (tab: Tab) => void;
+  actionCount: number;
+}) {
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#1f2d4e] bg-[#0d1526]">
-        <div className="w-8 h-8 rounded-full bg-[#1b2a5e] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[#d4a843] text-base">smart_toy</span>
-        </div>
-        <div className="flex-1">
-          <p className="text-white font-semibold text-sm" style={{ fontFamily: 'var(--font-heading)' }}>
-            AI Assistant
-          </p>
-          <div className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-            <span className="text-[#10b981] text-[10px]">Online</span>
-          </div>
-        </div>
+    <div className="flex border-b border-[#1f2d4e] bg-[#0d1526] flex-none">
+      {TABS.map((tab) => (
         <button
-          onClick={onClose}
-          className="text-[#6b7280] hover:text-white transition-colors p-1 rounded-lg hover:bg-[#1f2d4e]"
+          key={tab.id}
+          onClick={() => onChange(tab.id)}
+          className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+            active === tab.id ? 'text-[#d4a843]' : 'text-[#6b7280] hover:text-[#9ca3af]'
+          }`}
         >
-          <span className="material-symbols-outlined text-base">close</span>
+          <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+          {tab.label}
+          {/* Actions count badge */}
+          {tab.id === 'actions' && actionCount > 0 && (
+            <span className="absolute top-1.5 right-3 min-w-[16px] h-4 bg-[#d4a843] text-[#0a0f1e] text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+              {actionCount > 99 ? '99+' : actionCount}
+            </span>
+          )}
+          {/* Active indicator */}
+          {active === tab.id && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d4a843] rounded-t" />
+          )}
         </button>
-      </div>
+      ))}
+    </div>
+  );
+}
 
+// ─── Chat Tab ───────────────────────────────────────────────────────────────────
+
+interface ChatTabProps {
+  messages: UIMessage[];
+  isLoading: boolean;
+  error: Error | null | undefined;
+  input: string;
+  onInputChange: (value: string) => void;
+  onSend: () => void;
+  onSelectPrompt: (prompt: string) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function ChatTab({
+  messages,
+  isLoading,
+  error,
+  input,
+  onInputChange,
+  onSend,
+  onSelectPrompt,
+  onKeyDown,
+  inputRef,
+  messagesEndRef,
+}: ChatTabProps) {
+  return (
+    <>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
-            <span className="material-symbols-outlined text-[#d4a843] text-4xl mb-3">smart_toy</span>
-            <p className="text-white font-semibold text-sm mb-1">AI Store Assistant</p>
-            <p className="text-[#6b7280] text-xs leading-relaxed">
-              Ask me to search products, check inventory, manage orders, and more.
-            </p>
-          </div>
+          <SuggestedPrompts onSelectPrompt={onSelectPrompt} />
         ) : (
           <>
             {messages.map((message) => (
@@ -234,7 +295,9 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
             {isLoading && (
               <div className="flex gap-2">
                 <div className="w-7 h-7 rounded-full bg-[#1b2a5e] flex items-center justify-center flex-none">
-                  <span className="material-symbols-outlined text-[#d4a843] text-sm">smart_toy</span>
+                  <span className="material-symbols-outlined text-[#d4a843] text-sm">
+                    smart_toy
+                  </span>
                 </div>
                 <div className="bg-[#111827] border border-[#1f2d4e] rounded-xl rounded-tl-sm px-3 py-2">
                   <div className="flex gap-1 items-center">
@@ -261,13 +324,13 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-[#1f2d4e] p-3 bg-[#0d1526]">
+      <div className="border-t border-[#1f2d4e] p-3 bg-[#0d1526] flex-none">
         <div className="relative">
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyDown={onKeyDown}
             placeholder="Ask anything… (Enter to send)"
             rows={1}
             disabled={isLoading}
@@ -276,7 +339,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           />
           <button
             type="button"
-            onClick={handleSend}
+            onClick={onSend}
             disabled={!input.trim() || isLoading}
             className="absolute right-2 bottom-2 w-8 h-8 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:cursor-not-allowed rounded-lg flex items-center justify-center transition-colors"
           >
@@ -286,6 +349,141 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
+    </>
+  );
+}
+
+// ─── Chat Panel ─────────────────────────────────────────────────────────────────
+
+function ChatPanel({ onClose }: { onClose: () => void }) {
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/admin/chat' }), []);
+
+  const { messages, sendMessage, status, error } = useChat({ transport });
+  const [input, setInput] = useState('');
+  const [activeTab, setActiveTab] = useState<Tab>('chat');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Count tool calls across all messages for the Actions badge
+  const actionCount = useMemo(() => {
+    let count = 0;
+    for (const msg of messages) {
+      if (msg.role !== 'assistant') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const part of (msg.parts as any[]) ?? []) {
+        const t = part.type as string;
+        if (t?.startsWith('tool-') || t === 'tool-invocation') count++;
+      }
+    }
+    return count;
+  }, [messages]);
+
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    // Focus on open
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  function handleSend() {
+    const text = input.trim();
+    if (!text || isLoading) return;
+    sendMessage({ text });
+    setInput('');
+    // Switch to chat tab if not already there
+    setActiveTab('chat');
+  }
+
+  function handleSelectPrompt(prompt: string) {
+    setInput('');
+    setActiveTab('chat');
+    sendMessage({ text: prompt });
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#1f2d4e] bg-[#0d1526] flex-none">
+        <div className="w-8 h-8 rounded-full bg-[#1b2a5e] flex items-center justify-center">
+          <span className="material-symbols-outlined text-[#d4a843] text-base">smart_toy</span>
+        </div>
+        <div className="flex-1">
+          <p
+            className="text-white font-semibold text-sm"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            AI Assistant
+          </p>
+          <div className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+            <span className="text-[#10b981] text-[10px]">Online</span>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-[#6b7280] hover:text-white transition-colors p-1 rounded-lg hover:bg-[#1f2d4e]"
+        >
+          <span className="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+
+      {/* Tab Bar */}
+      <TabBar active={activeTab} onChange={setActiveTab} actionCount={actionCount} />
+
+      {/* Tab Content */}
+      {activeTab === 'chat' && (
+        <ChatTab
+          messages={messages}
+          isLoading={isLoading}
+          error={error}
+          input={input}
+          onInputChange={setInput}
+          onSend={handleSend}
+          onSelectPrompt={handleSelectPrompt}
+          onKeyDown={handleKeyDown}
+          inputRef={inputRef}
+          messagesEndRef={messagesEndRef}
+        />
+      )}
+
+      {activeTab === 'history' && (
+        <div className="flex-1 overflow-hidden">
+          <ChatHistory
+            onNewChat={() => {
+              setActiveTab('chat');
+              setTimeout(() => inputRef.current?.focus(), 150);
+            }}
+          />
+        </div>
+      )}
+
+      {activeTab === 'actions' && (
+        <div className="flex-1 overflow-hidden">
+          <ActionLog messages={messages} agentInfo={AGENT_INFO} />
+        </div>
+      )}
     </div>
   );
 }

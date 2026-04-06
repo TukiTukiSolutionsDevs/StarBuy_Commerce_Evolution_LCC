@@ -1,18 +1,14 @@
 /**
  * Next.js Middleware — Admin Route Protection
  *
- * Protects all /admin/* routes (except /api/admin/auth) by validating
- * the admin_token cookie.
+ * Protects all /admin/* routes (except /admin/login and /api/admin/auth)
+ * by validating the admin_token JWT cookie using jose (Edge Runtime compatible).
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
-function makeExpectedToken(password: string, nodeEnv: string): string {
-  const payload = `starbuy-admin:${password}:${nodeEnv}`;
-  return Buffer.from(payload).toString('base64');
-}
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Only protect /admin routes
@@ -30,20 +26,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const adminPassword = process.env.ADMIN_CHAT_PASSWORD;
-  const nodeEnv = process.env.NODE_ENV ?? 'development';
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
 
-  // If no password configured, block everything
-  if (!adminPassword) {
-    return NextResponse.redirect(new URL('/admin/login', request.url));
+  if (!token) {
+    const loginUrl = new URL('/admin/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  const token = request.cookies.get('admin_token')?.value;
-  const expectedToken = makeExpectedToken(adminPassword, nodeEnv);
+  const payload = await verifyAdminToken(token);
 
-  if (!token || token !== expectedToken) {
+  if (!payload) {
+    // Token invalid or expired — redirect to login
     const loginUrl = new URL('/admin/login', request.url);
-    // Preserve the intended destination so we can redirect after login
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }

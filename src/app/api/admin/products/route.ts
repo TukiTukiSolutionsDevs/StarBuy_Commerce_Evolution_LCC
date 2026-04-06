@@ -7,30 +7,15 @@
 
 import type { NextRequest } from 'next/server';
 import { searchProducts, createProduct } from '@/lib/shopify/admin/tools/products';
+import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
-
-// ─── Auth helper (same pattern as chat/route.ts) ───────────────────────────────
-
-function makeExpectedToken(password: string): string {
-  const payload = `starbuy-admin:${password}:${process.env.NODE_ENV}`;
-  return Buffer.from(payload).toString('base64');
-}
-
-function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_CHAT_PASSWORD;
-  if (!adminPassword) return false;
-
-  const token = request.cookies.get('admin_token')?.value;
-  if (!token) return false;
-
-  return token === makeExpectedToken(adminPassword);
-}
 
 // ─── GET — list products ───────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthenticated(request)) {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (!token || !(await verifyAdminToken(token))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -50,12 +35,13 @@ export async function GET(request: NextRequest) {
 // ─── POST — create product ─────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  if (!isAdminAuthenticated(request)) {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (!token || !(await verifyAdminToken(token))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const body = await request.json() as {
+    const body = (await request.json()) as {
       title?: string;
       descriptionHtml?: string;
       vendor?: string;
@@ -69,12 +55,22 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    const result = await createProduct(body as { title: string; descriptionHtml?: string; vendor?: string; productType?: string; tags?: string[]; status?: 'ACTIVE' | 'DRAFT' | 'ARCHIVED'; price?: string });
+    const result = await createProduct(
+      body as {
+        title: string;
+        descriptionHtml?: string;
+        vendor?: string;
+        productType?: string;
+        tags?: string[];
+        status?: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
+        price?: string;
+      },
+    );
 
     if (result.userErrors.length > 0) {
       return Response.json(
         { error: result.userErrors.map((e) => e.message).join(', ') },
-        { status: 422 }
+        { status: 422 },
       );
     }
 

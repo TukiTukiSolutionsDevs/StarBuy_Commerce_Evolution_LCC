@@ -8,26 +8,18 @@
 import type { NextRequest } from 'next/server';
 import { searchProducts } from '@/lib/shopify/admin/tools/products';
 import { listCollections } from '@/lib/shopify/admin/tools/collections';
+import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-function makeExpectedToken(password: string): string {
-  const payload = `starbuy-admin:${password}:${process.env.NODE_ENV}`;
-  return Buffer.from(payload).toString('base64');
-}
-
-function isAdminAuthenticated(request: NextRequest): boolean {
-  const adminPassword = process.env.ADMIN_CHAT_PASSWORD;
-  if (!adminPassword) return false;
-
-  const token = request.cookies.get('admin_token')?.value;
-  if (!token) return false;
-
-  return token === makeExpectedToken(adminPassword);
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthenticated(request)) {
+  const token = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  if (!token) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const payload = await verifyAdminToken(token);
+  if (!payload) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -6,7 +6,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { getDataDir } from '@/lib/data-dir';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -45,7 +45,7 @@ type SavedConfig = {
   ollamaModel: string;
 };
 
-const CONFIG_PATH = join(process.cwd(), '.admin-ai-config.json');
+const CONFIG_PATH = getDataDir('.admin-ai-config.json');
 
 const DEFAULT_CONFIG: SavedConfig = {
   provider: 'claude',
@@ -57,24 +57,9 @@ const DEFAULT_CONFIG: SavedConfig = {
 // ─── Models per provider ────────────────────────────────────────────────────────
 
 export const PROVIDER_MODELS: Record<AIProvider, string[]> = {
-  claude: [
-    'claude-sonnet-4-5',
-    'claude-haiku-4',
-    'claude-opus-4',
-  ],
-  openai: [
-    'gpt-4o',
-    'gpt-4o-mini',
-    'gpt-4-turbo',
-    'o1',
-    'o1-mini',
-    'o3-mini',
-  ],
-  gemini: [
-    'gemini-2.5-pro',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-  ],
+  claude: ['claude-sonnet-4-5', 'claude-haiku-4', 'claude-opus-4'],
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini', 'o3-mini'],
+  gemini: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'],
   ollama: [
     'llama3.1:8b',
     'llama3.2:3b',
@@ -94,7 +79,9 @@ function readSavedConfig(): SavedConfig {
       const raw = readFileSync(CONFIG_PATH, 'utf-8');
       return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
     }
-  } catch { /* use defaults */ }
+  } catch {
+    /* use defaults */
+  }
   return { ...DEFAULT_CONFIG };
 }
 
@@ -151,7 +138,11 @@ export function getFullConfig(): AIConfigFull {
 
 // ─── Get active provider + model (for the chat route) ───────────────────────────
 
-export function getActiveProvider(): { provider: AIProvider; model: string; ollamaBaseUrl: string } {
+export function getActiveProvider(): {
+  provider: AIProvider;
+  model: string;
+  ollamaBaseUrl: string;
+} {
   const saved = readSavedConfig();
   return {
     provider: saved.provider,

@@ -41,17 +41,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://starbuy.com',
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://starbuyevolucion.com',
     siteName: 'Starbuy',
     title: 'Starbuy — Trending Products at Unbeatable Prices',
-    description:
-      'Shop trending products, electronics, fashion, and more at Starbuy.',
+    description: 'Shop trending products, electronics, fashion, and more at Starbuy.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Starbuy — Trending Products at Unbeatable Prices',
-    description:
-      'Shop trending products, electronics, fashion, and more at Starbuy.',
+    description: 'Shop trending products, electronics, fashion, and more at Starbuy.',
   },
 };
 
@@ -63,10 +61,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${plusJakartaSans.variable} ${inter.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-[var(--color-surface)] text-[var(--color-text-primary)]">
         {/*
           Material Symbols Outlined font for icons.

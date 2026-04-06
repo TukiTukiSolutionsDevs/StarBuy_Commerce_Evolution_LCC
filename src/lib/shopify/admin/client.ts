@@ -2,7 +2,7 @@
  * Shopify Admin GraphQL Client
  *
  * Uses the OAuth token manager to authenticate requests.
- * Targets Admin API version 2026-01.
+ * Targets Admin API version 2026-04.
  */
 
 import { getAdminToken } from './token';
@@ -43,7 +43,7 @@ type ShopifyAdminResponse<T> = {
 
 // ─── Client ────────────────────────────────────────────────────────────────────
 
-const API_VERSION = '2026-01';
+const API_VERSION = '2026-04';
 
 export async function adminFetch<T>(options: AdminFetchOptions): Promise<T> {
   const { query, variables } = options;

@@ -32,11 +32,15 @@ yarn-error.log*
 
 # env files — NEVER commit secrets
 .env*
+!.env.example
 !.env.production.example
 !.env.local.example
 
-# AI runtime config
+# AI & admin runtime data (generated at runtime on the VPS)
 .admin-ai-config.json
+.admin-ai-memory/
+.admin-automations/
+.admin-activity/
 
 # SSL certificates
 certbot/

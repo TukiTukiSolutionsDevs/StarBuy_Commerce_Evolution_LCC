@@ -23,9 +23,13 @@ jobs:
             --build-arg SHOPIFY_STOREFRONT_ACCESS_TOKEN=${{ secrets.SHOPIFY_STOREFRONT_ACCESS_TOKEN }} \
             --build-arg SHOPIFY_STOREFRONT_PRIVATE_TOKEN=${{ secrets.SHOPIFY_STOREFRONT_PRIVATE_TOKEN }} \
             --build-arg SHOPIFY_API_VERSION=${{ secrets.SHOPIFY_API_VERSION }} \
+            --build-arg SHOPIFY_CLIENT_ID=${{ secrets.SHOPIFY_CLIENT_ID }} \
+            --build-arg SHOPIFY_CLIENT_SECRET=${{ secrets.SHOPIFY_CLIENT_SECRET }} \
+            --build-arg ADMIN_CHAT_PASSWORD=${{ secrets.ADMIN_CHAT_PASSWORD }} \
             --build-arg NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN=${{ secrets.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN }} \
             --build-arg NEXT_PUBLIC_SHOPIFY_API_VERSION=${{ secrets.NEXT_PUBLIC_SHOPIFY_API_VERSION }} \
             --build-arg NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN=${{ secrets.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN }} \
+            --build-arg NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }} \
             -t starbuy-store:latest \
             -t starbuy-store:${{ github.sha }} \
             .

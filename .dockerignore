@@ -29,5 +29,10 @@ Dockerfile*
 # Nginx config — mounted as volume, not copied into Next.js image
 nginx/
 
+# Runtime data directories
+.admin-ai-memory/
+.admin-automations/
+.admin-activity/
+
 # macOS artifacts
 .DS_Store

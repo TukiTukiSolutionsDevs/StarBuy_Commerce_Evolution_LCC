@@ -31,12 +31,8 @@ export type ProductInventory = {
 
 // ─── Get Inventory Levels ──────────────────────────────────────────────────────
 
-export async function getInventoryLevels(
-  productId: string
-): Promise<ProductInventory> {
-  const gid = productId.startsWith('gid://')
-    ? productId
-    : `gid://shopify/Product/${productId}`;
+export async function getInventoryLevels(productId: string): Promise<ProductInventory> {
+  const gid = productId.startsWith('gid://') ? productId : `gid://shopify/Product/${productId}`;
 
   const gql = `
     query GetInventory($id: ID!) {
@@ -108,6 +104,121 @@ export async function getInventoryLevels(
   };
 }
 
+// ─── Set Inventory by Item ID ─────────────────────────────────────────────────
+
+/**
+ * Sets or adjusts inventory for a specific inventoryItemId + locationId.
+ * mode 'set'    → absolute quantity
+ * mode 'adjust' → relative delta (+/-)
+ */
+export async function setInventoryByItemId(
+  inventoryItemId: string,
+  locationId: string,
+  value: number,
+  mode: 'set' | 'adjust' = 'set',
+): Promise<{ success: boolean; message: string }> {
+  const itemGid = inventoryItemId.startsWith('gid://')
+    ? inventoryItemId
+    : `gid://shopify/InventoryItem/${inventoryItemId}`;
+  const locationGid = locationId.startsWith('gid://')
+    ? locationId
+    : `gid://shopify/Location/${locationId}`;
+
+  if (mode === 'adjust') {
+    // Use inventoryAdjustQuantities for relative delta
+    const mutation = `
+      mutation AdjustInventory($input: InventoryAdjustQuantitiesInput!) {
+        inventoryAdjustQuantities(input: $input) {
+          inventoryAdjustmentGroup {
+            id
+          }
+          userErrors { field message }
+        }
+      }
+    `;
+
+    const data = await adminFetch<{
+      inventoryAdjustQuantities: {
+        inventoryAdjustmentGroup: { id: string } | null;
+        userErrors: Array<{ field: string[] | null; message: string }>;
+      };
+    }>({
+      query: mutation,
+      variables: {
+        input: {
+          name: 'available',
+          reason: 'correction',
+          changes: [
+            {
+              inventoryItemId: itemGid,
+              locationId: locationGid,
+              delta: value,
+            },
+          ],
+        },
+      },
+    });
+
+    const { userErrors } = data.inventoryAdjustQuantities;
+    if (userErrors.length > 0) {
+      return {
+        success: false,
+        message: `Adjustment failed: ${userErrors.map((e) => e.message).join(', ')}`,
+      };
+    }
+    return {
+      success: true,
+      message: `Inventory adjusted by ${value > 0 ? '+' : ''}${value} units.`,
+    };
+  }
+
+  // mode === 'set'
+  const mutation = `
+    mutation SetInventory($input: InventorySetQuantitiesInput!) {
+      inventorySetQuantities(input: $input) {
+        inventoryAdjustmentGroup {
+          id
+        }
+        userErrors { field message }
+      }
+    }
+  `;
+
+  const data = await adminFetch<{
+    inventorySetQuantities: {
+      inventoryAdjustmentGroup: { id: string } | null;
+      userErrors: Array<{ field: string[] | null; message: string }>;
+    };
+  }>({
+    query: mutation,
+    variables: {
+      input: {
+        name: 'available',
+        reason: 'correction',
+        quantities: [
+          {
+            inventoryItemId: itemGid,
+            locationId: locationGid,
+            quantity: value,
+          },
+        ],
+      },
+    },
+  });
+
+  const { userErrors } = data.inventorySetQuantities;
+  if (userErrors.length > 0) {
+    return {
+      success: false,
+      message: `Set failed: ${userErrors.map((e) => e.message).join(', ')}`,
+    };
+  }
+  return {
+    success: true,
+    message: `Inventory set to ${value} units.`,
+  };
+}
+
 // ─── Set Inventory Quantity ────────────────────────────────────────────────────
 
 /**
@@ -117,7 +228,7 @@ export async function getInventoryLevels(
 export async function setInventoryQuantity(
   productId: string,
   quantity: number,
-  locationId: string = 'gid://shopify/Location/86682697925'
+  locationId: string = 'gid://shopify/Location/86682697925',
 ): Promise<{ success: boolean; message: string }> {
   const inventory = await getInventoryLevels(productId);
 

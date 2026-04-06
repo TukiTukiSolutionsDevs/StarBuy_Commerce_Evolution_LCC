@@ -15,11 +15,18 @@ services:
         NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN: ${NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN}
         NEXT_PUBLIC_SHOPIFY_API_VERSION: ${NEXT_PUBLIC_SHOPIFY_API_VERSION}
         NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN: ${NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://starbuyevolucion.com}
     container_name: starbuy-app
     restart: unless-stopped
     env_file: .env.production
     expose:
       - "3000"
+    volumes:
+      # Persistent data — survives container restarts and redeploys
+      - app-data:/app/data
+    environment:
+      # Tell the app to use /app/data for runtime file storage
+      - STARBUY_DATA_DIR=/app/data
     networks:
       - starbuy-net
     healthcheck:
@@ -56,6 +63,10 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  app-data:
+    driver: local
 
 networks:
   starbuy-net:

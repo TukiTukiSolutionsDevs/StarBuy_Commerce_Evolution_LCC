@@ -1,12 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useToast } from '@/components/ui/useToast';
+
+// ─── Types ──────────────────────────────────────────────────────────────────────
 
 type Provider = 'claude' | 'openai' | 'gemini' | 'ollama';
 
 type ProviderInfo = {
   configured: boolean;
   models: string[];
+};
+
+type StoreInfo = {
+  name: string;
+  email: string;
+  domain: string;
+  primaryDomain: string;
+  plan: string;
+  currency: string;
+  apiVersion: string;
 };
 
 type Config = {
@@ -20,9 +33,15 @@ type Config = {
     connected: boolean;
   };
   providers: Record<Provider, ProviderInfo>;
+  storeInfo: StoreInfo | null;
 };
 
-const PROVIDER_META: Record<Provider, { name: string; icon: string; color: string; envKey: string; description: string }> = {
+// ─── Provider Metadata ─────────────────────────────────────────────────────────
+
+const PROVIDER_META: Record<
+  Provider,
+  { name: string; icon: string; color: string; envKey: string; description: string }
+> = {
   claude: {
     name: 'Claude (Anthropic)',
     icon: 'psychology',
@@ -53,13 +72,66 @@ const PROVIDER_META: Record<Provider, { name: string; icon: string; color: strin
   },
 };
 
+// ─── Section Header Component ──────────────────────────────────────────────────
+
+function SectionHeader({
+  icon,
+  iconColor = 'text-[#d4a843]',
+  title,
+  description,
+}: {
+  icon: string;
+  iconColor?: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="px-6 py-4 border-b border-[#1f2d4e]">
+      <h2 className="text-white font-semibold flex items-center gap-2">
+        <span className={`material-symbols-outlined ${iconColor}`}>{icon}</span>
+        {title}
+      </h2>
+      {description && <p className="text-[#6b7280] text-xs mt-1">{description}</p>}
+    </div>
+  );
+}
+
+// ─── Status Dot Component ──────────────────────────────────────────────────────
+
+function StatusDot({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <span
+      className={`flex items-center gap-1.5 text-xs ${ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
+    >
+      <span className={`w-2 h-2 rounded-full ${ok ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+      {label}
+    </span>
+  );
+}
+
+// ─── Info Row Component ────────────────────────────────────────────────────────
+
+function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-[#1f2d4e] last:border-0">
+      <span className="text-xs text-[#6b7280]">{label}</span>
+      <span className={`text-sm text-[#d1d5db] ${mono ? 'font-mono text-xs' : ''}`}>
+        {value || '—'}
+      </span>
+    </div>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────────────────────────────
+
 export default function SettingsPage() {
+  const { toast } = useToast();
+
   const [config, setConfig] = useState<Config | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
-  // Selected values (local state before save)
+  // AI Provider state
   const [selectedProvider, setSelectedProvider] = useState<Provider>('claude');
   const [selectedModel, setSelectedModel] = useState('');
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
@@ -67,8 +139,16 @@ export default function SettingsPage() {
 
   // Connection test results
   const [shopifyTest, setShopifyTest] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [ollamaTest, setOllamaTest] = useState<{ ok: boolean; msg: string; models?: string[] } | null>(null);
+  const [ollamaTest, setOllamaTest] = useState<{
+    ok: boolean;
+    msg: string;
+    models?: string[];
+  } | null>(null);
   const [testing, setTesting] = useState('');
+
+  // Admin config state
+  const [clearingCache, setClearingCache] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -80,15 +160,13 @@ export default function SettingsPage() {
         setOllamaUrl(data.ollama.baseUrl);
         setOllamaModel(data.ollama.model);
       })
+      .catch(() => toast.error('Failed to load settings'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
 
-  function showToast(msg: string, type: 'success' | 'error') {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  }
+  // ─── AI Save ─────────────────────────────────────────────────────────────────
 
-  async function handleSave() {
+  async function handleSaveAI() {
     setSaving(true);
     try {
       const res = await fetch('/api/admin/settings', {
@@ -102,13 +180,15 @@ export default function SettingsPage() {
         }),
       });
       if (!res.ok) throw new Error('Failed to save');
-      showToast('Settings saved successfully', 'success');
+      toast.success('AI settings saved successfully');
     } catch {
-      showToast('Failed to save settings', 'error');
+      toast.error('Failed to save settings');
     } finally {
       setSaving(false);
     }
   }
+
+  // ─── Connection Tests ─────────────────────────────────────────────────────────
 
   async function testConnection(type: 'shopify' | 'ollama') {
     setTesting(type);
@@ -118,11 +198,20 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ test: type }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as {
+        success: boolean;
+        message?: string;
+        error?: string;
+        models?: string[];
+      };
       if (type === 'shopify') {
-        setShopifyTest({ ok: data.success, msg: data.message ?? data.error });
+        setShopifyTest({ ok: data.success, msg: data.message ?? data.error ?? 'Unknown error' });
       } else {
-        setOllamaTest({ ok: data.success, msg: data.message ?? data.error, models: data.models });
+        setOllamaTest({
+          ok: data.success,
+          msg: data.message ?? data.error ?? 'Unknown error',
+          models: data.models,
+        });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Connection failed';
@@ -133,7 +222,47 @@ export default function SettingsPage() {
     }
   }
 
-  // When provider changes, auto-select first model
+  // ─── Danger Zone Actions ──────────────────────────────────────────────────────
+
+  async function handleClearCache() {
+    if (!confirm('Clear all cache? This will refetch data from Shopify on the next request.'))
+      return;
+    setClearingCache(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear-cache' }),
+      });
+      const data = (await res.json()) as { success: boolean; message?: string };
+      if (data.success) {
+        toast.success(data.message ?? 'Cache cleared');
+      } else {
+        toast.error('Failed to clear cache');
+      }
+    } catch {
+      toast.error('Failed to clear cache');
+    } finally {
+      setClearingCache(false);
+    }
+  }
+
+  async function handleLogout() {
+    if (!confirm('This will clear your current session. You will be redirected to the login page.'))
+      return;
+    setLoggingOut(true);
+    try {
+      // Delete the admin cookie and redirect
+      document.cookie = 'admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      window.location.href = '/admin/login';
+    } catch {
+      toast.error('Failed to logout');
+      setLoggingOut(false);
+    }
+  }
+
+  // ─── Provider Change ──────────────────────────────────────────────────────────
+
   function handleProviderChange(p: Provider) {
     setSelectedProvider(p);
     if (p === 'ollama') {
@@ -144,10 +273,14 @@ export default function SettingsPage() {
     }
   }
 
+  // ─── Loading State ────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <span className="material-symbols-outlined text-[#d4a843] text-3xl animate-spin">progress_activity</span>
+        <span className="material-symbols-outlined text-[#d4a843] text-3xl animate-spin">
+          progress_activity
+        </span>
       </div>
     );
   }
@@ -155,332 +288,648 @@ export default function SettingsPage() {
   if (!config) return null;
 
   const activeProviderMeta = PROVIDER_META[selectedProvider];
-  const isProviderReady = selectedProvider === 'ollama' || config.providers[selectedProvider]?.configured;
+  const isProviderReady =
+    selectedProvider === 'ollama' || config.providers[selectedProvider]?.configured;
+
+  // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      {/* ── Page Header ──────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-heading)' }}>
           Settings
         </h1>
         <p className="text-[#6b7280] text-sm mt-1">
-          Configure your AI assistant and Shopify connection
+          Store configuration, integrations, and admin preferences
         </p>
       </div>
 
-      {/* ─── AI Provider Selection ─────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 1 — Store Information (read-only from Shopify)
+      ════════════════════════════════════════════════════════════════════════ */}
       <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#1f2d4e]">
-          <h2 className="text-white font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#d4a843]">smart_toy</span>
-            AI Provider
-          </h2>
-          <p className="text-[#6b7280] text-xs mt-1">
-            Choose which AI powers your admin assistant
-          </p>
-        </div>
+        <SectionHeader
+          icon="store"
+          iconColor="text-[#10b981]"
+          title="Store Information"
+          description="Live data from your Shopify store — read only"
+        />
 
-        <div className="p-6 grid grid-cols-2 gap-4">
+        <div className="p-6">
+          {config.storeInfo ? (
+            <div className="divide-y divide-[#1f2d4e]">
+              <InfoRow label="Store Name" value={config.storeInfo.name} />
+              <InfoRow label="Contact Email" value={config.storeInfo.email} />
+              <InfoRow label="Shopify Domain" value={config.storeInfo.domain} mono />
+              <InfoRow label="Primary Domain" value={config.storeInfo.primaryDomain} mono />
+              <InfoRow label="Shopify Plan" value={config.storeInfo.plan} />
+              <InfoRow label="Currency" value={config.storeInfo.currency} />
+              <InfoRow label="Admin API Version" value={config.storeInfo.apiVersion} mono />
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 py-4 text-[#6b7280] text-sm">
+              <span className="material-symbols-outlined text-[#374151]">cloud_off</span>
+              <div>
+                <p className="text-[#9ca3af] font-medium">Store info unavailable</p>
+                <p className="text-xs mt-0.5">
+                  Shopify Admin API credentials may be missing or invalid
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 2 — Admin Configuration
+      ════════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+        <SectionHeader
+          icon="admin_panel_settings"
+          iconColor="text-[#d4a843]"
+          title="Admin Configuration"
+          description="Admin access, session settings, and preferences"
+        />
+
+        <div className="p-6 space-y-5">
+          {/* Session Info */}
+          <div className="bg-[#0d1526] rounded-xl p-4 space-y-2">
+            <p className="text-xs font-medium text-[#9ca3af] flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm text-[#d4a843]">timer</span>
+              Session Duration
+            </p>
+            <p className="text-sm text-white">24 hours</p>
+            <p className="text-xs text-[#6b7280]">
+              Admin sessions expire after 24h. JWT tokens are signed with{' '}
+              <code className="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">ADMIN_JWT_SECRET</code> or{' '}
+              <code className="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">ADMIN_CHAT_PASSWORD</code>.
+            </p>
+          </div>
+
+          {/* Password Change Info */}
+          <div className="bg-[#0d1526] rounded-xl p-4 space-y-2">
+            <p className="text-xs font-medium text-[#9ca3af] flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm text-[#d4a843]">lock</span>
+              Admin Password
+            </p>
+            <p className="text-xs text-[#6b7280]">
+              Password is set via the{' '}
+              <code className="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">ADMIN_CHAT_PASSWORD</code>{' '}
+              environment variable in{' '}
+              <code className="bg-[#1f2d4e] px-1 rounded text-[#9ca3af]">.env.local</code>. Restart
+              the server after changing it.
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+              <span className="text-xs text-[#10b981]">Password is configured</span>
+            </div>
+          </div>
+
+          {/* Theme Preference (placeholder) */}
+          <div className="bg-[#0d1526] rounded-xl p-4 space-y-2 opacity-60">
+            <p className="text-xs font-medium text-[#9ca3af] flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm text-[#6b7280]">palette</span>
+              Theme Preference
+              <span className="text-[10px] bg-[#1f2d4e] text-[#6b7280] px-2 py-0.5 rounded-full font-normal">
+                Coming soon
+              </span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                disabled
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#d4a843] bg-[#d4a843]/10 text-[#d4a843] text-xs font-medium cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined text-sm">dark_mode</span>
+                Dark
+              </button>
+              <button
+                disabled
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#1f2d4e] text-[#6b7280] text-xs cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined text-sm">light_mode</span>
+                Light
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 3 — API & Integrations Status
+      ════════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+        <SectionHeader
+          icon="hub"
+          iconColor="text-[#6366f1]"
+          title="API & Integrations"
+          description="Status of all connected services and APIs"
+        />
+
+        <div className="p-6 space-y-3">
+          {/* Shopify Storefront API */}
+          <div className="flex items-center justify-between py-3 px-4 bg-[#0d1526] rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#10b981]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-sm text-[#10b981]">storefront</span>
+              </div>
+              <div>
+                <p className="text-sm text-white font-medium">Shopify Storefront API</p>
+                <p className="text-xs text-[#6b7280]">
+                  Public storefront — products, cart, checkout
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <StatusDot
+                ok={config.shopify.connected}
+                label={config.shopify.connected ? 'Connected' : 'Not configured'}
+              />
+              {config.shopify.connected && (
+                <span className="text-[10px] text-[#374151] font-mono">2026-04</span>
+              )}
+            </div>
+          </div>
+
+          {/* Shopify Admin API */}
+          <div className="flex items-center justify-between py-3 px-4 bg-[#0d1526] rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#10b981]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-sm text-[#10b981]">
+                  admin_panel_settings
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-white font-medium">Shopify Admin API</p>
+                <p className="text-xs text-[#6b7280]">Product management, orders, inventory</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <StatusDot
+                ok={config.shopify.connected}
+                label={config.shopify.connected ? 'Connected' : 'Not configured'}
+              />
+              {config.shopify.connected && (
+                <span className="text-[10px] text-[#374151] font-mono">2026-04</span>
+              )}
+            </div>
+          </div>
+
+          {/* AI Provider */}
           {(Object.keys(PROVIDER_META) as Provider[]).map((p) => {
             const meta = PROVIDER_META[p];
             const info = config.providers[p];
-            const isSelected = selectedProvider === p;
-            const isReady = p === 'ollama' || info.configured;
+            const isActive = selectedProvider === p;
+            const isReady = p === 'ollama' ? true : info.configured;
+
+            if (!isReady && !isActive) return null;
 
             return (
-              <button
+              <div
                 key={p}
-                onClick={() => handleProviderChange(p)}
-                className={`relative text-left rounded-xl p-4 border-2 transition-all ${
-                  isSelected
-                    ? 'border-[#d4a843] bg-[#d4a843]/5'
-                    : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
-                }`}
+                className="flex items-center justify-between py-3 px-4 bg-[#0d1526] rounded-xl"
               >
-                {/* Status dot */}
-                <div className="absolute top-3 right-3">
-                  {isReady ? (
-                    <span className="flex items-center gap-1 text-[10px] text-[#10b981] bg-[#10b981]/10 px-2 py-0.5 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                      Ready
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-[10px] text-[#6b7280] bg-[#6b7280]/10 px-2 py-0.5 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#6b7280]" />
-                      No key
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: `${meta.color}15` }}
                   >
-                    <span className="material-symbols-outlined text-xl" style={{ color: meta.color }}>
+                    <span
+                      className="material-symbols-outlined text-sm"
+                      style={{ color: meta.color }}
+                    >
                       {meta.icon}
                     </span>
                   </div>
                   <div>
-                    <div className="text-white font-medium text-sm">{meta.name}</div>
+                    <p className="text-sm text-white font-medium flex items-center gap-2">
+                      {meta.name}
+                      {isActive && (
+                        <span className="text-[10px] bg-[#d4a843]/10 text-[#d4a843] px-2 py-0.5 rounded-full font-medium">
+                          Active
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-[#6b7280]">
+                      {isActive
+                        ? `Model: ${selectedModel || config.model}`
+                        : 'Configured, not active'}
+                    </p>
                   </div>
                 </div>
-
-                <p className="text-[#6b7280] text-xs leading-relaxed">{meta.description}</p>
-
-                {!isReady && meta.envKey && (
-                  <p className="text-[#374151] text-[10px] mt-2 font-mono">
-                    Add {meta.envKey} to .env.local
-                  </p>
-                )}
-              </button>
+                <StatusDot ok={isReady} label={isReady ? 'Ready' : 'No API key'} />
+              </div>
             );
           })}
+
+          {/* AutoDS */}
+          <div className="flex items-center justify-between py-3 px-4 bg-[#0d1526] rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#374151]/30 flex items-center justify-center">
+                <span className="material-symbols-outlined text-sm text-[#6b7280]">
+                  inventory_2
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-white font-medium">AutoDS Integration</p>
+                <p className="text-xs text-[#6b7280]">Dropshipping & product sourcing</p>
+              </div>
+            </div>
+            <StatusDot ok={false} label="Not connected" />
+          </div>
         </div>
       </section>
 
-      {/* ─── Model Selection ───────────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 4 — AI Provider Configuration
+      ════════════════════════════════════════════════════════════════════════ */}
       <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#1f2d4e]">
-          <h2 className="text-white font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined" style={{ color: activeProviderMeta.color }}>
-              {activeProviderMeta.icon}
-            </span>
-            {activeProviderMeta.name} — Model
-          </h2>
-        </div>
+        <SectionHeader
+          icon="smart_toy"
+          iconColor="text-[#d4a843]"
+          title="AI Provider"
+          description="Choose which AI powers your admin assistant"
+        />
 
-        <div className="p-6 space-y-4">
-          {selectedProvider === 'ollama' ? (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-                  Ollama Server URL
-                </label>
-                <div className="flex gap-3">
-                  <input
-                    value={ollamaUrl}
-                    onChange={(e) => setOllamaUrl(e.target.value)}
-                    placeholder="http://localhost:11434"
-                    className="flex-1 bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none"
-                  />
-                  <button
-                    onClick={() => testConnection('ollama')}
-                    disabled={testing === 'ollama'}
-                    className="bg-[#f97316]/10 hover:bg-[#f97316]/20 text-[#f97316] border border-[#f97316]/20 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2"
-                  >
-                    {testing === 'ollama' ? (
-                      <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+        <div className="p-6 space-y-6">
+          {/* Provider Cards */}
+          <div className="grid grid-cols-2 gap-4">
+            {(Object.keys(PROVIDER_META) as Provider[]).map((p) => {
+              const meta = PROVIDER_META[p];
+              const info = config.providers[p];
+              const isSelected = selectedProvider === p;
+              const isReady = p === 'ollama' || info.configured;
+
+              return (
+                <button
+                  key={p}
+                  onClick={() => handleProviderChange(p)}
+                  className={`relative text-left rounded-xl p-4 border-2 transition-all ${
+                    isSelected
+                      ? 'border-[#d4a843] bg-[#d4a843]/5'
+                      : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
+                  }`}
+                >
+                  {/* Status badge */}
+                  <div className="absolute top-3 right-3">
+                    {isReady ? (
+                      <span className="flex items-center gap-1 text-[10px] text-[#10b981] bg-[#10b981]/10 px-2 py-0.5 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                        Ready
+                      </span>
                     ) : (
-                      <span className="material-symbols-outlined text-base">bolt</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#6b7280] bg-[#6b7280]/10 px-2 py-0.5 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#6b7280]" />
+                        No key
+                      </span>
                     )}
-                    Test
-                  </button>
-                </div>
-                {ollamaTest && (
-                  <div className={`mt-2 text-xs flex items-center gap-1 ${ollamaTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                    <span className="material-symbols-outlined text-sm">
-                      {ollamaTest.ok ? 'check_circle' : 'error'}
-                    </span>
-                    {ollamaTest.msg}
                   </div>
-                )}
-              </div>
 
+                  <div className="flex items-center gap-3 mb-2">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${meta.color}15` }}
+                    >
+                      <span
+                        className="material-symbols-outlined text-xl"
+                        style={{ color: meta.color }}
+                      >
+                        {meta.icon}
+                      </span>
+                    </div>
+                    <div className="text-white font-medium text-sm">{meta.name}</div>
+                  </div>
+
+                  <p className="text-[#6b7280] text-xs leading-relaxed">{meta.description}</p>
+
+                  {!isReady && meta.envKey && (
+                    <p className="text-[#374151] text-[10px] mt-2 font-mono">
+                      Add {meta.envKey} to .env.local
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Model Selection */}
+          <div>
+            <h3 className="text-xs font-medium text-[#9ca3af] mb-3 flex items-center gap-2">
+              <span
+                className="material-symbols-outlined text-sm"
+                style={{ color: activeProviderMeta.color }}
+              >
+                {activeProviderMeta.icon}
+              </span>
+              {activeProviderMeta.name} — Model
+            </h3>
+
+            {selectedProvider === 'ollama' ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
+                    Ollama Server URL
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      value={ollamaUrl}
+                      onChange={(e) => setOllamaUrl(e.target.value)}
+                      placeholder="http://localhost:11434"
+                      className="flex-1 bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none"
+                    />
+                    <button
+                      onClick={() => testConnection('ollama')}
+                      disabled={testing === 'ollama'}
+                      className="bg-[#f97316]/10 hover:bg-[#f97316]/20 text-[#f97316] border border-[#f97316]/20 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2"
+                    >
+                      {testing === 'ollama' ? (
+                        <span className="material-symbols-outlined text-base animate-spin">
+                          progress_activity
+                        </span>
+                      ) : (
+                        <span className="material-symbols-outlined text-base">bolt</span>
+                      )}
+                      Test
+                    </button>
+                  </div>
+                  {ollamaTest && (
+                    <div
+                      className={`mt-2 text-xs flex items-center gap-1 ${ollamaTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {ollamaTest.ok ? 'check_circle' : 'error'}
+                      </span>
+                      {ollamaTest.msg}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Model</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {config.providers.ollama.models.map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => {
+                          setOllamaModel(m);
+                          setSelectedModel(m);
+                        }}
+                        className={`text-left rounded-lg px-3 py-2 text-sm border transition-colors ${
+                          ollamaModel === m
+                            ? 'border-[#f97316] bg-[#f97316]/10 text-white'
+                            : 'border-[#1f2d4e] text-[#9ca3af] hover:border-[#374151]'
+                        }`}
+                      >
+                        <span className="font-mono text-xs">{m}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    value={ollamaModel}
+                    onChange={(e) => {
+                      setOllamaModel(e.target.value);
+                      setSelectedModel(e.target.value);
+                    }}
+                    placeholder="Or type custom model name..."
+                    className="w-full mt-2 bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] text-white rounded-lg px-3 py-2 text-xs font-mono outline-none"
+                  />
+                </div>
+              </div>
+            ) : (
               <div>
-                <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Model</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {(ollamaTest?.models ?? PROVIDER_META.ollama.description ? config.providers.ollama.models : []).map((m) => (
+                  {config.providers[selectedProvider].models.map((m) => (
                     <button
                       key={m}
-                      onClick={() => { setOllamaModel(m); setSelectedModel(m); }}
-                      className={`text-left rounded-lg px-3 py-2 text-sm border transition-colors ${
-                        ollamaModel === m
-                          ? 'border-[#f97316] bg-[#f97316]/10 text-white'
-                          : 'border-[#1f2d4e] text-[#9ca3af] hover:border-[#374151]'
-                      }`}
+                      onClick={() => setSelectedModel(m)}
+                      className="text-left rounded-lg px-3 py-2 text-sm border transition-colors border-[#1f2d4e] text-[#9ca3af] hover:border-[#374151]"
+                      style={
+                        selectedModel === m
+                          ? {
+                              borderColor: activeProviderMeta.color,
+                              backgroundColor: `${activeProviderMeta.color}15`,
+                              color: 'white',
+                            }
+                          : {}
+                      }
                     >
                       <span className="font-mono text-xs">{m}</span>
                     </button>
                   ))}
                 </div>
-                <div className="mt-2">
-                  <input
-                    value={ollamaModel}
-                    onChange={(e) => { setOllamaModel(e.target.value); setSelectedModel(e.target.value); }}
-                    placeholder="Or type custom model name..."
-                    className="w-full bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] text-white rounded-lg px-3 py-2 text-xs font-mono outline-none"
-                  />
-                </div>
-              </div>
-            </>
-          ) : (
-            <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Model</label>
-              <div className="grid grid-cols-2 gap-2">
-                {config.providers[selectedProvider].models.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setSelectedModel(m)}
-                    className={`text-left rounded-lg px-3 py-2 text-sm border transition-colors ${
-                      selectedModel === m
-                        ? `border-[${activeProviderMeta.color}] bg-[${activeProviderMeta.color}]/10 text-white`
-                        : 'border-[#1f2d4e] text-[#9ca3af] hover:border-[#374151]'
-                    }`}
-                    style={selectedModel === m ? { borderColor: activeProviderMeta.color, backgroundColor: `${activeProviderMeta.color}15` } : {}}
-                  >
-                    <span className="font-mono text-xs">{m}</span>
-                  </button>
-                ))}
-              </div>
 
-              {!isProviderReady && (
-                <div className="mt-3 bg-[#ef4444]/5 border border-[#ef4444]/20 rounded-xl p-3 text-xs text-[#ef4444] flex items-start gap-2">
-                  <span className="material-symbols-outlined text-sm mt-0.5">warning</span>
-                  <div>
-                    <strong>API key missing.</strong> Add <code className="bg-[#ef4444]/10 px-1 rounded">{activeProviderMeta.envKey}</code> to your <code>.env.local</code> file and restart the server.
+                {!isProviderReady && (
+                  <div className="mt-3 bg-[#ef4444]/5 border border-[#ef4444]/20 rounded-xl p-3 text-xs text-[#ef4444] flex items-start gap-2">
+                    <span className="material-symbols-outlined text-sm mt-0.5">warning</span>
+                    <div>
+                      <strong>API key missing.</strong> Add{' '}
+                      <code className="bg-[#ef4444]/10 px-1 rounded">
+                        {activeProviderMeta.envKey}
+                      </code>{' '}
+                      to your <code>.env.local</code> file and restart the server.
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ─── Shopify Connection ────────────────────────────────────────────── */}
-      <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#1f2d4e]">
-          <h2 className="text-white font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#10b981]">storefront</span>
-            Shopify Connection
-          </h2>
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-[#6b7280] mb-1">Store Domain</label>
-              <div className="bg-[#0f1729] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white font-mono">
-                {config.shopify.domain || '—'}
+                )}
               </div>
-            </div>
-            <div>
-              <label className="block text-xs text-[#6b7280] mb-1">Client ID</label>
-              <div className="bg-[#0f1729] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-[#9ca3af] font-mono truncate">
-                {config.shopify.clientId ? `${config.shopify.clientId.slice(0, 12)}...` : '—'}
-              </div>
-            </div>
+            )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${config.shopify.connected ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-              <span className={`text-sm ${config.shopify.connected ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                {config.shopify.connected ? 'Credentials configured' : 'Missing credentials'}
-              </span>
+          {/* Shopify Test */}
+          <div className="bg-[#0d1526] rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-[#9ca3af]">Shopify Connection Test</p>
+                <p className="text-xs text-[#6b7280] mt-0.5">
+                  Verify your Shopify Admin API credentials are working
+                </p>
+              </div>
+              <button
+                onClick={() => testConnection('shopify')}
+                disabled={testing === 'shopify' || !config.shopify.connected}
+                className="bg-[#10b981]/10 hover:bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/20 rounded-xl px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {testing === 'shopify' ? (
+                  <span className="material-symbols-outlined text-base animate-spin">
+                    progress_activity
+                  </span>
+                ) : (
+                  <span className="material-symbols-outlined text-base">bolt</span>
+                )}
+                Test Connection
+              </button>
             </div>
+            {shopifyTest && (
+              <div
+                className={`text-xs flex items-center gap-1 ${shopifyTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {shopifyTest.ok ? 'check_circle' : 'error'}
+                </span>
+                {shopifyTest.msg}
+              </div>
+            )}
+          </div>
 
+          {/* Save AI Settings */}
+          <div className="flex justify-end">
             <button
-              onClick={() => testConnection('shopify')}
-              disabled={testing === 'shopify' || !config.shopify.connected}
-              className="bg-[#10b981]/10 hover:bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/20 rounded-xl px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+              onClick={handleSaveAI}
+              disabled={saving}
+              className="bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] text-[#0a0f1e] font-semibold rounded-xl px-8 py-3 text-sm transition-colors flex items-center gap-2"
             >
-              {testing === 'shopify' ? (
-                <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+              {saving ? (
+                <span className="material-symbols-outlined text-base animate-spin">
+                  progress_activity
+                </span>
               ) : (
-                <span className="material-symbols-outlined text-base">bolt</span>
+                <span className="material-symbols-outlined text-base">save</span>
               )}
-              Test Connection
+              Save AI Settings
             </button>
           </div>
-
-          {shopifyTest && (
-            <div className={`text-xs flex items-center gap-1 ${shopifyTest.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-              <span className="material-symbols-outlined text-sm">
-                {shopifyTest.ok ? 'check_circle' : 'error'}
-              </span>
-              {shopifyTest.msg}
-            </div>
-          )}
-
-          <div className="bg-[#0d1526] rounded-xl p-4 text-xs text-[#6b7280] space-y-1">
-            <p className="font-medium text-[#9ca3af]">Auth: OAuth Client Credentials</p>
-            <p>Token auto-refreshes every 24 hours. No manual token management needed.</p>
-            <p className="font-mono text-[10px] text-[#374151]">
-              Env vars: SHOPIFY_STORE_DOMAIN, SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET
-            </p>
-          </div>
         </div>
       </section>
 
-      {/* ─── Environment Variables Reference ────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 5 — Environment Variables Reference
+      ════════════════════════════════════════════════════════════════════════ */}
       <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#1f2d4e]">
-          <h2 className="text-white font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#6b7280]">key</span>
-            Environment Variables
-          </h2>
-          <p className="text-[#6b7280] text-xs mt-1">
-            API keys are stored securely in .env.local — not in the database
-          </p>
-        </div>
+        <SectionHeader
+          icon="key"
+          iconColor="text-[#6b7280]"
+          title="Environment Variables"
+          description="API keys stored in .env.local — never in the database"
+        />
 
         <div className="p-6">
           <div className="bg-[#0d1526] rounded-xl overflow-hidden font-mono text-xs">
             {[
-              { key: 'ANTHROPIC_API_KEY', label: 'Claude', configured: config.providers.claude.configured },
-              { key: 'OPENAI_API_KEY', label: 'OpenAI', configured: config.providers.openai.configured },
-              { key: 'GOOGLE_GENERATIVE_AI_API_KEY', label: 'Gemini', configured: config.providers.gemini.configured },
-              { key: 'SHOPIFY_STORE_DOMAIN', label: 'Shopify', configured: !!config.shopify.domain },
+              {
+                key: 'ANTHROPIC_API_KEY',
+                label: 'Claude AI',
+                configured: config.providers.claude.configured,
+              },
+              {
+                key: 'OPENAI_API_KEY',
+                label: 'OpenAI',
+                configured: config.providers.openai.configured,
+              },
+              {
+                key: 'GOOGLE_GENERATIVE_AI_API_KEY',
+                label: 'Gemini',
+                configured: config.providers.gemini.configured,
+              },
+              {
+                key: 'SHOPIFY_STORE_DOMAIN',
+                label: 'Shopify',
+                configured: !!config.shopify.domain,
+              },
               { key: 'SHOPIFY_CLIENT_ID', label: 'Shopify', configured: !!config.shopify.clientId },
-              { key: 'SHOPIFY_CLIENT_SECRET', label: 'Shopify', configured: config.shopify.hasClientSecret },
+              {
+                key: 'SHOPIFY_CLIENT_SECRET',
+                label: 'Shopify',
+                configured: config.shopify.hasClientSecret,
+              },
               { key: 'ADMIN_CHAT_PASSWORD', label: 'Admin', configured: true },
+              { key: 'ADMIN_JWT_SECRET', label: 'Admin (optional)', configured: true },
             ].map((env) => (
               <div
                 key={env.key}
                 className="flex items-center justify-between px-4 py-2.5 border-b border-[#1f2d4e] last:border-0"
               >
                 <div className="flex items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full ${env.configured ? 'bg-[#10b981]' : 'bg-[#374151]'}`} />
+                  <span
+                    className={`w-2 h-2 rounded-full ${env.configured ? 'bg-[#10b981]' : 'bg-[#374151]'}`}
+                  />
                   <span className="text-[#9ca3af]">{env.key}</span>
                 </div>
-                <span className={`text-[10px] ${env.configured ? 'text-[#10b981]' : 'text-[#374151]'}`}>
-                  {env.configured ? 'Set' : 'Missing'}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[#374151]">{env.label}</span>
+                  <span
+                    className={`text-[10px] ${env.configured ? 'text-[#10b981]' : 'text-[#374151]'}`}
+                  >
+                    {env.configured ? 'Set' : 'Missing'}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Save Button ──────────────────────────────────────────────────────── */}
-      <div className="flex justify-end gap-4 pb-8">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] text-[#0a0f1e] font-semibold rounded-xl px-8 py-3 text-sm transition-colors flex items-center gap-2"
-        >
-          {saving ? (
-            <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-          ) : (
-            <span className="material-symbols-outlined text-base">save</span>
-          )}
-          Save Settings
-        </button>
-      </div>
-
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium shadow-lg ${
-          toast.type === 'success' ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
-        }`}>
-          <span className="material-symbols-outlined text-base">
-            {toast.type === 'success' ? 'check_circle' : 'error'}
-          </span>
-          {toast.msg}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 6 — Danger Zone
+      ════════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-[#111827] border border-[#ef4444]/30 rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#ef4444]/20 bg-[#ef4444]/5">
+          <h2 className="text-[#ef4444] font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#ef4444]">dangerous</span>
+            Danger Zone
+          </h2>
+          <p className="text-[#ef4444]/60 text-xs mt-1">
+            These actions are irreversible — proceed with caution
+          </p>
         </div>
-      )}
+
+        <div className="p-6 space-y-4">
+          {/* Clear Cache */}
+          <div className="flex items-center justify-between p-4 border border-[#ef4444]/20 rounded-xl bg-[#ef4444]/5">
+            <div>
+              <p className="text-sm text-white font-medium flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-[#ef4444]">
+                  delete_sweep
+                </span>
+                Clear All Cache
+              </p>
+              <p className="text-xs text-[#6b7280] mt-1">
+                Invalidates all Shopify data cache. Next requests will refetch from the API.
+              </p>
+            </div>
+            <button
+              onClick={handleClearCache}
+              disabled={clearingCache}
+              className="shrink-0 ml-4 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] border border-[#ef4444]/30 rounded-xl px-5 py-2 text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {clearingCache ? (
+                <span className="material-symbols-outlined text-base animate-spin">
+                  progress_activity
+                </span>
+              ) : (
+                <span className="material-symbols-outlined text-base">delete_sweep</span>
+              )}
+              Clear Cache
+            </button>
+          </div>
+
+          {/* Logout / Revoke Session */}
+          <div className="flex items-center justify-between p-4 border border-[#ef4444]/20 rounded-xl bg-[#ef4444]/5">
+            <div>
+              <p className="text-sm text-white font-medium flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-[#ef4444]">logout</span>
+                Logout from All Sessions
+              </p>
+              <p className="text-xs text-[#6b7280] mt-1">
+                Clears your admin session cookie. You will be redirected to the login page. Other
+                active sessions using the same browser will also be invalidated.
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="shrink-0 ml-4 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] border border-[#ef4444]/30 rounded-xl px-5 py-2 text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {loggingOut ? (
+                <span className="material-symbols-outlined text-base animate-spin">
+                  progress_activity
+                </span>
+              ) : (
+                <span className="material-symbols-outlined text-base">logout</span>
+              )}
+              Logout
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
