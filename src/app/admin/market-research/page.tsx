@@ -107,10 +107,7 @@ function ResultCard({
     <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-5 space-y-4 hover:border-[#374151] transition-colors">
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
-        <h3
-          className="text-white text-sm font-semibold leading-snug flex-1"
-          style={{ fontFamily: 'var(--font-heading)' }}
-        >
+        <h3 className="text-[#f9fafb] text-base font-bold leading-snug flex-1 drop-shadow-sm">
           {result.title}
         </h3>
         <span
@@ -121,12 +118,16 @@ function ResultCard({
       </div>
 
       {/* Overall score */}
-      <div className="flex items-center gap-3">
-        <div
-          className={`text-3xl font-bold ${scoreTextColor(result.scores.overall)}`}
-          style={{ fontFamily: 'var(--font-heading)' }}
-        >
-          {result.scores.overall}
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col items-center gap-0.5">
+          <div
+            className={`text-4xl font-black ${scoreTextColor(result.scores.overall)} drop-shadow-lg`}
+          >
+            {Math.round(result.scores.overall)}
+          </div>
+          <span className="text-[8px] text-[#6b7280] uppercase tracking-widest font-semibold">
+            Score
+          </span>
         </div>
         <div className="flex-1 space-y-2">
           <ScoreBar label="Trend" score={result.scores.trend} />
@@ -767,10 +768,7 @@ export default function MarketResearchPage() {
       {!searching && displayedResults.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2
-              className="text-white text-base font-semibold"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
+            <h2 className="text-[#f9fafb] text-lg font-bold">
               Results for &ldquo;{activeSession?.query}&rdquo;
             </h2>
             <span className="text-[#6b7280] text-sm">
