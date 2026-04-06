@@ -342,23 +342,25 @@ function ImageGallery({
       <div className="flex gap-3 overflow-x-auto pb-2">
         {loading && <div className="w-20 h-20 rounded-lg bg-[#1f2d4e] animate-pulse flex-none" />}
 
-        {images.map((img) => (
-          <div key={img.id} className="relative group flex-none">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={img.image.url}
-              alt={img.image.altText ?? ''}
-              className="w-20 h-20 rounded-lg object-cover border border-[#1f2d4e]"
-            />
-            <button
-              type="button"
-              onClick={() => handleDelete(img.id)}
-              className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-            >
-              <span className="material-symbols-outlined text-red-400 text-xl">delete</span>
-            </button>
-          </div>
-        ))}
+        {images
+          .filter((img) => img.image?.url)
+          .map((img) => (
+            <div key={img.id} className="relative group flex-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={img.image.url}
+                alt={img.image.altText ?? ''}
+                className="w-20 h-20 rounded-lg object-cover border border-[#1f2d4e]"
+              />
+              <button
+                type="button"
+                onClick={() => handleDelete(img.id)}
+                className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+              >
+                <span className="material-symbols-outlined text-red-400 text-xl">delete</span>
+              </button>
+            </div>
+          ))}
 
         {/* Upload button */}
         <button

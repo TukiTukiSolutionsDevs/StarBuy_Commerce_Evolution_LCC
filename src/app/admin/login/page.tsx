@@ -57,24 +57,19 @@ export default function AdminLoginPage() {
         <div className="text-center mb-8">
           <img src="/StarBuy.png" alt="StarBuy" className="h-20 w-auto mx-auto mb-4" />
           <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            className="text-2xl font-bold"
+            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
           >
             Admin Panel
           </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
-            AI-powered store management
-          </p>
+          <p className="text-[#6b7280] text-sm mt-1">AI-powered store management</p>
         </div>
 
         {/* Login card */}
         <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-8 shadow-2xl shadow-black/40">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-[#9ca3af] mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-[#9ca3af] mb-2">
                 Admin password
               </label>
               <div className="relative">
@@ -97,9 +92,7 @@ export default function AdminLoginPage() {
 
             {error && (
               <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
-                <span className="material-symbols-outlined text-red-400 text-base">
-                  error
-                </span>
+                <span className="material-symbols-outlined text-red-400 text-base">error</span>
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
@@ -118,9 +111,7 @@ export default function AdminLoginPage() {
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-base">
-                    login
-                  </span>
+                  <span className="material-symbols-outlined text-base">login</span>
                   Sign in
                 </>
               )}
@@ -128,9 +119,7 @@ export default function AdminLoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-[#374151] text-xs mt-6">
-          StarBuy Admin — Internal tool
-        </p>
+        <p className="text-center text-[#374151] text-xs mt-6">StarBuy Admin — Internal tool</p>
       </div>
     </div>
   );

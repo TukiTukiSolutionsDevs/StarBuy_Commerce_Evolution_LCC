@@ -167,7 +167,7 @@ function SectionHeader({
 }) {
   return (
     <div className="px-6 py-4 border-b border-[#1f2d4e]">
-      <h2 className="text-white font-semibold flex items-center gap-2">
+      <h2 className="font-semibold flex items-center gap-2" style={{ color: '#ffffff' }}>
         <span className={`material-symbols-outlined ${iconColor}`}>{icon}</span>
         {title}
       </h2>
@@ -895,7 +895,10 @@ export default function SettingsPage() {
 
           {/* ── API Keys ───────────────────────────────────────────────────────── */}
           <div className="px-0 py-2 border-t border-[#1f2d4e]">
-            <h3 className="text-white text-sm font-semibold flex items-center gap-2 mb-4">
+            <h3
+              className="text-sm font-semibold flex items-center gap-2 mb-4"
+              style={{ color: '#ffffff' }}
+            >
               <span className="material-symbols-outlined text-[#d4a843] text-lg">key</span>
               API Keys
             </h3>
@@ -1261,7 +1264,9 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#10b981]">psychology</span>
-                  <h3 className="text-white text-sm font-semibold">🧠 AI Analysis</h3>
+                  <h3 className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+                    🧠 AI Analysis
+                  </h3>
                 </div>
                 <Toggle
                   enabled={searchModes.free}
@@ -1335,7 +1340,9 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#6366f1]">travel_explore</span>
-                  <h3 className="text-white text-sm font-semibold">🔍 Web Search (Tavily)</h3>
+                  <h3 className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+                    🔍 Web Search (Tavily)
+                  </h3>
                 </div>
                 <Toggle
                   enabled={searchModes.tavily}

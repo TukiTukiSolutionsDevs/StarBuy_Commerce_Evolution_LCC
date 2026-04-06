@@ -50,9 +50,7 @@ export async function getProductImages(productId: string): Promise<ProductImage[
     variables: { id: gid },
   });
 
-  return data.product.media.edges
-    .map((e) => e.node)
-    .filter((n) => n.id); // filter out empty nodes (non-image media)
+  return data.product.media.edges.map((e) => e.node).filter((n) => n.id && n.image?.url); // filter out non-image media and still-processing images
 }
 
 // ─── Upload Product Image ───────────────────────────────────────────────────────
@@ -64,7 +62,7 @@ export async function uploadProductImage(
     mimeType: string;
     fileSize: number;
   },
-  fileBuffer: Buffer
+  fileBuffer: Buffer,
 ): Promise<ProductImage | null> {
   const gid = productId.startsWith('gid://') ? productId : `gid://shopify/Product/${productId}`;
 
@@ -100,7 +98,7 @@ export async function uploadProductImage(
 
   if (staged.stagedUploadsCreate.userErrors.length > 0) {
     throw new Error(
-      `Staged upload failed: ${staged.stagedUploadsCreate.userErrors.map((e) => e.message).join(', ')}`
+      `Staged upload failed: ${staged.stagedUploadsCreate.userErrors.map((e) => e.message).join(', ')}`,
     );
   }
 
@@ -112,7 +110,11 @@ export async function uploadProductImage(
   for (const param of target.parameters) {
     formData.append(param.name, param.value);
   }
-  formData.append('file', new Blob([new Uint8Array(fileBuffer)], { type: file.mimeType }), file.filename);
+  formData.append(
+    'file',
+    new Blob([new Uint8Array(fileBuffer)], { type: file.mimeType }),
+    file.filename,
+  );
 
   const uploadRes = await fetch(target.url, {
     method: 'POST',
@@ -161,7 +163,7 @@ export async function uploadProductImage(
 
   if (media.productCreateMedia.mediaUserErrors.length > 0) {
     throw new Error(
-      `Media attach failed: ${media.productCreateMedia.mediaUserErrors.map((e) => e.message).join(', ')}`
+      `Media attach failed: ${media.productCreateMedia.mediaUserErrors.map((e) => e.message).join(', ')}`,
     );
   }
 
@@ -170,10 +172,7 @@ export async function uploadProductImage(
 
 // ─── Delete Product Image ───────────────────────────────────────────────────────
 
-export async function deleteProductImage(
-  productId: string,
-  mediaId: string
-): Promise<boolean> {
+export async function deleteProductImage(productId: string, mediaId: string): Promise<boolean> {
   const gid = productId.startsWith('gid://') ? productId : `gid://shopify/Product/${productId}`;
 
   const data = await adminFetch<{
@@ -196,7 +195,7 @@ export async function deleteProductImage(
 
   if (data.productDeleteMedia.mediaUserErrors.length > 0) {
     throw new Error(
-      `Delete media failed: ${data.productDeleteMedia.mediaUserErrors.map((e) => e.message).join(', ')}`
+      `Delete media failed: ${data.productDeleteMedia.mediaUserErrors.map((e) => e.message).join(', ')}`,
     );
   }
 
