@@ -14,9 +14,9 @@ import type { NextRequest } from 'next/server';
 import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
 import { getActiveProvider } from '@/lib/ai/config';
 import { getApiKey } from '@/lib/ai/api-keys';
-import { saveSession, listSessions } from '@/lib/market-research/store';
+import { saveSession, getSession, listSessions } from '@/lib/market-research/store';
 import { marketResearchTools } from '@/lib/market-research/tools';
-import type { SearchMode, ResearchSession } from '@/lib/market-research/types';
+import type { SearchMode, ResearchSession, ResearchResult } from '@/lib/market-research/types';
 
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
@@ -125,6 +125,112 @@ After all research is complete, write a structured summary:
 Be systematic, data-driven, and concise. Use the tools in the sequence above.`;
 }
 
+// ─── Extract Products from AI Summary Text ────────────────────────────────────
+// Fallback for when the AI describes products but doesn't call saveResearchResult.
+// Parses markdown-style summaries with scores and product details.
+
+function extractProductsFromSummary(summary: string): ResearchResult[] {
+  const products: ResearchResult[] = [];
+
+  // Split by product headers: "#### 1." or "### 1." or "**1." etc
+  const sections = summary.split(/(?=####?\s*\d+[\.\):]|(?=\*\*\d+[\.\):])|(?=\d+\.\s+\*\*))/);
+
+  for (const section of sections) {
+    if (section.trim().length < 50) continue;
+
+    // Extract title: first bold text or header text
+    const titleMatch = section.match(/(?:#{2,4}\s*\d+[\.\):]\s*)(.*?)(?:\n|$)/);
+    const altTitleMatch = section.match(/\*\*\d*[\.\):]*\s*(.*?)\*\*/);
+    const title = (titleMatch?.[1] ?? altTitleMatch?.[1] ?? '').replace(/\*+/g, '').trim();
+
+    if (!title || title.length < 3) continue;
+
+    // Extract scores
+    const trendMatch = section.match(/[Tt]rend[:\s]*(\d+)/);
+    const demandMatch = section.match(/[Dd]emand[:\s]*(\d+)/);
+    const competitionMatch = section.match(/[Cc]ompetition[:\s]*(\d+)/);
+    const marginMatch = section.match(/[Mm]argin[:\s]*(\d+)/);
+    const overallMatch = section.match(/[Oo]verall[:\s]*(\d+[\.\d]*)/);
+
+    const trend = trendMatch ? parseInt(trendMatch[1]) : 50;
+    const demand = demandMatch ? parseInt(demandMatch[1]) : 50;
+    const competition = competitionMatch ? parseInt(competitionMatch[1]) : 50;
+    const margin = marginMatch ? parseInt(marginMatch[1]) : 50;
+    const overall = overallMatch
+      ? parseFloat(overallMatch[1])
+      : Math.round(trend * 0.25 + demand * 0.25 + competition * 0.25 + margin * 0.25);
+
+    // Extract prices
+    const supplierMatch = section.match(
+      /(?:[Ss]ourc|[Ss]upplier|[Cc]ost)[^\d$]*\$?([\d.]+)\s*[-–]\s*\$?([\d.]+)/,
+    );
+    const retailMatch = section.match(
+      /(?:[Rr]etail|[Ss]elling|[Pp]rice)[^\d$]*\$?([\d.]+)\s*[-–]\s*\$?([\d.]+)/,
+    );
+    const marginPctMatch = section.match(/(?:[Mm]argin|[Pp]rofit)[^\d]*~?(\d+)%/);
+
+    // Determine recommendation
+    let recommendation: 'hot' | 'promising' | 'saturated' | 'pass' = 'promising';
+    const lowerSection = section.toLowerCase();
+    if (lowerSection.includes('hot') || overall >= 75) recommendation = 'hot';
+    else if (lowerSection.includes('saturated') || competition < 30) recommendation = 'saturated';
+    else if (overall < 40) recommendation = 'pass';
+
+    // Extract reasoning (everything after scores, first ~300 chars of prose)
+    const reasoningMatch = section.match(
+      /(?:[Ww]hy it wins|[Rr]eason|[Ww]hy)[:\s]*([^\n]+(?:\n(?![\n#])[^\n]+)*)/,
+    );
+    const reasoning =
+      reasoningMatch?.[1]?.replace(/\*+/g, '').trim().slice(0, 400) ??
+      `AI-identified product with overall score of ${overall}/100.`;
+
+    products.push({
+      id: `extracted-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title,
+      description: reasoning.slice(0, 200),
+      scores: { trend, demand, competition, margin, overall },
+      signals: [
+        {
+          source: 'AI Analysis',
+          indicator: `Overall score: ${overall}/100`,
+          strength: overall >= 70 ? 'strong' : overall >= 50 ? 'moderate' : 'weak',
+        },
+        ...(trendMatch
+          ? [
+              {
+                source: 'Trend',
+                indicator: `Trend score: ${trend}/100`,
+                strength: (trend >= 70 ? 'strong' : 'moderate') as 'strong' | 'moderate' | 'weak',
+              },
+            ]
+          : []),
+        ...(lowerSection.includes('tiktok')
+          ? [
+              {
+                source: 'TikTok',
+                indicator: 'Viral potential detected',
+                strength: 'strong' as const,
+              },
+            ]
+          : []),
+      ],
+      priceRange: {
+        supplier: supplierMatch ? `$${supplierMatch[1]}-${supplierMatch[2]}` : 'Research needed',
+        retail: retailMatch ? `$${retailMatch[1]}-${retailMatch[2]}` : 'Research needed',
+        marginPercent: marginPctMatch
+          ? `${marginPctMatch[1]}%`
+          : `~${Math.round((1 - 0.4) * 100)}%`,
+      },
+      recommendation,
+      reasoning,
+      sources: [],
+      researchedAt: Date.now(),
+    });
+  }
+
+  return products;
+}
+
 // ─── GET — List sessions ──────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -227,11 +333,26 @@ export async function POST(request: NextRequest) {
       tools: marketResearchTools,
       stopWhen: stepCountIs(15),
       onFinish: async (event: { text: string }) => {
-        // Mark session as complete with summary
+        // Re-read session to get any tool-saved results
+        const currentSession = getSession(sessionId) ?? session;
+        const summary = event.text.slice(0, 3000);
+
+        // If AI described products in text but didn't call saveResearchResult (common with Gemini),
+        // parse the summary to extract products automatically.
+        if (currentSession.results.length === 0 && summary.length > 100) {
+          const extracted = extractProductsFromSummary(summary);
+          if (extracted.length > 0) {
+            currentSession.results.push(...extracted);
+            console.log(
+              `[market-research] Extracted ${extracted.length} products from AI summary (tool calling missed)`,
+            );
+          }
+        }
+
         const updatedSession = {
-          ...session,
+          ...currentSession,
           status: 'complete' as const,
-          summary: event.text.slice(0, 2000),
+          summary,
           completedAt: Date.now(),
         };
         saveSession(updatedSession);
