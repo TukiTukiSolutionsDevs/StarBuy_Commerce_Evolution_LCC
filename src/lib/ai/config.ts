@@ -7,6 +7,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { getDataDir } from '@/lib/data-dir';
+import { getApiKey } from '@/lib/ai/api-keys';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -135,19 +136,19 @@ export function getFullConfig(): AIConfigFull {
     },
     providers: {
       claude: {
-        configured: hasKey('ANTHROPIC_API_KEY'),
+        configured: !!getApiKey('claude'),
         models: PROVIDER_MODELS.claude,
       },
       openai: {
-        configured: hasKey('OPENAI_API_KEY'),
+        configured: !!getApiKey('openai'),
         models: PROVIDER_MODELS.openai,
       },
       gemini: {
-        configured: hasKey('GOOGLE_GENERATIVE_AI_API_KEY'),
+        configured: !!getApiKey('gemini'),
         models: PROVIDER_MODELS.gemini,
       },
       ollama: {
-        configured: true, // always available if running locally
+        configured: true,
         models: PROVIDER_MODELS.ollama,
       },
     },
