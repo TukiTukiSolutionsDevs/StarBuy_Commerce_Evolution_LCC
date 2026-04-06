@@ -409,28 +409,42 @@ export default function MarketResearchPage() {
     setSearching(true);
     setActiveSession(null);
     setResearchProgress(0);
-    setResearchStep('Starting research...');
+    setResearchStep('Connecting to AI model...');
 
-    const STEPS = [
-      { at: 5, label: 'Connecting to AI model...' },
-      { at: 15, label: 'Searching general trends...' },
-      { at: 30, label: 'Analyzing TikTok virality...' },
-      { at: 45, label: 'Checking competition landscape...' },
-      { at: 60, label: 'Researching supplier prices...' },
-      { at: 75, label: 'Analyzing reviews & ratings...' },
-      { at: 85, label: 'Scoring and ranking products...' },
-      { at: 95, label: 'Generating final report...' },
-    ];
-
-    // Simulate progress while the stream runs
-    let stepIdx = 0;
-    const progressInterval = setInterval(() => {
-      if (stepIdx < STEPS.length) {
-        setResearchProgress(STEPS[stepIdx].at);
-        setResearchStep(STEPS[stepIdx].label);
-        stepIdx++;
+    // Single progress tracker — ONLY goes up, never down
+    let currentProgress = 0;
+    function advanceTo(target: number, label: string) {
+      if (target > currentProgress) {
+        currentProgress = target;
+        setResearchProgress(target);
+        setResearchStep(label);
       }
-    }, 4000);
+    }
+
+    // Smooth baseline timer — slowly advances if stream is quiet
+    // This ensures the bar always moves forward, giving visual feedback
+    const startTime = Date.now();
+    const baselineInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      // Smooth curve: fast start, slows down, never reaches 90 on its own
+      // Formula: 85 * (1 - e^(-elapsed/40)) → approaches 85 over ~2 minutes
+      const baseline = Math.round(85 * (1 - Math.exp(-elapsed / 40)));
+      if (baseline > currentProgress) {
+        const labels = [
+          { at: 5, label: 'Preparing research...' },
+          { at: 15, label: 'Searching for trends...' },
+          { at: 25, label: 'Analyzing market data...' },
+          { at: 35, label: 'Checking social media signals...' },
+          { at: 45, label: 'Evaluating competition...' },
+          { at: 55, label: 'Researching suppliers...' },
+          { at: 65, label: 'Analyzing pricing data...' },
+          { at: 75, label: 'Almost there — scoring products...' },
+          { at: 82, label: 'Finalizing analysis...' },
+        ];
+        const step = [...labels].reverse().find((s) => baseline >= s.at);
+        advanceTo(baseline, step?.label ?? 'Working...');
+      }
+    }, 1500);
 
     try {
       const res = await fetch('/api/admin/market-research', {
@@ -446,7 +460,6 @@ export default function MarketResearchPage() {
       const sessionId = res.headers.get('x-session-id');
 
       if (!res.ok) {
-        // Try to read error as JSON
         let errorMsg = 'Research failed';
         try {
           const errData = (await res.json()) as { error?: string };
@@ -457,9 +470,8 @@ export default function MarketResearchPage() {
         throw new Error(errorMsg);
       }
 
-      // Consume the stream (we don't render it — the AI saves results via tools)
-      setResearchProgress(50);
-      setResearchStep('AI is analyzing data...');
+      // Consume the stream — detect tool calls to jump progress ahead
+      advanceTo(10, 'AI is analyzing your query...');
 
       const reader = res.body?.getReader();
       if (reader) {
@@ -470,36 +482,24 @@ export default function MarketResearchPage() {
           done = chunk.done;
           if (chunk.value) {
             const text = decoder.decode(chunk.value, { stream: true });
-            // Look for tool call patterns in the stream to update progress
-            if (text.includes('searchTrends')) {
-              setResearchProgress(25);
-              setResearchStep('Analyzing market trends...');
-            } else if (text.includes('searchTikTok')) {
-              setResearchProgress(40);
-              setResearchStep('Checking TikTok virality...');
-            } else if (text.includes('searchCompetition')) {
-              setResearchProgress(55);
-              setResearchStep('Assessing competition...');
-            } else if (text.includes('searchSupplierPrices')) {
-              setResearchProgress(65);
-              setResearchStep('Researching supplier prices...');
-            } else if (text.includes('searchReviews')) {
-              setResearchProgress(78);
-              setResearchStep('Analyzing reviews & ratings...');
-            } else if (text.includes('saveResearchResult')) {
-              setResearchProgress(90);
-              setResearchStep('Saving scored results...');
-            }
+            // Jump progress when we detect specific tool calls in the stream
+            if (text.includes('searchTrends')) advanceTo(20, '🔍 Searching general trends...');
+            if (text.includes('searchTikTok')) advanceTo(35, '📱 Analyzing TikTok virality...');
+            if (text.includes('searchCompetition')) advanceTo(50, '🏪 Assessing competition...');
+            if (text.includes('searchSupplierPrices'))
+              advanceTo(65, '💰 Researching supplier prices...');
+            if (text.includes('searchReviews')) advanceTo(78, '⭐ Analyzing reviews & ratings...');
+            if (text.includes('saveResearchResult')) advanceTo(88, '💾 Saving scored results...');
           }
         }
       }
 
-      clearInterval(progressInterval);
-      setResearchProgress(98);
-      setResearchStep('Fetching final results...');
+      clearInterval(baselineInterval);
+      advanceTo(92, '📊 Compiling final report...');
 
       // Fetch the completed session
       if (sessionId) {
+        advanceTo(95, '📥 Fetching results...');
         const sessionRes = await fetch(`/api/admin/market-research/${sessionId}`);
         const sessionData = (await sessionRes.json()) as { session?: ResearchSession };
         if (sessionData.session) {
@@ -508,20 +508,18 @@ export default function MarketResearchPage() {
             sessionData.session!,
             ...prev.filter((s) => s.id !== sessionData.session!.id),
           ]);
-          setResearchProgress(100);
-          setResearchStep('Done!');
+          advanceTo(100, '✅ Done!');
           toast.success(
             `Found ${sessionData.session.results.length} product${sessionData.session.results.length !== 1 ? 's' : ''}`,
           );
         }
       }
 
-      // Also refresh sessions list
       void fetchSessions();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Research failed');
     } finally {
-      clearInterval(progressInterval);
+      clearInterval(baselineInterval);
       setSearching(false);
       setResearchProgress(0);
     }
