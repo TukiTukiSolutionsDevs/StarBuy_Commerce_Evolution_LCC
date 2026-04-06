@@ -644,13 +644,14 @@ export default function MarketResearchPage() {
           <div className="flex items-center bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-1 gap-1">
             <button
               onClick={() => setSearchMode('free')}
+              title="Uses AI knowledge to analyze products. Works with any configured AI key (Gemini, Claude, OpenAI). No extra cost."
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 searchMode === 'free'
                   ? 'bg-[#6b8cff]/10 text-[#6b8cff] border border-[#6b8cff]/20'
                   : 'text-[#6b7280] hover:text-[#9ca3af]'
               }`}
             >
-              🆓 Free Search
+              🧠 AI Analysis
             </button>
 
             <div className="relative group">
@@ -660,6 +661,7 @@ export default function MarketResearchPage() {
                     setSearchMode('tavily');
                   }
                 }}
+                title="Real-time web search using Tavily API. Searches Google, Amazon, TikTok, and more for current data. Requires Tavily API key (1,000 free searches/month)."
                 disabled={checkingSettings || !tavilyConfigured}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   searchMode === 'tavily'
@@ -669,7 +671,7 @@ export default function MarketResearchPage() {
                       : 'text-[#374151] opacity-50 cursor-not-allowed'
                 }`}
               >
-                ⚡ Tavily Pro
+                🔍 Web Search (Tavily)
                 {!tavilyConfigured && !checkingSettings && (
                   <span className="material-symbols-outlined text-sm text-[#374151]">lock</span>
                 )}
@@ -743,8 +745,11 @@ export default function MarketResearchPage() {
 
           {/* Elapsed time */}
           <p className="text-[#374151] text-[10px] font-mono">
-            Mode: {searchMode === 'tavily' ? '⚡ Tavily Pro' : '🆓 Free Search'} · This usually
-            takes 30-90 seconds
+            Mode:{' '}
+            {searchMode === 'tavily'
+              ? '🔍 Web Search (Tavily) — real-time internet data'
+              : '🧠 AI Analysis — uses AI knowledge, no extra cost'}{' '}
+            · Takes 30-90 seconds
           </p>
         </div>
       )}

@@ -1257,8 +1257,8 @@ export default function SettingsPage() {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#10b981]">public</span>
-                  <h3 className="text-white text-sm font-semibold">Free Search</h3>
+                  <span className="material-symbols-outlined text-[#10b981]">psychology</span>
+                  <h3 className="text-white text-sm font-semibold">🧠 AI Analysis</h3>
                 </div>
                 <Toggle
                   enabled={searchModes.free}
@@ -1272,27 +1272,28 @@ export default function SettingsPage() {
                 />
               </div>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#10b981]/10 text-[#10b981] text-[10px] font-medium mb-3">
-                🆓 No cost — works immediately
+                🆓 No extra cost — uses your AI key
               </span>
               <p className="text-[#6b7280] text-xs leading-relaxed mb-3">
-                Uses DuckDuckGo web scraping for product research. No API key needed.
+                The AI model analyzes products from its training knowledge. Works with any
+                configured AI key (Gemini, Claude, or OpenAI).
               </p>
               <ul className="space-y-1.5 text-xs">
                 <li className="flex items-center gap-2 text-[#10b981]">
                   <span className="material-symbols-outlined text-sm">check_circle</span>
-                  No API key needed
+                  Works with any AI key you already have
                 </li>
                 <li className="flex items-center gap-2 text-[#10b981]">
                   <span className="material-symbols-outlined text-sm">check_circle</span>
-                  Works immediately
+                  No extra API or cost needed
                 </li>
-                <li className="flex items-center gap-2 text-[#d4a843]">
-                  <span className="material-symbols-outlined text-sm">warning</span>
-                  Slower results
+                <li className="flex items-center gap-2 text-[#10b981]">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  Deep analysis of trends, pricing, competition
                 </li>
-                <li className="flex items-center gap-2 text-[#d4a843]">
-                  <span className="material-symbols-outlined text-sm">warning</span>
-                  May miss some data sources
+                <li className="flex items-center gap-2 text-[#9ca3af]">
+                  <span className="material-symbols-outlined text-sm">info</span>
+                  Based on AI training data (not real-time web)
                 </li>
               </ul>
             </div>
@@ -1307,8 +1308,8 @@ export default function SettingsPage() {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#6366f1]">bolt</span>
-                  <h3 className="text-white text-sm font-semibold">Tavily Pro</h3>
+                  <span className="material-symbols-outlined text-[#6366f1]">travel_explore</span>
+                  <h3 className="text-white text-sm font-semibold">🔍 Web Search (Tavily)</h3>
                 </div>
                 <Toggle
                   enabled={searchModes.tavily}
@@ -1330,8 +1331,8 @@ export default function SettingsPage() {
                 ⚡ Professional — deep &amp; accurate
               </span>
               <p className="text-[#6b7280] text-xs leading-relaxed mb-3">
-                Professional search API with structured results and AI summaries. Best accuracy for
-                product research.
+                Real-time web search. Searches Google, Amazon, TikTok, Reddit, and more for current
+                data. Requires its own API key (free tier: 1,000 searches/month).
               </p>
               <ul className="space-y-1.5 text-xs">
                 <li className="flex items-center gap-2 text-[#10b981]">
@@ -1445,7 +1446,7 @@ export default function SettingsPage() {
           <div className="mt-4 flex items-center gap-2 text-[#6b7280] text-xs">
             <span className="material-symbols-outlined text-sm">info</span>
             Active:{' '}
-            {[searchModes.free && 'Free Search', searchModes.tavily && 'Tavily Pro']
+            {[searchModes.free && '🧠 AI Analysis', searchModes.tavily && '🔍 Web Search']
               .filter(Boolean)
               .join(' + ') || 'None'}
             {searchModes.free &&
