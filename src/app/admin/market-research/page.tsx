@@ -349,6 +349,8 @@ export default function MarketResearchPage() {
 
   const [importingId, setImportingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [researchProgress, setResearchProgress] = useState(0);
+  const [researchStep, setResearchStep] = useState('');
 
   // ── Check Tavily key status ────────────────────────────────────────────────
 
@@ -397,27 +399,122 @@ export default function MarketResearchPage() {
 
     setSearching(true);
     setActiveSession(null);
+    setResearchProgress(0);
+    setResearchStep('Starting research...');
+
+    const STEPS = [
+      { at: 5, label: 'Connecting to AI model...' },
+      { at: 15, label: 'Searching general trends...' },
+      { at: 30, label: 'Analyzing TikTok virality...' },
+      { at: 45, label: 'Checking competition landscape...' },
+      { at: 60, label: 'Researching supplier prices...' },
+      { at: 75, label: 'Analyzing reviews & ratings...' },
+      { at: 85, label: 'Scoring and ranking products...' },
+      { at: 95, label: 'Generating final report...' },
+    ];
+
+    // Simulate progress while the stream runs
+    let stepIdx = 0;
+    const progressInterval = setInterval(() => {
+      if (stepIdx < STEPS.length) {
+        setResearchProgress(STEPS[stepIdx].at);
+        setResearchStep(STEPS[stepIdx].label);
+        stepIdx++;
+      }
+    }, 4000);
 
     try {
       const res = await fetch('/api/admin/market-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query.trim(), category, searchMode }),
+        body: JSON.stringify({
+          query: query.trim(),
+          category: category !== 'All' ? category : undefined,
+          searchMode,
+        }),
       });
 
-      const data = (await res.json()) as { session?: ResearchSession; error?: string };
-      if (!res.ok) throw new Error(data.error ?? 'Research failed');
+      const sessionId = res.headers.get('x-session-id');
 
-      const newSession = data.session!;
-      setActiveSession(newSession);
-      setSessions((prev) => [newSession, ...prev.filter((s) => s.id !== newSession.id)]);
-      toast.success(
-        `Found ${newSession.results.length} product${newSession.results.length !== 1 ? 's' : ''}`,
-      );
+      if (!res.ok) {
+        // Try to read error as JSON
+        let errorMsg = 'Research failed';
+        try {
+          const errData = (await res.json()) as { error?: string };
+          errorMsg = errData.error ?? errorMsg;
+        } catch {
+          errorMsg = `Research failed (${res.status})`;
+        }
+        throw new Error(errorMsg);
+      }
+
+      // Consume the stream (we don't render it — the AI saves results via tools)
+      setResearchProgress(50);
+      setResearchStep('AI is analyzing data...');
+
+      const reader = res.body?.getReader();
+      if (reader) {
+        const decoder = new TextDecoder();
+        let done = false;
+        while (!done) {
+          const chunk = await reader.read();
+          done = chunk.done;
+          if (chunk.value) {
+            const text = decoder.decode(chunk.value, { stream: true });
+            // Look for tool call patterns in the stream to update progress
+            if (text.includes('searchTrends')) {
+              setResearchProgress(25);
+              setResearchStep('Analyzing market trends...');
+            } else if (text.includes('searchTikTok')) {
+              setResearchProgress(40);
+              setResearchStep('Checking TikTok virality...');
+            } else if (text.includes('searchCompetition')) {
+              setResearchProgress(55);
+              setResearchStep('Assessing competition...');
+            } else if (text.includes('searchSupplierPrices')) {
+              setResearchProgress(65);
+              setResearchStep('Researching supplier prices...');
+            } else if (text.includes('searchReviews')) {
+              setResearchProgress(78);
+              setResearchStep('Analyzing reviews & ratings...');
+            } else if (text.includes('saveResearchResult')) {
+              setResearchProgress(90);
+              setResearchStep('Saving scored results...');
+            }
+          }
+        }
+      }
+
+      clearInterval(progressInterval);
+      setResearchProgress(98);
+      setResearchStep('Fetching final results...');
+
+      // Fetch the completed session
+      if (sessionId) {
+        const sessionRes = await fetch(`/api/admin/market-research/${sessionId}`);
+        const sessionData = (await sessionRes.json()) as { session?: ResearchSession };
+        if (sessionData.session) {
+          setActiveSession(sessionData.session);
+          setSessions((prev) => [
+            sessionData.session!,
+            ...prev.filter((s) => s.id !== sessionData.session!.id),
+          ]);
+          setResearchProgress(100);
+          setResearchStep('Done!');
+          toast.success(
+            `Found ${sessionData.session.results.length} product${sessionData.session.results.length !== 1 ? 's' : ''}`,
+          );
+        }
+      }
+
+      // Also refresh sessions list
+      void fetchSessions();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Research failed');
     } finally {
+      clearInterval(progressInterval);
       setSearching(false);
+      setResearchProgress(0);
     }
   }
 
@@ -606,49 +703,49 @@ export default function MarketResearchPage() {
         </div>
       </div>
 
-      {/* ── Loading State ─────────────────────────────────────────────── */}
+      {/* ── Loading State with Progress ─────────────────────────────── */}
       {searching && (
         <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="material-symbols-outlined text-[#d4a843] text-xl animate-spin">
-              query_stats
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#d4a843] text-xl animate-spin">
+                query_stats
+              </span>
+              <h2
+                className="text-white text-base font-semibold"
+                style={{ fontFamily: 'var(--font-heading)' }}
+              >
+                Researching market…
+              </h2>
+            </div>
+            <span className="text-[#d4a843] text-2xl font-bold font-mono">{researchProgress}%</span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-[#1f2d4e] rounded-full h-3 mb-4 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-1000 ease-out"
+              style={{
+                width: `${researchProgress}%`,
+                background: 'linear-gradient(90deg, #d4a843 0%, #f59e0b 50%, #10b981 100%)',
+              }}
+            />
+          </div>
+
+          {/* Current step */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-base text-[#d4a843] animate-pulse">
+              arrow_forward
             </span>
-            <h2
-              className="text-white text-base font-semibold"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Researching market…
-            </h2>
+            <span className="text-white text-sm font-medium">{researchStep}</span>
           </div>
-          <div className="space-y-2">
-            {[
-              'Searching general trends…',
-              'Analyzing TikTok virality signals…',
-              'Checking Amazon demand data…',
-              'Assessing competition landscape…',
-              'Calculating supplier margins…',
-              'Generating final scores…',
-            ].map((step, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span
-                  className="material-symbols-outlined text-base animate-spin text-[#d4a843]"
-                  style={{ animationDelay: `${i * 0.3}s` }}
-                >
-                  sync
-                </span>
-                <span className="text-[#9ca3af] text-sm">{step}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex gap-1">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <span
-                key={i}
-                className="w-2 h-2 rounded-full bg-[#d4a843] animate-bounce"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
-          </div>
+
+          {/* Elapsed time */}
+          <p className="text-[#374151] text-[10px] font-mono">
+            Mode: {searchMode === 'tavily' ? '⚡ Tavily Pro' : '🆓 Free Search'} · This usually
+            takes 30-90 seconds
+          </p>
         </div>
       )}
 

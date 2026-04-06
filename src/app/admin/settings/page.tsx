@@ -808,10 +808,15 @@ export default function SettingsPage() {
               const keySource = keyStatus?.source ?? null;
 
               return (
-                <button
+                <div
                   key={p}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleProviderChange(p)}
-                  className={`relative text-left rounded-xl p-4 border-2 transition-all overflow-hidden ${
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') handleProviderChange(p);
+                  }}
+                  className={`relative text-left rounded-xl p-4 border-2 transition-all overflow-hidden cursor-pointer ${
                     isSelected
                       ? 'border-[#d4a843] bg-[#d4a843]/5'
                       : 'border-[#1f2d4e] hover:border-[#374151] bg-[#0d1526]'
@@ -880,7 +885,7 @@ export default function SettingsPage() {
                       Add key below or set {meta.envKey}
                     </p>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
