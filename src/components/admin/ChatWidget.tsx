@@ -26,7 +26,16 @@ const AGENT_INFO: Record<string, { name: string; icon: string; color: string }> 
   analytics: { name: 'Analytics Agent', icon: 'insights', color: '#8b5cf6' },
   operations: { name: 'Operations Agent', icon: 'warehouse', color: '#ef4444' },
   shopify: { name: 'Shopify Expert', icon: 'store', color: '#96bf48' },
-  orchestrator: { name: 'Assistant', icon: 'smart_toy', color: '#d4a843' },
+  autods: { name: 'AutoDS Agent', icon: 'package_2', color: '#00b4d8' },
+  'market-research': { name: 'Market Intel', icon: 'query_stats', color: '#f59e0b' },
+  orchestrator: { name: 'StarBot', icon: 'smart_toy', color: '#d4a843' },
+};
+
+const PROVIDER_ICONS: Record<string, { icon: string; color: string; label: string }> = {
+  claude: { icon: 'psychology', color: '#d4a843', label: 'Claude' },
+  openai: { icon: 'auto_awesome', color: '#10b981', label: 'GPT' },
+  gemini: { icon: 'diamond', color: '#6366f1', label: 'Gemini' },
+  ollama: { icon: 'computer', color: '#9ca3af', label: 'Ollama' },
 };
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -363,8 +372,23 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [activeModel, setActiveModel] = useState<{ provider: string; model: string } | null>(null);
 
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Fetch active AI model
+  useEffect(() => {
+    fetch('/api/admin/settings')
+      .then((r) => r.json())
+      .then((data: { provider?: string; model?: string }) => {
+        if (data.provider && data.model) {
+          setActiveModel({ provider: data.provider, model: data.model });
+        }
+      })
+      .catch(() => {
+        /* ignore */
+      });
+  }, []);
 
   // Count tool calls across all messages for the Actions badge
   const actionCount = useMemo(() => {
@@ -429,17 +453,38 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
         <div className="w-8 h-8 rounded-full bg-[#1b2a5e] flex items-center justify-center">
           <span className="material-symbols-outlined text-[#d4a843] text-base">smart_toy</span>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p
             className="text-white font-semibold text-sm"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
-            AI Assistant
+            StarBot
           </p>
-          <div className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-            <span className="text-[#10b981] text-[10px]">Online</span>
-          </div>
+          {activeModel ? (
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] flex-none" />
+              <span
+                className="material-symbols-outlined flex-none"
+                style={{
+                  fontSize: '10px',
+                  color: PROVIDER_ICONS[activeModel.provider]?.color ?? '#6b7280',
+                }}
+              >
+                {PROVIDER_ICONS[activeModel.provider]?.icon ?? 'smart_toy'}
+              </span>
+              <span
+                className="text-[10px] font-mono truncate"
+                style={{ color: PROVIDER_ICONS[activeModel.provider]?.color ?? '#6b7280' }}
+              >
+                {activeModel.model}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+              <span className="text-[#10b981] text-[10px]">Online</span>
+            </div>
+          )}
         </div>
         <button
           onClick={onClose}
