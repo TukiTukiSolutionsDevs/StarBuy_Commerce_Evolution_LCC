@@ -17,7 +17,11 @@ export type AdminCustomer = {
   email: string;
   phone: string | null;
   tags: string[];
+  numberOfOrders: number;
+  amountSpent: { amount: string; currencyCode: string };
+  /** @deprecated Alias for numberOfOrders — for backward compatibility */
   ordersCount: number;
+  /** @deprecated Alias for amountSpent — for backward compatibility */
   totalSpentV2: { amount: string; currencyCode: string };
   createdAt: string;
   updatedAt: string;
@@ -39,8 +43,8 @@ const CUSTOMER_FRAGMENT = `
     email
     phone
     tags
-    ordersCount
-    totalSpentV2 { amount currencyCode }
+    numberOfOrders
+    amountSpent { amount currencyCode }
     createdAt
     updatedAt
     state
@@ -58,7 +62,7 @@ const CUSTOMER_FRAGMENT = `
 
 export async function searchCustomers(
   query: string = '',
-  limit: number = 10
+  limit: number = 10,
 ): Promise<AdminCustomer[]> {
   const gql = `
     query SearchCustomers($query: String, $first: Int!) {
@@ -77,14 +81,21 @@ export async function searchCustomers(
     customers: { edges: Array<{ node: AdminCustomer }> };
   }>({ query: gql, variables: { query, first: limit } });
 
-  return data.customers.edges.map((e) => e.node);
+  return data.customers.edges.map((e) => mapCustomerCompat(e.node));
+}
+
+/** Add backward-compatible aliases for renamed fields */
+function mapCustomerCompat(c: Record<string, unknown>): AdminCustomer {
+  const customer = c as AdminCustomer;
+  // API 2026-04 renamed ordersCount → numberOfOrders, totalSpentV2 → amountSpent
+  customer.ordersCount = customer.numberOfOrders ?? 0;
+  customer.totalSpentV2 = customer.amountSpent ?? { amount: '0', currencyCode: 'USD' };
+  return customer;
 }
 
 // ─── Get by ID ─────────────────────────────────────────────────────────────────
 
-export async function getCustomerById(
-  id: string
-): Promise<AdminCustomer | null> {
+export async function getCustomerById(id: string): Promise<AdminCustomer | null> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Customer/${id}`;
 
   const gql = `
@@ -101,7 +112,7 @@ export async function getCustomerById(
     variables: { id: gid },
   });
 
-  return data.customer;
+  return data.customer ? mapCustomerCompat(data.customer as Record<string, unknown>) : null;
 }
 
 // ─── Create ────────────────────────────────────────────────────────────────────
@@ -115,7 +126,7 @@ type CreateCustomerInput = {
 };
 
 export async function createCustomer(
-  input: CreateCustomerInput
+  input: CreateCustomerInput,
 ): Promise<{ customer: AdminCustomer | null; userErrors: UserError[] }> {
   const mutation = `
     mutation CreateCustomer($input: CustomerInput!) {
@@ -141,13 +152,11 @@ export async function createCustomer(
 
 // ─── Update ────────────────────────────────────────────────────────────────────
 
-type UpdateCustomerFields = Partial<
-  Omit<CreateCustomerInput, 'email'> & { email: string }
->;
+type UpdateCustomerFields = Partial<Omit<CreateCustomerInput, 'email'> & { email: string }>;
 
 export async function updateCustomer(
   id: string,
-  fields: UpdateCustomerFields
+  fields: UpdateCustomerFields,
 ): Promise<{ customer: AdminCustomer | null; userErrors: UserError[] }> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Customer/${id}`;
 
@@ -176,7 +185,7 @@ export async function updateCustomer(
 // ─── Delete ────────────────────────────────────────────────────────────────────
 
 export async function deleteCustomer(
-  id: string
+  id: string,
 ): Promise<{ deleted: boolean; userErrors: UserError[] }> {
   const gid = id.startsWith('gid://') ? id : `gid://shopify/Customer/${id}`;
 
