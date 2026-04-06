@@ -1271,12 +1271,35 @@ export default function SettingsPage() {
                   }}
                 />
               </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#10b981]/10 text-[#10b981] text-[10px] font-medium mb-3">
-                🆓 No extra cost — uses your AI key
-              </span>
+              {/* Key status banner */}
+              {config?.providers?.gemini?.configured ||
+              config?.providers?.claude?.configured ||
+              config?.providers?.openai?.configured ? (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#10b981]/10 border border-[#10b981]/20 mb-3">
+                  <span className="material-symbols-outlined text-[#10b981] text-base">
+                    check_circle
+                  </span>
+                  <span className="text-[#10b981] text-xs font-semibold">
+                    Ready — using your{' '}
+                    {config?.providers?.gemini?.configured
+                      ? 'Gemini'
+                      : config?.providers?.claude?.configured
+                        ? 'Claude'
+                        : 'OpenAI'}{' '}
+                    key
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#d4a843]/10 border border-[#d4a843]/20 mb-3">
+                  <span className="material-symbols-outlined text-[#d4a843] text-base">info</span>
+                  <span className="text-[#d4a843] text-xs font-semibold">
+                    Add an AI key above to enable
+                  </span>
+                </div>
+              )}
               <p className="text-[#6b7280] text-xs leading-relaxed mb-3">
                 The AI model analyzes products from its training knowledge. Works with any
-                configured AI key (Gemini, Claude, or OpenAI).
+                configured AI key (Gemini, Claude, or OpenAI). No extra cost.
               </p>
               <ul className="space-y-1.5 text-xs">
                 <li className="flex items-center gap-2 text-[#10b981]">
@@ -1327,55 +1350,65 @@ export default function SettingsPage() {
                   }}
                 />
               </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#6366f1]/10 text-[#6366f1] text-[10px] font-medium mb-3">
-                ⚡ Professional — deep &amp; accurate
-              </span>
+              {/* Key status banner */}
+              {config?.apiKeyStatus?.tavily?.configured ? (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#10b981]/10 border border-[#10b981]/20 mb-3">
+                  <span className="material-symbols-outlined text-[#10b981] text-base">
+                    check_circle
+                  </span>
+                  <span className="text-[#10b981] text-xs font-semibold">API Key configured</span>
+                  <span className="text-[#10b981]/60 text-[10px] font-mono ml-auto">
+                    {config.apiKeyStatus.tavily.masked}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/20 mb-3">
+                  <span className="material-symbols-outlined text-[#ef4444] text-base">
+                    warning
+                  </span>
+                  <span className="text-[#ef4444] text-xs font-semibold">API Key needed</span>
+                  <span className="text-[#ef4444]/60 text-[10px] ml-auto">
+                    Add key below to activate
+                  </span>
+                </div>
+              )}
+
               <p className="text-[#6b7280] text-xs leading-relaxed mb-3">
-                Real-time web search. Searches Google, Amazon, TikTok, Reddit, and more for current
-                data. Requires its own API key (free tier: 1,000 searches/month).
+                Real-time web search — queries Google, Amazon, TikTok, Reddit, and more for current
+                data.
               </p>
               <ul className="space-y-1.5 text-xs">
                 <li className="flex items-center gap-2 text-[#10b981]">
                   <span className="material-symbols-outlined text-sm">check_circle</span>
-                  1,000 free searches/month
+                  Free tier: 1,000 searches/mo · 100 req/min
                 </li>
                 <li className="flex items-center gap-2 text-[#10b981]">
                   <span className="material-symbols-outlined text-sm">check_circle</span>
-                  Deep structured results
+                  Deep structured results with AI summaries
                 </li>
                 <li className="flex items-center gap-2 text-[#10b981]">
                   <span className="material-symbols-outlined text-sm">check_circle</span>
-                  Best accuracy for market research
+                  Best accuracy for product research
                 </li>
                 <li className="flex items-center gap-2 text-[#9ca3af]">
                   <span className="material-symbols-outlined text-sm">info</span>
-                  ~$0.01/search after free tier
+                  ~$0.01/search after free tier · ~$0.12/session
                 </li>
               </ul>
 
               {/* Tavily API key section */}
               <div className="mt-4 pt-4 border-t border-[#1f2d4e]">
-                <p className="text-[#6b7280] text-[10px] mb-3">
-                  API Key{' '}
-                  {config?.apiKeyStatus?.tavily?.configured ? (
-                    <span className="text-[#10b981]">
-                      ✓ configured ({config.apiKeyStatus.tavily.source})
-                    </span>
-                  ) : (
-                    <span className="text-[#ef4444]">✗ not configured</span>
-                  )}
-                </p>
                 <SetupGuide
                   open={tavilyGuideOpen}
                   onToggle={() => setTavilyGuideOpen((v) => !v)}
                   steps={[
                     'Go to <a href="https://tavily.com" target="_blank" rel="noopener" class="text-[#d4a843] hover:underline">tavily.com</a> and click <strong>"Get API Key"</strong>',
-                    'Create a free account — <strong>1,000 free searches/month</strong> included',
-                    'Copy your API key from the dashboard',
+                    'Create a free account — <strong>1,000 searches/month + 100 req/min</strong> included',
+                    'Copy your API key from the dashboard (starts with <code>tvly-</code>)',
                     'Paste it in the field below and click Save',
                   ]}
-                  pricing="~$0.01 per search. ~$0.12 per full research session (12 searches avg)."
-                  pricingNote="1,000 free searches/month on the free tier — enough for ~83 research sessions!"
+                  pricing="Free: 1,000 searches/mo · 100 req/min. Paid: ~$0.01/search."
+                  pricingNote="Free tier is enough for ~83 full research sessions per month!"
                 />
                 <div className="flex gap-2 mt-3">
                   <div className="relative flex-1">
