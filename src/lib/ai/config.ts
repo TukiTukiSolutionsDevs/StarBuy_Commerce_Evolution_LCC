@@ -69,7 +69,14 @@ const DEFAULT_CONFIG: SavedConfig = {
 export const PROVIDER_MODELS: Record<AIProvider, string[]> = {
   claude: ['claude-sonnet-4-5', 'claude-haiku-4', 'claude-opus-4'],
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1', 'o1-mini', 'o3-mini'],
-  gemini: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'],
+  gemini: [
+    'gemini-3.1-pro-preview',
+    'gemini-3-pro-preview',
+    'gemini-3.1-flash-lite-preview',
+    'gemini-3-flash-preview',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+  ],
   ollama: [
     'llama3.1:8b',
     'llama3.2:3b',

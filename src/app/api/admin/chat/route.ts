@@ -87,7 +87,7 @@ const PROVIDER_PRIORITY: Array<'claude' | 'openai' | 'gemini'> = ['claude', 'ope
 const DEFAULT_MODELS: Record<string, string> = {
   claude: 'claude-sonnet-4-5',
   openai: 'gpt-4o',
-  gemini: 'gemini-2.5-flash',
+  gemini: 'gemini-3.1-pro-preview',
 };
 
 function autoDetectProvider(
@@ -181,13 +181,35 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sanitizedMessages: any[] = messages as any[];
     if (provider === 'gemini') {
-      sanitizedMessages = (messages as any[]).filter((m) => {
-        // Keep only user/assistant roles with plain string content
-        if (m.role !== 'user' && m.role !== 'assistant') return false;
-        // Drop messages with non-string content (part arrays, tool calls, etc.)
-        if (typeof m.content !== 'string') return false;
-        return true;
-      });
+      sanitizedMessages = (messages as any[])
+        .filter((m) => {
+          if (m.role !== 'user' && m.role !== 'assistant') return false;
+          return true;
+        })
+        .map((m) => {
+          // Flatten non-string content to string
+          if (typeof m.content !== 'string') {
+            if (Array.isArray(m.content)) {
+              const text = m.content
+                .filter((p: { type?: string }) => p.type === 'text')
+                .map((p: { text?: string }) => p.text ?? '')
+                .join('\n');
+              return { ...m, content: text || '...' };
+            }
+            return { ...m, content: String(m.content) || '...' };
+          }
+          return m;
+        });
+      // Ensure at least one message exists
+      if (!sanitizedMessages.length) {
+        sanitizedMessages = [
+          { role: 'user', content: messages[messages.length - 1]?.content ?? 'hello' },
+        ];
+        // Flatten again if needed
+        if (typeof sanitizedMessages[0].content !== 'string') {
+          sanitizedMessages[0] = { role: 'user', content: 'hello' };
+        }
+      }
     }
 
     const result = streamText({
