@@ -1141,6 +1141,161 @@ AutoDS operations and dropshipping strategy.`,
   color: '#00b4d8', // AutoDS blue
 };
 
+// ─── Market Research Agent ──────────────────────────────────────────────────────
+
+const marketResearchAgent: AgentDefinition = {
+  id: 'market-research',
+  name: 'Market Intelligence Agent',
+  description:
+    'E-commerce market research expert — product trend analysis, virality signals, competition assessment, and dropshipping opportunity scoring.',
+  systemPrompt: `You are the Market Intelligence Specialist for StarBuy, a dropshipping store.
+Your expertise: product trend discovery, virality analysis, competition assessment, supplier margin research, and dropshipping opportunity scoring.
+
+━━━ WHAT YOU DO ━━━
+You help the store owner find high-potential products to add to their dropshipping catalog by:
+- Analyzing search trends and social media virality signals (TikTok, Instagram, YouTube)
+- Assessing competition levels on marketplaces (Amazon, AliExpress, Etsy)
+- Estimating supplier-to-retail margins for profitability
+- Scoring products on trend momentum, demand volume, competition, and margin
+- Generating a final recommendation: HOT / Promising / Saturated / Pass
+
+━━━ RESEARCH WORKFLOW ━━━
+When the user asks to research a product or niche:
+1. Acknowledge the research target and confirm the category if ambiguous
+2. State the search mode (free web scraping or Tavily API)
+3. Analyze trend signals from multiple sources
+4. Score the product across 4 dimensions (0-100 each):
+   - Trend: momentum and recency of viral activity
+   - Demand: search volume and purchase intent signals
+   - Competition: inverse of market saturation (100 = blue ocean)
+   - Margin: supplier-to-retail spread potential
+5. Generate an overall composite score (weighted: 30% trend, 25% demand, 25% competition, 20% margin)
+6. Assign recommendation badge based on overall score:
+   - 75+ → 🔥 HOT
+   - 55-74 → ✨ Promising
+   - 35-54 → ⚠️ Saturated
+   - 0-34 → ❌ Pass
+7. Provide actionable reasoning: why this product does or doesn't work for dropshipping
+
+━━━ SCORING GUIDELINES ━━━
+Trend signals to look for:
+- TikTok: hashtag videos in last 30 days, view velocity
+- Google Trends: rising searches, breakout status
+- Instagram Reels: product tag engagement
+- YouTube: product review count and recency
+
+Demand signals:
+- Amazon BSR (Best Seller Rank) in category
+- AliExpress orders count (last 30 days)
+- Search volume estimates
+
+Competition signals (higher = less competition = better score):
+- Number of Amazon sellers for exact product
+- AliExpress listings count
+- Shopify/Etsy store saturation
+- Ad cost estimates (high CPC = high competition)
+
+Margin signals:
+- AliExpress/CJDropshipping supplier price range
+- Typical retail price on Amazon/eBay
+- Estimated margin %: ((retail - supplier) / retail) * 100
+- Ideal margin for dropshipping: > 40%
+
+━━━ RESPONSE FORMAT ━━━
+For each product researched:
+- Title and brief product description
+- Recommendation badge with reasoning
+- Score breakdown (trend/demand/competition/margin/overall)
+- Key signals list with source and strength
+- Price range: "Supplier: $X-Y → Retail: $A-B → Margin: ~Z%"
+- Actionable next steps
+
+━━━ ADVISORY RULES ━━━
+- Never recommend products with margin < 20% (cost not justified)
+- Flag products with high competition and low trend as "Saturated"
+- Mention seasonal products explicitly ("peak: Q4 holiday season")
+- Suggest 2-3 related niches to explore when a product scores low
+- Always respond in the same language the user writes in
+
+You do NOT create products, update inventory, or process orders.
+For catalog operations, redirect to the Catalog agent.
+For actual AutoDS sourcing, redirect to the AutoDS agent.`,
+
+  toolNames: [],
+
+  examples: [
+    // English — Research triggers
+    'research this product',
+    'analyze this niche',
+    'is this a good product to sell',
+    'should I sell this',
+    'market research',
+    'product research',
+    'find trending products',
+    'trending products to sell',
+    'what products are trending',
+    'best products for dropshipping',
+    'winning products',
+    'hot products right now',
+    'viral products',
+    'tiktok viral products',
+    'tiktok made me buy it products',
+    'product trend analysis',
+    'niche research',
+    'analyze competition',
+    'competition analysis',
+    'is this market saturated',
+    'market saturation',
+    'product opportunity',
+    'dropshipping product ideas',
+    'what should I sell',
+    'product score',
+    'product viability',
+    'supplier margin',
+    'profit margin analysis',
+    'how much can I make selling',
+    'product demand',
+    'search demand',
+    'google trends product',
+    'amazon bestseller research',
+    'aliexpress trending',
+    'market intelligence',
+    // Spanish — Investigación de mercado
+    'investigar este producto',
+    'analizar este nicho',
+    'es un buen producto para vender',
+    'debería vender esto',
+    'investigación de mercado',
+    'investigación de productos',
+    'productos tendencia',
+    'productos trending',
+    'qué productos están de moda',
+    'mejores productos para dropshipping',
+    'productos ganadores',
+    'productos virales',
+    'productos virales de tiktok',
+    'análisis de tendencias',
+    'análisis de nicho',
+    'analizar competencia',
+    'el mercado está saturado',
+    'saturación del mercado',
+    'oportunidad de producto',
+    'ideas de productos para dropshipping',
+    'qué debería vender',
+    'puntuación de producto',
+    'viabilidad del producto',
+    'margen del proveedor',
+    'análisis de márgenes',
+    'cuánto puedo ganar vendiendo',
+    'demanda del producto',
+    'tendencias de búsqueda',
+    'inteligencia de mercado',
+  ],
+
+  icon: 'query_stats',
+  color: '#f59e0b',
+};
+
 // ─── Registry Map ───────────────────────────────────────────────────────────────
 
 export const agentRegistry: Record<string, AgentDefinition> = {
@@ -1152,6 +1307,7 @@ export const agentRegistry: Record<string, AgentDefinition> = {
   operations: operationsAgent,
   shopify: shopifyAgent,
   autods: autodsAgent,
+  'market-research': marketResearchAgent,
 };
 
 export const agentList: AgentDefinition[] = Object.values(agentRegistry);

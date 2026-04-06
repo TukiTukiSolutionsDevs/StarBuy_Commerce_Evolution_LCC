@@ -13,7 +13,8 @@ export type AgentId =
   | 'analytics'
   | 'operations'
   | 'shopify'
-  | 'autods';
+  | 'autods'
+  | 'market-research';
 
 export type AgentDefinition = {
   id: AgentId;

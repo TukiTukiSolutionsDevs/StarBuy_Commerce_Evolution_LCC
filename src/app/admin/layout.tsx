@@ -35,6 +35,7 @@ const NAV_ITEMS = [
   { href: '/admin/discounts', label: 'Discounts', icon: 'local_offer', exact: false },
   { href: '/admin/activity', label: 'Activity', icon: 'notifications_active', exact: false },
   { href: '/admin/automations', label: 'Automations', icon: 'electric_bolt', exact: false },
+  { href: '/admin/market-research', label: 'Market Intel', icon: 'query_stats', exact: false },
   { href: '/admin/settings', label: 'Settings', icon: 'settings', exact: false },
 ] as const;
 

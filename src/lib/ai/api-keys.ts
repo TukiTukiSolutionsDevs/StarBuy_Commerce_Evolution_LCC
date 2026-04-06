@@ -15,12 +15,13 @@ import { getDataDir } from '@/lib/data-dir';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
-export type ApiKeyProvider = 'claude' | 'openai' | 'gemini';
+export type ApiKeyProvider = 'claude' | 'openai' | 'gemini' | 'tavily';
 
 type StoredKeys = {
   claude?: string;
   openai?: string;
   gemini?: string;
+  tavily?: string;
 };
 
 export type ApiKeyStatus = {
@@ -38,6 +39,7 @@ const ENV_VARS: Record<ApiKeyProvider, string> = {
   claude: 'ANTHROPIC_API_KEY',
   openai: 'OPENAI_API_KEY',
   gemini: 'GOOGLE_GENERATIVE_AI_API_KEY',
+  tavily: 'TAVILY_API_KEY',
 };
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────────
@@ -148,5 +150,6 @@ export function getApiKeyStatus(): Record<ApiKeyProvider, ApiKeyStatus> {
     claude: getStatus('claude'),
     openai: getStatus('openai'),
     gemini: getStatus('gemini'),
+    tavily: getStatus('tavily'),
   };
 }

@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest) {
       model?: string;
       ollamaBaseUrl?: string;
       ollamaModel?: string;
-      apiKeys?: { claude?: string; openai?: string; gemini?: string };
+      apiKeys?: { claude?: string; openai?: string; gemini?: string; tavily?: string };
     };
 
     // Handle API key saves
