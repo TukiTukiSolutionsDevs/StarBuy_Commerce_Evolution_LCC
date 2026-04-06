@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as {
-      test?: 'shopify' | 'ollama' | 'provider';
+      test?: 'shopify' | 'ollama' | 'provider' | 'tavily';
       action?: 'clear-cache' | 'logout';
       provider?: AIProvider;
     };
@@ -175,6 +175,37 @@ export async function POST(request: NextRequest) {
         success: true,
         message: `Ollama running — ${models.length} models`,
         models,
+      });
+    }
+
+    if (body.test === 'tavily') {
+      const { getApiKey } = await import('@/lib/ai/api-keys');
+      const tavilyKey = getApiKey('tavily');
+      if (!tavilyKey) {
+        return Response.json({ success: false, error: 'Tavily API key not configured' });
+      }
+      // Test with a simple search
+      const res = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_key: tavilyKey,
+          query: 'test connection',
+          max_results: 1,
+          search_depth: 'basic',
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) {
+        const errData = (await res.json().catch(() => ({ message: `HTTP ${res.status}` }))) as {
+          message?: string;
+        };
+        throw new Error(errData.message ?? `Tavily returned ${res.status}`);
+      }
+      const data = (await res.json()) as { results?: unknown[] };
+      return Response.json({
+        success: true,
+        message: `Tavily connected — ${data.results?.length ?? 0} test results returned`,
       });
     }
 
