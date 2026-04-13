@@ -28,7 +28,7 @@ export function WishlistButton({ productId, className = '', size = 'md' }: Wishl
   const isWishlisted = useSyncExternalStore(
     subscribe,
     () => isInWishlist(productId),
-    getServerSnapshot
+    getServerSnapshot,
   );
 
   function handleClick(e: React.MouseEvent) {
@@ -48,13 +48,15 @@ export function WishlistButton({ productId, className = '', size = 'md' }: Wishl
       aria-pressed={isWishlisted}
       className={[
         'flex items-center justify-center rounded-full transition-all duration-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#795a00] focus-visible:ring-offset-2',
         isWishlisted
-          ? 'bg-red-50 text-red-500 hover:bg-red-100'
-          : 'bg-white/90 text-gray-400 hover:text-red-400 hover:bg-white shadow-sm',
+          ? 'bg-[#fff8f0] text-[#795a00] fill-[#795a00] hover:bg-[#f8cc69]/30'
+          : 'bg-[#ffffff]/90 backdrop-blur text-[#b1b2af] hover:text-[#795a00] hover:bg-white',
         sizeClasses,
         className,
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {isWishlisted ? (
         /* Filled heart */
@@ -63,8 +65,19 @@ export function WishlistButton({ productId, className = '', size = 'md' }: Wishl
         </svg>
       ) : (
         /* Outline heart */
-        <svg className={iconSize} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+        <svg
+          className={iconSize}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+          />
         </svg>
       )}
     </button>

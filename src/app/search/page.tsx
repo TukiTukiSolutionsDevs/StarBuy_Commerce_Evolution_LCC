@@ -13,10 +13,10 @@ type SearchPageProps = {
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
   const { q } = await searchParams;
   return {
-    title: q ? `Search: "${q}" — Starbuy` : 'Search Results — Starbuy',
+    title: q ? `Search: "${q}" — StarBuyBaby` : 'Search — StarBuyBaby',
     description: q
-      ? `Search results for "${q}" at Starbuy. Find trending products at unbeatable prices.`
-      : 'Search for products at Starbuy.',
+      ? `Search results for "${q}" at StarBuyBaby.`
+      : 'Search for products at StarBuyBaby.',
     robots: { index: false, follow: true },
   };
 }
@@ -30,7 +30,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   if (q.trim()) {
     try {
-      // Try predictive search first
       const results = await predictiveSearch(q);
       products = results.products.map((p) => ({
         id: p.id,
@@ -46,7 +45,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       }));
       suggestions = results.queries?.map((s) => s.text) ?? [];
     } catch {
-      // Fallback: search products by title
       try {
         const fallback = await getProducts({ query: q, first: 12 });
         products = fallback;
@@ -57,39 +55,37 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <Container as="main" className="py-8 sm:py-12">
+    <Container as="main" className="py-8 sm:py-12 bg-[#faf9f6]">
       {/* Breadcrumbs */}
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-slate-500">
+        <ol className="flex items-center gap-2 text-sm text-[#5d605c]">
           <li>
-            <Link href="/" className="hover:text-[#1B2A5E] transition-colors">
+            <Link href="/" className="hover:text-[#795a00] transition-colors">
               Home
             </Link>
           </li>
           <li aria-hidden="true">
-            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
           </li>
-          <li className="text-[#1B2A5E] font-medium">Search</li>
+          <li className="text-[#303330] font-medium">Search</li>
         </ol>
       </nav>
 
       {/* Search form */}
       <div className="mb-8 max-w-xl">
-        <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)] mb-4">
-          Search Products
-        </h1>
+        <h1 className="font-headline text-4xl text-[#303330] mb-4">Search Products</h1>
         <SearchForm initialQuery={q} />
       </div>
 
       {/* Suggestions */}
       {suggestions.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
-          <span className="text-sm text-[var(--color-text-secondary)]">Related searches:</span>
+          <span className="text-sm text-[#5d605c]">Related searches:</span>
           {suggestions.map((s) => (
             <Link
               key={s}
               href={`/search?q=${encodeURIComponent(s)}`}
-              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-[var(--color-text-primary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+              className="rounded-full bg-[#f4f4f0] px-3 py-1 text-xs font-medium text-[#303330] hover:bg-[#f8cc69]/20 hover:text-[#795a00] transition-colors"
             >
               {s}
             </Link>
@@ -101,14 +97,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {q.trim() && (
         <>
           <div className="mb-6 flex items-center justify-between">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[#5d605c]">
               {hasError ? (
                 'An error occurred during search.'
               ) : products.length > 0 ? (
                 <>
-                  <span className="font-semibold text-[#1B2A5E]">{products.length}</span>
-                  {` result${products.length === 1 ? '' : 's'} for `}
-                  <span className="font-semibold text-[#1B2A5E]">&quot;{q}&quot;</span>
+                  <span className="font-label text-xs uppercase tracking-widest text-[#5d605c]">
+                    {products.length} result{products.length === 1 ? '' : 's'} for
+                  </span>{' '}
+                  <span className="font-semibold text-[#303330]">&quot;{q}&quot;</span>
                 </>
               ) : (
                 `No results found for "${q}"`
@@ -117,28 +114,29 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </div>
 
           {products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
           ) : !hasError ? (
-            <div className="rounded-2xl border border-dashed border-gray-300 py-16 text-center">
+            <div className="rounded-2xl bg-[#f4f4f0] py-16 text-center">
               <span
-                className="material-symbols-outlined text-6xl text-gray-300 mb-4 block"
+                className="material-symbols-outlined text-6xl text-[#b1b2af] mb-4 block"
                 aria-hidden="true"
               >
                 search_off
               </span>
-              <h2 className="text-lg font-bold text-[#1B2A5E] font-[var(--font-heading)] mb-2">
-                No products found
-              </h2>
-              <p className="text-slate-500 text-sm mb-6">
+              <h2 className="font-headline text-2xl text-[#303330] mb-2">No products found</h2>
+              <p className="text-[#5d605c] text-sm mb-6">
                 Try a different search term or browse our collections.
               </p>
               <Link
                 href="/collections"
-                className="inline-flex items-center gap-2 rounded-lg bg-[#1B2A5E] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#2a3f7e] transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-bold tracking-widest text-[#fff8f0] transition-all duration-500 hover:shadow-[0_0_20px_rgba(121,90,0,0.3)]"
+                style={{
+                  background: 'radial-gradient(circle at center, #f8cc69 0%, #795a00 100%)',
+                }}
               >
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   grid_view
@@ -147,18 +145,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </Link>
             </div>
           ) : (
-            /* hasError — show error state */
-            <div className="rounded-2xl border border-dashed border-red-200 py-16 text-center bg-red-50/50">
+            <div className="rounded-2xl bg-[#f4f4f0] py-16 text-center">
               <span
-                className="material-symbols-outlined text-6xl text-red-300 mb-4 block"
+                className="material-symbols-outlined text-6xl text-[#b1b2af] mb-4 block"
                 aria-hidden="true"
               >
                 error_outline
               </span>
-              <h2 className="text-lg font-bold text-red-700 font-[var(--font-heading)] mb-2">
-                Search unavailable
-              </h2>
-              <p className="text-slate-500 text-sm">
+              <h2 className="font-headline text-2xl text-[#303330] mb-2">Search unavailable</h2>
+              <p className="text-[#5d605c] text-sm">
                 We couldn&apos;t complete your search. Please try again later.
               </p>
             </div>
@@ -169,11 +164,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Empty state when no query */}
       {!q.trim() && (
         <div className="mt-12 flex flex-col items-center gap-4 py-16 text-center">
-          <span className="material-symbols-outlined text-7xl text-gray-200" aria-hidden="true">
+          <span className="material-symbols-outlined text-7xl text-[#e1e3df]" aria-hidden="true">
             manage_search
           </span>
-          <p className="text-slate-500 font-medium">Start typing to search products</p>
-          <p className="text-sm text-slate-400">Search by product name, type, or keyword</p>
+          <p className="text-[#5d605c] font-medium">Start typing to search products</p>
+          <p className="text-sm text-[#b1b2af]">Search by product name, type, or keyword</p>
         </div>
       )}
     </Container>

@@ -53,3 +53,8 @@ certbot/
 *.tsbuildinfo
 next-env.d.ts
 .admin-market-research/
+.starbuy-alerts/
+.starbuy-monitor/
+.starbuy-research/
+.starbuy-trends-cache/
+openspec/

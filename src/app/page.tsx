@@ -1,75 +1,31 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProducts } from '@/lib/shopify';
+import { getProducts, getCollections } from '@/lib/shopify';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { NewsletterSection } from '@/components/home/NewsletterSection';
+import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: "Starbuy — Discover What's Trending",
+  title: 'StarBuyBaby — Celestial Shopping for Modern Living',
   description:
-    'Shop trending products, electronics, fashion, and more at Starbuy. Fast shipping, 30-day returns, and unbeatable prices.',
+    'Discover curated essentials, trending products, and premium finds at StarBuyBaby. Elegant shopping, fast shipping, and celestial quality.',
   openGraph: {
-    title: "Starbuy — Discover What's Trending",
+    title: 'StarBuyBaby — Celestial Shopping for Modern Living',
     description:
-      'Curated trending products at unbeatable prices. Shop electronics, fashion, home and more.',
+      'Curated essentials and premium finds at StarBuyBaby. Elegant shopping experience.',
     url: '/',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Starbuy — Discover What's Trending",
-    description: 'Curated trending products at unbeatable prices.',
+    title: 'StarBuyBaby — Celestial Shopping for Modern Living',
+    description: 'Curated essentials and premium finds at StarBuyBaby.',
   },
 };
 
-// ─── Static category data ─────────────────────────────────────────────────────
-const CATEGORIES = [
-  {
-    icon: 'devices',
-    name: 'Electronics',
-    handle: 'electronics',
-    gradient: 'from-blue-500 to-indigo-600',
-    iconColor: 'text-blue-100',
-  },
-  {
-    icon: 'apparel',
-    name: 'Fashion',
-    handle: 'fashion',
-    gradient: 'from-pink-500 to-rose-600',
-    iconColor: 'text-pink-100',
-  },
-  {
-    icon: 'home',
-    name: 'Home & Garden',
-    handle: 'home-garden',
-    gradient: 'from-emerald-500 to-teal-600',
-    iconColor: 'text-emerald-100',
-  },
-  {
-    icon: 'face_3',
-    name: 'Beauty',
-    handle: 'beauty',
-    gradient: 'from-purple-500 to-fuchsia-600',
-    iconColor: 'text-purple-100',
-  },
-  {
-    icon: 'fitness_center',
-    name: 'Sports',
-    handle: 'sports',
-    gradient: 'from-orange-500 to-red-600',
-    iconColor: 'text-orange-100',
-  },
-  {
-    icon: 'smart_toy',
-    name: 'Toys & Games',
-    handle: 'toys',
-    gradient: 'from-amber-400 to-yellow-500',
-    iconColor: 'text-amber-100',
-  },
-];
-
+// ─── Trust items ─────────────────────────────────────────────────────────────
 const TRUST_ITEMS = [
   {
     icon: 'local_shipping',
@@ -96,13 +52,25 @@ const TRUST_ITEMS = [
 // ─── Page (Server Component) ───────────────────────────────────────────────────
 
 export default async function HomePage() {
-  // Fetch products — graceful fallback if API fails
   let products: Awaited<ReturnType<typeof getProducts>> = [];
+  let collections: Awaited<ReturnType<typeof getCollections>> = [];
+
   try {
     products = await getProducts({ first: 8, sortKey: 'BEST_SELLING' });
   } catch {
-    // Show placeholder if Shopify is unreachable
+    // Graceful fallback
   }
+
+  try {
+    collections = await getCollections(6);
+  } catch {
+    // Graceful fallback
+  }
+
+  // Pick featured collections for bento grid
+  const featuredCollection = collections[0] ?? null;
+  const accentCollection = collections[1] ?? null;
+  const promoCollection = collections[2] ?? null;
 
   return (
     <>
@@ -110,299 +78,200 @@ export default async function HomePage() {
       <OrganizationJsonLd />
       <WebSiteJsonLd />
 
-      {/* ── Hero Section ──────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[500px] md:min-h-[600px] flex items-center overflow-hidden">
-        {/* Dark navy gradient background with mesh pattern */}
-        <div className="absolute inset-0 bg-[#1B2A5E]" />
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, #D4A843 0%, transparent 50%),
-                              radial-gradient(circle at 80% 20%, #2a3f7e 0%, transparent 40%),
-                              radial-gradient(circle at 60% 80%, #111d42 0%, transparent 50%)`,
-          }}
-        />
+      {/* ── Hero Section (Stitch-inspired) ──────────────────────────────── */}
+      <section className="relative px-6 pt-20 pb-24 md:pt-28 md:pb-32 mb-20 overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute -top-10 -left-20 w-64 h-64 bg-[#bcd6ff]/30 blur-[100px] rounded-full -z-10" />
+        <div className="absolute top-40 -right-20 w-80 h-80 bg-[#f8cc69]/20 blur-[120px] rounded-full -z-10" />
 
-        <div className="container mx-auto px-6 relative z-10 text-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            {/* Left: Text content */}
-            <div>
-              <span className="inline-block bg-white/10 backdrop-blur-sm text-amber-400 px-4 py-1.5 rounded-full text-sm font-semibold mb-6 border border-white/10">
-                ✦ Trending Collection 2026
-              </span>
-              <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight font-[var(--font-heading)]">
-                Discover What&apos;s <span className="text-amber-400">Trending</span>
-              </h1>
-              <p className="text-xl md:text-2xl mb-10 text-white/80 leading-relaxed">
-                Curated products at unbeatable prices — delivered to your door.
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-6">
+            The Ethereal Collection
+          </p>
+          <h1 className="font-headline text-5xl md:text-7xl text-[#303330] leading-tight tracking-tight mb-6">
+            StarBuyBaby
+          </h1>
+          <p className="font-body text-[#5d605c] max-w-xl mx-auto leading-relaxed text-lg mb-10">
+            Curated essentials for modern living. Discover celestial quality, timeless design, and
+            products that elevate your everyday.
+          </p>
+          <Link
+            href="/collections/all"
+            className="inline-block px-10 py-4 rounded-lg font-bold tracking-widest text-[#fff8f0] hover:shadow-[0_0_20px_rgba(121,90,0,0.3)] transition-all duration-500"
+            style={{
+              background: 'radial-gradient(circle at center, #f8cc69 0%, #795a00 100%)',
+            }}
+          >
+            Shop Now
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Featured Collections — Bento Grid ────────────────────────────── */}
+      <section className="px-6 mb-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-3">
+              Curated For You
+            </p>
+            <h2 className="font-headline text-4xl text-[#303330]">Featured Collections</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Large featured card */}
+            <Link
+              href={
+                featuredCollection
+                  ? `/collections/${featuredCollection.handle}`
+                  : '/collections/all'
+              }
+              className="group md:col-span-2 bg-[#f4f4f0] rounded-xl p-10 transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.06)]"
+            >
+              {featuredCollection?.image && (
+                <div className="relative w-full aspect-[2/1] rounded-lg overflow-hidden mb-6">
+                  <Image
+                    src={featuredCollection.image.url}
+                    alt={featuredCollection.image.altText ?? featuredCollection.title}
+                    fill
+                    sizes="(min-width: 768px) 66vw, 100vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              )}
+              <h3 className="font-headline text-3xl text-[#303330] mb-2">
+                {featuredCollection?.title ?? 'All Products'}
+              </h3>
+              <p className="text-[#5d605c] max-w-sm">
+                {featuredCollection?.description ??
+                  'Browse our complete collection of curated essentials.'}
               </p>
-              <div className="flex flex-wrap gap-4 items-center">
-                <Link
-                  href="/collections/all"
-                  className="inline-block bg-[#D4A843] hover:bg-[#C1973A] text-[#1B2A5E] px-10 py-4 rounded-lg font-bold text-lg transition-transform active:scale-95 shadow-xl"
-                >
-                  Shop Now
-                </Link>
-                <Link
-                  href="/collections"
-                  className="inline-block text-white/90 hover:text-white px-6 py-4 font-semibold transition-colors"
-                >
-                  Browse Categories →
-                </Link>
-              </div>
-            </div>
-
-            {/* Right: Trending products mini-grid */}
-            {products.length >= 2 ? (
-              <div className="hidden md:grid grid-cols-2 gap-4" aria-hidden="true">
-                <div className="space-y-4">
-                  {[products[0], products[1]].map((p) => (
-                    <Link
-                      key={p.id}
-                      href={`/products/${p.handle}`}
-                      className="group relative block rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300"
-                    >
-                      <div className="aspect-square relative bg-white/10">
-                        {p.featuredImage ? (
-                          <Image
-                            src={p.featuredImage.url}
-                            alt={p.featuredImage.altText ?? p.title}
-                            fill
-                            sizes="160px"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-white/10">
-                            <span className="material-symbols-outlined text-5xl text-white/30">
-                              shopping_bag
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                        <p className="text-white text-xs font-bold line-clamp-1">{p.title}</p>
-                        <p className="text-[#D4A843] text-xs font-semibold">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: p.priceRange.minVariantPrice.currencyCode,
-                          }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <div className="space-y-4 pt-8">
-                  {[products[2] ?? products[0], products[3] ?? products[1]].map((p) => (
-                    <Link
-                      key={p.id + '-b'}
-                      href={`/products/${p.handle}`}
-                      className="group relative block rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300"
-                    >
-                      <div className="aspect-square relative bg-white/10">
-                        {p.featuredImage ? (
-                          <Image
-                            src={p.featuredImage.url}
-                            alt={p.featuredImage.altText ?? p.title}
-                            fill
-                            sizes="160px"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-white/10">
-                            <span className="material-symbols-outlined text-5xl text-white/30">
-                              shopping_bag
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                        <p className="text-white text-xs font-bold line-clamp-1">{p.title}</p>
-                        <p className="text-[#D4A843] text-xs font-semibold">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: p.priceRange.minVariantPrice.currencyCode,
-                          }).format(parseFloat(p.priceRange.minVariantPrice.amount))}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Fallback decorative grid when no products are available */
-              <div className="hidden md:grid grid-cols-2 gap-4" aria-hidden="true">
-                <div className="space-y-4">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center aspect-square border border-white/5">
-                    <span className="material-symbols-outlined text-7xl text-white/40">
-                      headphones
-                    </span>
-                  </div>
-                  <div className="bg-[#D4A843]/20 backdrop-blur-sm rounded-2xl p-6 flex items-center justify-center aspect-[4/3] border border-[#D4A843]/20">
-                    <span className="material-symbols-outlined text-6xl text-[#D4A843]/60">
-                      watch
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-4 pt-8">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 flex items-center justify-center aspect-[4/3] border border-white/5">
-                    <span className="material-symbols-outlined text-6xl text-white/30">
-                      photo_camera
-                    </span>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center aspect-square border border-white/5">
-                    <span className="material-symbols-outlined text-7xl text-white/40">styler</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Categories ────────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-[#F8F9FC]">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-3xl font-extrabold text-[#1A1A2E] mb-2 font-[var(--font-heading)]">
-                Shop by Category
-              </h2>
-              <div className="h-1 w-20 bg-[#D4A843] rounded-full" />
-            </div>
-            <Link
-              href="/collections"
-              className="text-sm font-medium text-[#1B2A5E] hover:text-[#D4A843] transition-colors"
-            >
-              All Categories →
             </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.handle}
-                href={`/collections/${cat.handle}`}
-                className="group relative bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5"
-              >
-                <div
-                  className={`aspect-square bg-gradient-to-br ${cat.gradient} flex items-center justify-center`}
-                >
-                  <span
-                    className={`material-symbols-outlined ${cat.iconColor} text-5xl group-hover:scale-110 transition-transform duration-300`}
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                    aria-hidden="true"
-                  >
-                    {cat.icon}
-                  </span>
-                </div>
-                <div className="p-4 text-center">
-                  <span className="font-bold text-[#1A1A2E] text-sm group-hover:text-[#1B2A5E] transition-colors">
-                    {cat.name}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ── Trending Products ─────────────────────────────────────────────────── */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl font-extrabold text-[#1A1A2E] font-[var(--font-heading)]">
-              Trending Now
-            </h2>
+            {/* Smaller accent card */}
             <Link
-              href="/collections/all"
-              className="text-[#1B2A5E] font-bold hover:text-[#D4A843] transition-colors flex items-center gap-1"
+              href={accentCollection ? `/collections/${accentCollection.handle}` : '/collections'}
+              className="group bg-[#d4e3ff] rounded-xl p-8 text-[#005396] transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.06)] flex flex-col justify-end"
             >
-              View All
-              <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                chevron_right
+              {accentCollection?.image && (
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-6">
+                  <Image
+                    src={accentCollection.image.url}
+                    alt={accentCollection.image.altText ?? accentCollection.title}
+                    fill
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              )}
+              <h3 className="font-headline text-3xl mb-2">
+                {accentCollection?.title ?? 'Browse Collections'}
+              </h3>
+              <p className="text-[#005396]/70 max-w-sm">
+                {accentCollection?.description ?? 'Explore our curated categories.'}
+              </p>
+            </Link>
+
+            {/* Full-width promo card */}
+            <Link
+              href={promoCollection ? `/collections/${promoCollection.handle}` : '/collections/all'}
+              className="group md:col-span-3 bg-[#ffffff] rounded-xl p-8 md:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.04)] transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.08)] flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+            >
+              <div>
+                <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-3">
+                  Special Offer
+                </p>
+                <h3 className="font-headline text-3xl text-[#303330] mb-2">
+                  {promoCollection?.title ?? 'Discover More'}
+                </h3>
+                <p className="text-[#5d605c] max-w-md">
+                  {promoCollection?.description ??
+                    'Explore curated selections with celestial quality and fast shipping.'}
+                </p>
+              </div>
+              <span
+                className="inline-block px-8 py-3 rounded-lg font-bold tracking-widest text-[#fff8f0] text-sm shrink-0"
+                style={{
+                  background: 'radial-gradient(circle at center, #f8cc69 0%, #795a00 100%)',
+                }}
+              >
+                Shop Now
               </span>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Trending Products ─────────────────────────────────────────────── */}
+      <section className="bg-[#f4f4f0] py-20 -mx-0 px-6 mb-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="font-headline text-4xl text-[#303330] mb-4">Trending Now</h2>
+            <p className="text-[#5d605c] text-lg">Handpicked favorites our customers love</p>
           </div>
 
           {products.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {products.map((product, i) => (
                 <ProductCard key={product.id} product={product} priority={i < 4} />
               ))}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-gray-300 py-16 text-center">
-              <p className="text-[var(--color-text-secondary)]">
-                Products are being curated. Check back soon!
-              </p>
+            <div className="rounded-xl bg-[#ffffff] py-16 text-center shadow-[0_32px_64px_rgba(0,0,0,0.04)]">
+              <p className="text-[#5d605c]">Products are being curated. Check back soon!</p>
             </div>
           )}
-        </div>
-      </section>
 
-      {/* ── Promo Banner ──────────────────────────────────────────────────────── */}
-      <section className="py-12">
-        <div className="container mx-auto px-6">
-          <div className="relative rounded-2xl overflow-hidden bg-[#1B2A5E] p-12 md:p-20 text-center flex flex-col items-center">
-            {/* Subtle background pattern */}
-            <div
-              className="absolute inset-0 opacity-10"
-              style={{
-                backgroundImage: `radial-gradient(circle at 30% 50%, #D4A843 0%, transparent 60%),
-                                  radial-gradient(circle at 70% 50%, #2a3f7e 0%, transparent 60%)`,
-              }}
-            />
-            <div className="relative z-10">
-              <span className="bg-[#D4A843] text-[#1B2A5E] px-4 py-1 rounded-full font-bold text-sm mb-6 inline-block uppercase tracking-widest">
-                Limited Time
+          <div className="text-center mt-10">
+            <Link
+              href="/collections/all"
+              className="inline-flex items-center gap-2 font-body font-bold text-[#795a00] hover:text-[#6b4f00] transition-colors"
+            >
+              View All Products
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                arrow_forward
               </span>
-              <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6 font-[var(--font-heading)]">
-                Up to 50% Off — Limited Time Deals
-              </h2>
-              <p className="text-white/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
-                Save big on your favorite electronics, apparel, and home essentials. While supplies
-                last.
-              </p>
-              <Link
-                href="/collections/deals"
-                className="inline-block bg-[#D4A843] hover:bg-[#C1973A] text-[#1B2A5E] px-10 py-4 rounded-lg font-bold text-lg transition-transform active:scale-95 shadow-xl"
-              >
-                Shop Deals
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ── Trust Section ─────────────────────────────────────────────────────── */}
-      <section className="py-20 border-b border-slate-100">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-extrabold text-[#1A1A2E] text-center mb-16 font-[var(--font-heading)]">
-            Why Shop With Starbuy?
+      {/* ── Trust Section ─────────────────────────────────────────────────── */}
+      <section className="px-6 mb-20">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="font-headline text-3xl text-[#303330] text-center mb-12">
+            Why Shop With StarBuyBaby?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {TRUST_ITEMS.map((item) => (
               <div
                 key={item.title}
-                className="text-center group bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:border-[#D4A843]/40 hover:shadow-md transition-all duration-300"
+                className="text-center group bg-[#ffffff] rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all duration-500"
               >
-                <div className="w-16 h-16 bg-[#1B2A5E]/5 rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:bg-[#1B2A5E] transition-colors duration-300">
+                <div className="w-14 h-14 bg-[#f4f4f0] rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:bg-[#f8cc69]/20 transition-colors duration-500">
                   <span
-                    className="material-symbols-outlined text-[#1B2A5E] text-3xl group-hover:text-[#D4A843] transition-colors duration-300"
+                    className="material-symbols-outlined text-[#795a00] text-2xl"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
                 </div>
-                <h3 className="font-bold text-base mb-2 text-[#1A1A2E]">{item.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{item.description}</p>
+                <h3 className="font-body font-bold text-sm mb-2 text-[#303330]">{item.title}</h3>
+                <p className="text-[#5d605c] text-sm leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Newsletter ────────────────────────────────────────────────────────── */}
+      {/* ── Recently Viewed ───────────────────────────────────────────────── */}
+      <section className="px-6 mb-12">
+        <div className="max-w-6xl mx-auto">
+          <RecentlyViewed />
+        </div>
+      </section>
+
+      {/* ── Newsletter ────────────────────────────────────────────────────── */}
       <NewsletterSection />
     </>
   );

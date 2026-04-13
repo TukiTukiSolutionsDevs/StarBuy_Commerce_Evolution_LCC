@@ -7,29 +7,89 @@ import { Container } from '@/components/ui/Container';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { SortSelect } from '@/components/collection/SortSelect';
 import { FiltersPanel } from '@/components/collection/FiltersPanel';
-import { LoadMoreButton } from '@/components/collection/LoadMoreButton';
+import { CollectionGrid } from '@/components/collection/CollectionGrid';
 import type { ShopifyProductCard } from '@/lib/shopify/types';
+
+// ─── Sort param → Shopify sortKey + reverse ──────────────────────────────────
+
+const SORT_MAP: Record<string, { sortKey: string; reverse: boolean }> = {
+  'best-selling': { sortKey: 'BEST_SELLING', reverse: false },
+  newest: { sortKey: 'CREATED', reverse: true },
+  'price-asc': { sortKey: 'PRICE', reverse: false },
+  'price-desc': { sortKey: 'PRICE', reverse: true },
+  'title-asc': { sortKey: 'TITLE', reverse: false },
+  'title-desc': { sortKey: 'TITLE', reverse: true },
+};
+
+function parseSortParam(sort?: string): { sortKey: string; reverse: boolean } {
+  if (sort && sort in SORT_MAP) return SORT_MAP[sort];
+  return { sortKey: 'BEST_SELLING', reverse: false };
+}
+
+// ─── URL params → Shopify ProductFilter[] ────────────────────────────────────
+
+function buildShopifyFilters(sp: {
+  minPrice?: string;
+  maxPrice?: string;
+  availability?: string;
+  vendor?: string | string[];
+  productType?: string | string[];
+  tag?: string | string[];
+}): Record<string, unknown>[] {
+  const filters: Record<string, unknown>[] = [];
+
+  const min = sp.minPrice ? parseFloat(sp.minPrice) : undefined;
+  const max = sp.maxPrice ? parseFloat(sp.maxPrice) : undefined;
+  if ((min !== undefined && !isNaN(min)) || (max !== undefined && !isNaN(max))) {
+    const price: Record<string, number> = {};
+    if (min !== undefined && !isNaN(min)) price.min = min;
+    if (max !== undefined && !isNaN(max)) price.max = max;
+    filters.push({ price });
+  }
+
+  if (sp.availability === 'in-stock') {
+    filters.push({ available: true });
+  }
+
+  const vendors = Array.isArray(sp.vendor) ? sp.vendor : sp.vendor ? [sp.vendor] : [];
+  for (const v of vendors) {
+    filters.push({ productVendor: v });
+  }
+
+  const types = Array.isArray(sp.productType)
+    ? sp.productType
+    : sp.productType
+      ? [sp.productType]
+      : [];
+  for (const t of types) {
+    filters.push({ productType: t });
+  }
+
+  const tags = Array.isArray(sp.tag) ? sp.tag : sp.tag ? [sp.tag] : [];
+  for (const tg of tags) {
+    filters.push({ tag: tg });
+  }
+
+  return filters;
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type CollectionPageProps = {
   params: Promise<{ handle: string }>;
-  searchParams: Promise<{
-    sort?: string;
-    reverse?: string;
-    after?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    inStock?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+// ─── Metadata ────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: CollectionPageProps): Promise<Metadata> {
   const { handle } = await params;
 
   if (handle === 'all') {
     return {
-      title: 'All Products — Starbuy',
+      title: 'All Products — StarBuyBaby',
       description:
-        'Browse all products at Starbuy. Find the best electronics, fashion, home & garden, beauty, and more at unbeatable prices.',
+        'Browse all products at StarBuyBaby. Curated essentials, celestial quality, and elegant finds.',
     };
   }
 
@@ -39,11 +99,11 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
 
     const ogImage = collection.image?.url;
     return {
-      title: `${collection.title} — Starbuy`,
+      title: `${collection.title} — StarBuyBaby`,
       description:
         collection.seo?.description ||
         collection.description ||
-        `Shop ${collection.title} at Starbuy. Find the best products at unbeatable prices.`,
+        `Shop ${collection.title} at StarBuyBaby.`,
       openGraph: ogImage
         ? {
             images: [
@@ -58,65 +118,70 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
         : undefined,
     };
   } catch {
-    return { title: 'Collection — Starbuy' };
+    return { title: 'Collection — StarBuyBaby' };
   }
 }
 
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default async function CollectionPage({ params, searchParams }: CollectionPageProps) {
   const { handle } = await params;
-  const { sort = 'BEST_SELLING', reverse = 'false', after, inStock } = await searchParams;
+  const sp = await searchParams;
+
+  const sortParam = typeof sp.sort === 'string' ? sp.sort : undefined;
+  const { sortKey, reverse } = parseSortParam(sortParam);
+
+  const shopifyFilters = buildShopifyFilters({
+    minPrice: typeof sp.minPrice === 'string' ? sp.minPrice : undefined,
+    maxPrice: typeof sp.maxPrice === 'string' ? sp.maxPrice : undefined,
+    availability: typeof sp.availability === 'string' ? sp.availability : undefined,
+    vendor: sp.vendor,
+    productType: sp.productType,
+    tag: sp.tag,
+  });
 
   const isAll = handle === 'all';
 
-  // ── All Products: fetch with getProducts() ─────────────────────────────────
+  // ── All Products ───────────────────────────────────────────────────────────
   if (isAll) {
     let products: ShopifyProductCard[] = [];
 
     try {
-      products = await getProducts({
-        first: 24,
-        sortKey: sort,
-        reverse: reverse === 'true',
-      });
+      products = await getProducts({ first: 24, sortKey, reverse });
     } catch {
-      // Graceful error — shows empty state below
+      // Graceful error
     }
 
-    if (inStock === 'true') {
-      products = products.filter((p) => p.availableForSale);
-    }
+    products = applyClientFilters(products, sp);
 
     return (
-      <Container as="main" className="py-8 sm:py-12">
+      <Container as="main" className="py-8 sm:py-12 bg-[#faf9f6]">
         {/* Breadcrumbs */}
         <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+          <ol className="flex items-center gap-2 text-sm text-[#5d605c]">
             <li>
-              <Link href="/" className="hover:text-[var(--color-primary)] transition-colors">
+              <Link href="/" className="hover:text-[#795a00] transition-colors">
                 Home
               </Link>
             </li>
             <li aria-hidden="true">
-              <span className="material-symbols-outlined text-sm text-slate-300">
+              <span className="material-symbols-outlined text-sm text-[#b1b2af]">
                 chevron_right
               </span>
             </li>
-            <li className="text-[var(--color-text-primary)] font-semibold">All Products</li>
+            <li className="text-[#303330] font-semibold">All Products</li>
           </ol>
         </nav>
 
         {/* Collection Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)]">
-              All Products
-            </h1>
-            <p className="text-[var(--color-text-secondary)] mt-1">
+            <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">All Products</h1>
+            <p className="font-label text-xs uppercase tracking-widest text-[#5d605c] mt-2">
               {products.length} {products.length === 1 ? 'product' : 'products'}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-[#1A1A2E]">Sort by:</span>
             <Suspense fallback={null}>
               <SortSelect />
             </Suspense>
@@ -124,26 +189,24 @@ export default async function CollectionPage({ params, searchParams }: Collectio
         </div>
 
         {/* Layout: sidebar + grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-10">
-          <Suspense fallback={null}>
-            <FiltersPanel />
-          </Suspense>
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex items-center gap-3 lg:hidden">
+            <Suspense fallback={null}>
+              <FiltersPanel />
+            </Suspense>
+          </div>
 
-          <div>
+          <div className="hidden lg:block">
+            <Suspense fallback={null}>
+              <FiltersPanel />
+            </Suspense>
+          </div>
+
+          <div className="flex-1 min-w-0">
             {products.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 py-16 text-center">
-                <span
-                  className="material-symbols-outlined text-6xl text-gray-300 mb-4 block"
-                  aria-hidden="true"
-                >
-                  inventory_2
-                </span>
-                <p className="text-[var(--color-text-secondary)]">
-                  No products found. Try adjusting your filters.
-                </p>
-              </div>
+              <EmptyState />
             ) : (
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:grid-cols-3">
                 {products.map((product, i) => (
                   <ProductCard key={product.id} product={product} priority={i < 3} />
                 ))}
@@ -161,78 +224,62 @@ export default async function CollectionPage({ params, searchParams }: Collectio
   try {
     collection = await getCollectionByHandle(handle, {
       first: 12,
-      after,
-      sortKey: sort,
-      reverse: reverse === 'true',
+      sortKey,
+      reverse,
+      filters: shopifyFilters.length > 0 ? shopifyFilters : undefined,
     });
   } catch {
-    // Graceful error — will show below
+    // Graceful error
   }
 
   if (!collection) {
     notFound();
   }
 
-  // Client-side filtering by availability
-  let products = (collection.products?.edges ?? []).map((e) => e.node);
-  if (inStock === 'true') {
-    products = products.filter((p) => p.availableForSale);
-  }
-
+  const products = (collection.products?.edges ?? []).map((e) => e.node);
   const pageInfo = collection.products?.pageInfo;
+  const collectionFilters = collection.products?.filters;
   const productCount = products.length;
 
   return (
-    <Container as="main" className="py-8 sm:py-12">
+    <Container as="main" className="py-8 sm:py-12 bg-[#faf9f6]">
       {/* Breadcrumbs */}
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+        <ol className="flex items-center gap-2 text-sm text-[#5d605c]">
           <li>
-            <Link href="/" className="hover:text-[var(--color-primary)] transition-colors">
+            <Link href="/" className="hover:text-[#795a00] transition-colors">
               Home
             </Link>
           </li>
           <li aria-hidden="true">
-            <span className="material-symbols-outlined text-sm text-slate-300">
-              chevron_right
-            </span>
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
           </li>
           <li>
-            <Link
-              href="/collections"
-              className="hover:text-[var(--color-primary)] transition-colors"
-            >
+            <Link href="/collections" className="hover:text-[#795a00] transition-colors">
               Collections
             </Link>
           </li>
           <li aria-hidden="true">
-            <span className="material-symbols-outlined text-sm text-slate-300">
-              chevron_right
-            </span>
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
           </li>
-          <li className="text-[var(--color-text-primary)] font-semibold capitalize">
-            {collection.title}
-          </li>
+          <li className="text-[#303330] font-semibold capitalize">{collection.title}</li>
         </ol>
       </nav>
 
       {/* Collection Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)]">
-            {collection.title}
-          </h1>
+          <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">{collection.title}</h1>
           {collection.description && (
-            <p className="text-[var(--color-text-secondary)] mt-1 max-w-2xl">
+            <p className="text-[#5d605c] leading-relaxed max-w-2xl mt-2">
               {collection.description}
             </p>
           )}
-          <p className="text-[var(--color-text-secondary)] mt-1">
+          <p className="font-label text-xs uppercase tracking-widest text-[#5d605c] mt-2">
             {productCount} {productCount === 1 ? 'product' : 'products'}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-[#1A1A2E]">Sort by:</span>
           <Suspense fallback={null}>
             <SortSelect />
           </Suspense>
@@ -240,46 +287,78 @@ export default async function CollectionPage({ params, searchParams }: Collectio
       </div>
 
       {/* Layout: sidebar + grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-10">
-        {/* FiltersPanel */}
-        <Suspense fallback={null}>
-          <FiltersPanel />
-        </Suspense>
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex items-center gap-3 lg:hidden">
+          <Suspense fallback={null}>
+            <FiltersPanel filters={collectionFilters} />
+          </Suspense>
+        </div>
 
-        {/* Product grid */}
+        <div className="hidden lg:block">
+          <Suspense fallback={null}>
+            <FiltersPanel filters={collectionFilters} />
+          </Suspense>
+        </div>
+
         <div className="flex-1 min-w-0">
-          {products.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 py-16 text-center">
-              <span
-                className="material-symbols-outlined text-6xl text-gray-300 mb-4 block"
-                aria-hidden="true"
-              >
-                inventory_2
-              </span>
-              <p className="text-[var(--color-text-secondary)]">
-                No products found. Try adjusting your filters.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
-                {products.map((product, i) => (
-                  <ProductCard key={product.id} product={product} priority={i < 3} />
-                ))}
-              </div>
-
-              {/* Load More */}
-              {pageInfo?.hasNextPage && pageInfo.endCursor && (
-                <div className="mt-12 flex justify-center">
-                  <Suspense fallback={null}>
-                    <LoadMoreButton endCursor={pageInfo.endCursor} />
-                  </Suspense>
-                </div>
-              )}
-            </>
-          )}
+          <CollectionGrid
+            initialProducts={products}
+            initialPageInfo={pageInfo}
+            collectionHandle={handle}
+            sortKey={sortKey}
+            reverse={reverse}
+          />
         </div>
       </div>
     </Container>
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function applyClientFilters(
+  items: ShopifyProductCard[],
+  sp: Record<string, string | string[] | undefined>,
+): ShopifyProductCard[] {
+  let filtered = items;
+
+  if (sp.availability === 'in-stock') {
+    filtered = filtered.filter((p) => p.availableForSale);
+  }
+
+  const minPrice = typeof sp.minPrice === 'string' ? parseFloat(sp.minPrice) : NaN;
+  if (!isNaN(minPrice)) {
+    filtered = filtered.filter((p) => parseFloat(p.priceRange.minVariantPrice.amount) >= minPrice);
+  }
+
+  const maxPrice = typeof sp.maxPrice === 'string' ? parseFloat(sp.maxPrice) : NaN;
+  if (!isNaN(maxPrice)) {
+    filtered = filtered.filter((p) => parseFloat(p.priceRange.minVariantPrice.amount) <= maxPrice);
+  }
+
+  const vendors = Array.isArray(sp.vendor) ? sp.vendor : sp.vendor ? [sp.vendor] : [];
+  if (vendors.length > 0) {
+    filtered = filtered.filter((p) => vendors.includes(p.vendor));
+  }
+
+  const tags = Array.isArray(sp.tag) ? sp.tag : sp.tag ? [sp.tag] : [];
+  if (tags.length > 0) {
+    filtered = filtered.filter((p) => p.tags.some((t) => tags.includes(t)));
+  }
+
+  return filtered;
+}
+
+function EmptyState() {
+  return (
+    <div className="rounded-xl bg-[#f4f4f0] py-16 text-center">
+      <span
+        className="material-symbols-outlined text-6xl text-[#b1b2af] mb-4 block"
+        aria-hidden="true"
+      >
+        inventory_2
+      </span>
+      <p className="text-[#5d605c]">No products found. Try adjusting your filters.</p>
+    </div>
   );
 }

@@ -297,7 +297,7 @@ export default function AdminDashboardPage() {
         // We also need products for inventory alerts / top products table
         // Use a simple fetch to the existing stats route since products come from there
         // But we need the raw products — so let's call products API directly
-        const productsRes = await fetch('/api/admin/products?limit=250');
+        const productsRes = await fetch('/api/admin/products?limit=50');
         let products: AdminProduct[] = [];
         if (productsRes.ok) {
           const { products: p } = (await productsRes.json()) as { products: AdminProduct[] };

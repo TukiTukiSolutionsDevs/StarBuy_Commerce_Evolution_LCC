@@ -3,115 +3,77 @@ import { Container } from '@/components/ui/Container';
 import { ContactForm } from '@/components/contact/ContactForm';
 
 export const metadata: Metadata = {
-  title: 'Contact Us — Starbuy',
+  title: 'Contact Us — StarBuyBaby',
   description:
-    "Get in touch with the Starbuy team. We're here to help with orders, shipping, returns, and anything else you need.",
+    "Get in touch with the StarBuyBaby team. We're here to help with orders, shipping, returns, and anything else you need.",
   openGraph: {
-    title: 'Contact Starbuy',
-    description: 'Get in touch with our support team. We respond within 24–48 hours.',
+    title: 'Contact StarBuyBaby',
+    description: 'Get in touch with our support team. We respond within 24-48 hours.',
   },
 };
 
 const CONTACT_INFO = [
   {
     label: 'Email',
-    value: 'support@starbuy.com',
-    icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-        />
-      </svg>
-    ),
+    value: 'support@starbuybaby.com',
+    icon: 'mail',
   },
   {
     label: 'Location',
     value: 'Arlington, Virginia, USA',
-    icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-        />
-      </svg>
-    ),
+    icon: 'location_on',
   },
   {
     label: 'Response Time',
-    value: '24–48 business hours',
-    icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
+    value: '24-48 business hours',
+    icon: 'schedule',
   },
 ];
 
 export default function ContactPage() {
   return (
-    <Container as="main" className="py-16">
+    <Container as="main" className="py-16 bg-[#faf9f6]">
       {/* Header */}
       <div className="mx-auto max-w-2xl text-center mb-12">
-        <h1 className="font-heading text-4xl font-bold text-[#1B2A5E]">Get in Touch</h1>
-        <p className="mt-4 text-[var(--color-text-secondary)] leading-relaxed">
-          Have a question about your order or want to learn more about Starbuy? We&apos;re here to
-          help. Fill out the form and we&apos;ll respond within 24–48 business hours.
+        <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-4">
+          We&apos;re Here to Help
+        </p>
+        <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">Get in Touch</h1>
+        <p className="mt-4 text-[#5d605c] leading-relaxed">
+          Have a question about your order or want to learn more about StarBuyBaby? We&apos;re here
+          to help. Fill out the form and we&apos;ll respond within 24-48 business hours.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Contact info */}
         <div className="space-y-6">
-          <h2 className="font-heading text-xl font-bold text-[#1B2A5E]">Contact Information</h2>
+          <h2 className="font-headline text-xl text-[#303330]">Contact Information</h2>
 
           {CONTACT_INFO.map((item) => (
             <div key={item.label} className="flex items-start gap-4">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
-                {item.icon}
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#f4f4f0] text-[#795a00]">
+                <span
+                  className="material-symbols-outlined text-xl"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                  aria-hidden="true"
+                >
+                  {item.icon}
+                </span>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                <p className="font-label text-xs uppercase tracking-widest text-[#5d605c]">
                   {item.label}
                 </p>
-                <p className="mt-0.5 text-sm font-medium text-[var(--color-text-primary)]">
-                  {item.value}
-                </p>
+                <p className="mt-0.5 text-sm font-medium text-[#303330]">{item.value}</p>
               </div>
             </div>
           ))}
 
           {/* FAQ link */}
-          <div className="rounded-[var(--radius-lg)] bg-[var(--color-surface)] p-4 mt-8">
-            <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
-              Check our policies first
-            </p>
-            <p className="text-xs text-[var(--color-text-secondary)] mb-3">
+          <div className="rounded-2xl bg-[#f4f4f0] p-5 mt-8">
+            <p className="text-sm font-bold text-[#303330] mb-1">Check our policies first</p>
+            <p className="text-xs text-[#5d605c] mb-3">
               Many questions about returns, shipping, and payments are answered in our policies.
             </p>
             <div className="space-y-2">
@@ -123,9 +85,12 @@ export default function ContactPage() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-1 text-xs font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"
+                  className="flex items-center gap-1 text-xs font-medium text-[#795a00] hover:text-[#6b4f00] transition-colors"
                 >
-                  {link.label} →
+                  {link.label}
+                  <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                    arrow_forward
+                  </span>
                 </a>
               ))}
             </div>
@@ -134,8 +99,8 @@ export default function ContactPage() {
 
         {/* Form */}
         <div className="lg:col-span-2">
-          <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-8 shadow-[var(--shadow-card)]">
-            <h2 className="font-heading text-xl font-bold text-[#1B2A5E] mb-6">Send a Message</h2>
+          <div className="rounded-2xl bg-[#ffffff] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+            <h2 className="font-headline text-xl text-[#303330] mb-6">Send a Message</h2>
             <ContactForm />
           </div>
         </div>

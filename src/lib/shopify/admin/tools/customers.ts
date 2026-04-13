@@ -70,7 +70,7 @@ const CUSTOMER_FRAGMENT = `
     phone
     tags
     note
-    acceptsMarketing
+    emailMarketingConsent { marketingState }
     numberOfOrders
     amountSpent { amount currencyCode }
     createdAt
@@ -80,12 +80,8 @@ const CUSTOMER_FRAGMENT = `
     defaultAddress {
       ${ADDRESS_FIELDS}
     }
-    addresses(first: 10) {
-      edges {
-        node {
-          ${ADDRESS_FIELDS}
-        }
-      }
+    addresses {
+      ${ADDRESS_FIELDS}
     }
   }
 `;
@@ -120,10 +116,13 @@ export async function searchCustomers(
 function mapCustomerCompat(c: Record<string, unknown>): AdminCustomer {
   const customer = c as AdminCustomer & {
     addresses?: { edges?: Array<{ node: AdminAddress }> } | AdminAddress[];
+    emailMarketingConsent?: { marketingState?: string } | null;
   };
   // API 2026-04 renamed ordersCount → numberOfOrders, totalSpentV2 → amountSpent
   customer.ordersCount = customer.numberOfOrders ?? 0;
   customer.totalSpentV2 = customer.amountSpent ?? { amount: '0', currencyCode: 'USD' };
+  // API 2026-04 renamed acceptsMarketing → emailMarketingConsent.marketingState
+  customer.acceptsMarketing = customer.emailMarketingConsent?.marketingState === 'SUBSCRIBED';
 
   // Flatten addresses from GraphQL connection to plain array
   const rawAddresses = customer.addresses as
@@ -188,14 +187,28 @@ export async function createCustomer(
     ${CUSTOMER_FRAGMENT}
   `;
 
+  // Transform acceptsMarketing → emailMarketingConsent for 2026-04 API
+  const apiInput: Record<string, unknown> = { ...input };
+  if ('acceptsMarketing' in apiInput) {
+    apiInput.emailMarketingConsent = {
+      marketingState: apiInput.acceptsMarketing ? 'SUBSCRIBED' : 'NOT_SUBSCRIBED',
+      consentUpdatedAt: new Date().toISOString(),
+    };
+    delete apiInput.acceptsMarketing;
+  }
+
   const data = await adminFetch<{
     customerCreate: {
       customer: AdminCustomer | null;
       userErrors: UserError[];
     };
-  }>({ query: mutation, variables: { input } });
+  }>({ query: mutation, variables: { input: apiInput } });
 
-  return data.customerCreate;
+  const result = data.customerCreate;
+  if (result.customer) {
+    result.customer = mapCustomerCompat(result.customer as unknown as Record<string, unknown>);
+  }
+  return result;
 }
 
 // ─── Update ────────────────────────────────────────────────────────────────────
@@ -222,14 +235,28 @@ export async function updateCustomer(
     ${CUSTOMER_FRAGMENT}
   `;
 
+  // Transform acceptsMarketing → emailMarketingConsent for 2026-04 API
+  const apiFields: Record<string, unknown> = { ...fields };
+  if ('acceptsMarketing' in apiFields) {
+    apiFields.emailMarketingConsent = {
+      marketingState: apiFields.acceptsMarketing ? 'SUBSCRIBED' : 'NOT_SUBSCRIBED',
+      consentUpdatedAt: new Date().toISOString(),
+    };
+    delete apiFields.acceptsMarketing;
+  }
+
   const data = await adminFetch<{
     customerUpdate: {
       customer: AdminCustomer | null;
       userErrors: UserError[];
     };
-  }>({ query: mutation, variables: { input: { id: gid, ...fields } } });
+  }>({ query: mutation, variables: { input: { id: gid, ...apiFields } } });
 
-  return data.customerUpdate;
+  const result = data.customerUpdate;
+  if (result.customer) {
+    result.customer = mapCustomerCompat(result.customer as unknown as Record<string, unknown>);
+  }
+  return result;
 }
 
 // ─── Delete ────────────────────────────────────────────────────────────────────

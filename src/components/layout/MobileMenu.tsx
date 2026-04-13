@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import type { ShopifyMenuItem } from '@/lib/shopify/types';
 
 type MobileMenuProps = {
@@ -52,7 +52,18 @@ const FALLBACK_ITEMS = [
 
 export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
   const navItems = items.length > 0 ? items : FALLBACK_ITEMS;
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setSearchQuery('');
+    onClose();
+  }
 
   // Trap focus and close on Escape
   useEffect(() => {
@@ -76,7 +87,7 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-[#303330]/30 backdrop-blur-sm lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -89,41 +100,55 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
         aria-modal="true"
         aria-label="Navigation menu"
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[var(--color-primary)] text-white transition-transform duration-300 lg:hidden',
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#faf9f6] text-[#303330] transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lg:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-          <Image src="/StarBuy.png" alt="StarBuy" width={54} height={36} className="h-9 w-auto" />
+        <div className="flex items-center justify-between px-6 py-4">
+          <span className="font-headline font-black text-xl tracking-widest text-[#795a00]">
+            STARBUYBABY
+          </span>
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-white/10 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-[#795a00] hover:bg-[#f4f4f0] transition-colors duration-500"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
+              close
+            </span>
           </button>
         </div>
 
+        {/* Search */}
+        <div className="px-6 pt-2 pb-2">
+          <form onSubmit={handleSearchSubmit} className="relative" role="search">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              className="w-full rounded-xl bg-[#f4f4f0] border-none px-4 py-2.5 pl-10 text-sm text-[#303330] placeholder-[#b1b2af] focus:outline-none focus:ring-1 focus:ring-[#795a00]/30 transition-all duration-500"
+              aria-label="Search products"
+            />
+            <span
+              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-[#b1b2af]"
+              aria-hidden="true"
+            >
+              search
+            </span>
+          </form>
+        </div>
+
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto px-6 py-6">
+        <nav className="flex-1 overflow-y-auto px-6 py-4">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.id}>
                 <Link
                   href={resolveMenuUrl(item.url)}
                   onClick={onClose}
-                  className="flex items-center rounded-[var(--radius-md)] px-3 py-3 text-base font-medium hover:bg-white/10 transition-colors"
+                  className="flex items-center rounded-xl px-3 py-3 font-body text-base font-medium text-[#303330] hover:bg-[#f4f4f0] hover:text-[#795a00] transition-colors duration-500"
                 >
                   {item.title}
                 </Link>
@@ -134,7 +159,7 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
                         <Link
                           href={resolveMenuUrl(sub.url)}
                           onClick={onClose}
-                          className="flex items-center rounded-[var(--radius-md)] px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                          className="flex items-center rounded-xl px-3 py-2 font-body text-sm text-[#5d605c] hover:bg-[#f4f4f0] hover:text-[#795a00] transition-colors duration-500"
                         >
                           {sub.title}
                         </Link>
@@ -148,49 +173,25 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
         </nav>
 
         {/* Footer links */}
-        <div className="border-t border-white/10 px-6 py-4 space-y-2">
+        <div className="px-6 py-4 space-y-2">
           <Link
             href="/account"
             onClick={onClose}
-            className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-2 font-body text-sm text-[#5d605c] hover:text-[#795a00] transition-colors duration-500"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-              />
-            </svg>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              person
+            </span>
             My Account
           </Link>
           <Link
             href="/cart"
             onClick={onClose}
-            className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-2 font-body text-sm text-[#5d605c] hover:text-[#795a00] transition-colors duration-500"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-              />
-            </svg>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              shopping_bag
+            </span>
             Cart
           </Link>
         </div>

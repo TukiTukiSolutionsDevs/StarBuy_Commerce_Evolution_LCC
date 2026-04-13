@@ -957,22 +957,27 @@ export default function ProductsPage() {
     setEditLoading(true);
     try {
       const id = editProduct.id.replace('gid://shopify/Product/', '');
+      const body: Record<string, unknown> = {
+        title: form.title,
+        descriptionHtml: form.descriptionHtml,
+        vendor: form.vendor,
+        productType: form.productType,
+        tags: form.tags
+          ? form.tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [],
+        status: form.status,
+      };
+      // Include pricing if provided
+      if (form.price) body.price = form.price;
+      if (form.compareAtPrice) body.compareAtPrice = form.compareAtPrice;
+
       const res = await fetch(`/api/admin/products/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: form.title,
-          descriptionHtml: form.descriptionHtml,
-          vendor: form.vendor,
-          productType: form.productType,
-          tags: form.tags
-            ? form.tags
-                .split(',')
-                .map((t) => t.trim())
-                .filter(Boolean)
-            : [],
-          status: form.status,
-        }),
+        body: JSON.stringify(body),
       });
       const data = (await res.json()) as { product?: Product; error?: string };
       if (!res.ok) throw new Error(data.error ?? 'Failed to update');

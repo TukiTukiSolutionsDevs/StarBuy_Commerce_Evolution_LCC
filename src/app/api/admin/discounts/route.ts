@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
     return Response.json({ discounts });
   } catch (err) {
     console.error('[api/admin/discounts GET]', err);
-    return Response.json({ error: 'Failed to fetch discounts' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Failed to fetch discounts';
+    return Response.json({ error: message }, { status: 500 });
   }
 }
 

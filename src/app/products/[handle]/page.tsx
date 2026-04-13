@@ -3,13 +3,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProductByHandle, getProducts, getProductRecommendations } from '@/lib/shopify';
 import { Container } from '@/components/ui/Container';
-import { StarRating } from '@/components/ui/StarRating';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { ImageGallery } from '@/components/product/ImageGallery';
 import { ProductActions } from '@/components/product/ProductActions';
 import { ProductTabs } from '@/components/product/ProductTabs';
 import { ProductJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { WishlistButton } from '@/components/product/WishlistButton';
+import { StickyAddToCart } from '@/components/product/StickyAddToCart';
+import { TrackProductView } from '@/components/product/TrackProductView';
+import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 
 type ProductPageProps = {
   params: Promise<{ handle: string }>;
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       description:
         product.seo?.description ??
         product.description?.slice(0, 160) ??
-        `Buy ${product.title} at Starbuy.`,
+        `Buy ${product.title} at StarBuyBaby.`,
       openGraph: ogImage
         ? {
             images: [
@@ -75,13 +77,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         .slice(0, 4);
     }
   } catch {
-    // non-critical — related products are optional
+    // non-critical
   }
 
   const images = product.images.edges.map((e) => e.node);
 
   return (
-    <Container as="main" className="py-8 sm:py-12">
+    <Container as="main" className="py-8 sm:py-12 bg-[#faf9f6]">
       {/* JSON-LD structured data */}
       <ProductJsonLd product={product} />
       <BreadcrumbJsonLd
@@ -92,23 +94,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
         ]}
       />
 
-      {/* Breadcrumbs — Stitch style */}
-      <nav aria-label="Breadcrumb" className="flex text-sm text-slate-500 mb-8">
+      {/* Breadcrumbs */}
+      <nav aria-label="Breadcrumb" className="flex text-sm text-[#5d605c] mb-8">
         <ol className="flex items-center space-x-2">
           <li>
-            <Link href="/" className="hover:text-[#1B2A5E] transition-colors">
+            <Link href="/" className="hover:text-[#795a00] transition-colors">
               Home
             </Link>
           </li>
           <li className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
-            <Link href="/collections/all" className="hover:text-[#1B2A5E] transition-colors">
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
+            <Link href="/collections/all" className="hover:text-[#795a00] transition-colors">
               Shop
             </Link>
           </li>
           <li className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
-            <span className="text-[#1B2A5E] font-medium line-clamp-1 max-w-[200px]">
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
+            <span className="text-[#303330] font-medium line-clamp-1 max-w-[200px]">
               {product.title}
             </span>
           </li>
@@ -116,7 +118,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </nav>
 
       {/* Product section — 2 columns */}
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 items-start mb-16">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-start mb-16">
         {/* Left — Image Gallery */}
         <ImageGallery images={images} title={product.title} />
 
@@ -124,33 +126,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="flex flex-col">
           {/* Vendor */}
           {product.vendor && (
-            <p className="text-sm font-medium text-[#D4A843] uppercase tracking-wider mb-2">
+            <p className="font-label text-xs uppercase tracking-[0.3em] text-[#795a00] mb-4">
               {product.vendor}
             </p>
           )}
 
           {/* Title + wishlist */}
           <div className="flex items-start gap-3 mb-2">
-            <h1 className="text-4xl font-extrabold text-[#1B2A5E] flex-1 font-[var(--font-heading)]">
+            <h1 className="font-headline text-3xl md:text-4xl text-[#303330] flex-1">
               {product.title}
             </h1>
             <WishlistButton productId={product.id} size="md" className="mt-1 flex-shrink-0" />
           </div>
 
-          {/* Star Rating */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center text-[#D4A843]">
-              <StarRating rating={4.5} />
-              <span className="ml-2 text-[#1A1A2E] font-semibold">4.5</span>
-            </div>
-            <a href="#reviews" className="text-sm text-slate-500 hover:text-[#1B2A5E] underline">
-              128 reviews
-            </a>
-          </div>
-
           {/* Short description */}
           {product.description && (
-            <p className="text-slate-500 text-lg mb-8 leading-relaxed">
+            <p className="font-body text-[#5d605c] text-lg mb-8 leading-relaxed">
               {product.description.slice(0, 200)}
               {product.description.length > 200 ? '...' : ''}
             </p>
@@ -161,9 +152,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* Share */}
           <div className="flex items-center gap-4 mt-4">
-            <span className="text-sm font-bold text-[#1A1A2E]">Share:</span>
+            <span className="font-label text-xs uppercase tracking-widest text-[#303330]">
+              Share:
+            </span>
             <div className="flex gap-2">
-              <button className="w-8 h-8 rounded-full flex items-center justify-center border border-slate-200 hover:bg-[#1B2A5E] hover:text-white transition-colors">
+              <button className="w-8 h-8 rounded-full flex items-center justify-center bg-[#f4f4f0] hover:bg-[#795a00] hover:text-[#fff8f0] text-[#5d605c] transition-colors duration-400">
                 <span className="material-symbols-outlined text-sm" aria-hidden="true">
                   share
                 </span>
@@ -184,16 +177,35 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Related products */}
       {relatedProducts.length > 0 && (
         <section className="mb-20">
-          <h2 className="text-3xl font-extrabold text-[#1A1A2E] mb-8 font-[var(--font-heading)]">
-            You May Also Like
-          </h2>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <h2 className="font-headline text-3xl text-[#303330] mb-8">You May Also Like</h2>
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-8">
             {relatedProducts.map((rp) => (
               <ProductCard key={rp.id} product={rp} />
             ))}
           </div>
         </section>
       )}
+
+      {/* Track product view for recently viewed */}
+      <TrackProductView
+        id={product.id}
+        handle={product.handle}
+        title={product.title}
+        price={product.priceRange.minVariantPrice.amount}
+        currencyCode={product.priceRange.minVariantPrice.currencyCode}
+        image={product.featuredImage?.url ?? ''}
+      />
+
+      {/* Recently Viewed */}
+      <RecentlyViewed currentHandle={product.handle} />
+
+      {/* Sticky Add to Cart — mobile only */}
+      <StickyAddToCart
+        variantId={product.variants.edges[0]?.node.id}
+        availableForSale={product.availableForSale}
+        price={product.priceRange.minVariantPrice}
+        title={product.title}
+      />
     </Container>
   );
 }

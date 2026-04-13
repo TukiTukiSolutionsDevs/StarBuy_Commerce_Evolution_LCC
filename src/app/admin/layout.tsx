@@ -23,6 +23,11 @@ const CommandPalette = dynamic(() => import('@/components/admin/CommandPalette')
   ssr: false,
 });
 
+const AlertBellWidget = dynamic(
+  () => import('@/components/admin/alerts/AlertBell').then((m) => ({ default: m.AlertBell })),
+  { ssr: false },
+);
+
 // ─── Navigation ────────────────────────────────────────────────────────────────
 
 type NavItem = { href: string; label: string; icon: string; exact: boolean };
@@ -65,6 +70,17 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: 'Intelligence',
+    items: [
+      { href: '/admin/trends', label: 'Trend Engine', icon: 'trending_up', exact: false },
+      { href: '/admin/explorer', label: 'Market Explorer', icon: 'explore', exact: false },
+      { href: '/admin/research', label: 'Research Board', icon: 'science', exact: false },
+      { href: '/admin/states', label: 'State Intel', icon: 'map', exact: false },
+      { href: '/admin/monitor', label: 'Monitor', icon: 'monitoring', exact: false },
+      { href: '/admin/alerts', label: 'Alerts', icon: 'notifications', exact: false },
+    ],
+  },
+  {
     label: 'System',
     items: [{ href: '/admin/settings', label: 'Settings', icon: 'settings', exact: false }],
   },
@@ -78,6 +94,7 @@ function NavItem({
   icon,
   collapsed,
   active,
+  onClick,
 }: {
   href: string;
   label: string;
@@ -85,10 +102,12 @@ function NavItem({
   exact?: boolean;
   collapsed: boolean;
   active: boolean;
+  onClick?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       title={collapsed ? label : undefined}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group relative ${
         active
@@ -117,7 +136,32 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
+
+  // Close mobile sidebar when clicking a nav link
+  function closeMobile() {
+    setMobileOpen(false);
+  }
+
+  // Fetch unread alert count (poll every 60s)
+  useEffect(() => {
+    async function fetchAlertCount() {
+      try {
+        const res = await fetch('/api/admin/alerts/unread-count');
+        if (res.ok) {
+          const data = await res.json();
+          setAlertCount(data.count ?? 0);
+        }
+      } catch {
+        /* silent */
+      }
+    }
+    fetchAlertCount();
+    const interval = setInterval(fetchAlertCount, 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Listen for the custom event dispatched by Orders/Customers pages
   useEffect(() => {
@@ -141,11 +185,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <div className="fixed inset-0 z-50 bg-[#0a0f1e] flex overflow-hidden">
+        {/* ── Mobile backdrop ──────────────────────────────────────────── */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-[51] bg-black/60 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* ── Sidebar ─────────────────────────────────────────────────── */}
         <aside
-          className={`flex-none flex flex-col bg-[#0d1526] border-r border-[#1f2d4e] transition-all duration-300 ${
-            collapsed ? 'w-[60px]' : 'w-64'
-          }`}
+          className={[
+            'flex-none flex flex-col bg-[#0d1526] border-r border-[#1f2d4e] transition-all duration-300',
+            // Mobile: fixed drawer, hidden by default
+            'fixed inset-y-0 left-0 z-[52] lg:relative lg:z-auto',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+            collapsed ? 'w-[60px]' : 'w-64',
+          ].join(' ')}
         >
           {/* Logo */}
           <div
@@ -207,6 +264,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       {...item}
                       collapsed={collapsed}
                       active={isActive(item.href, item.exact)}
+                      onClick={closeMobile}
                     />
                   ))}
                 </div>
@@ -269,8 +327,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         {/* ── Main Content ────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Top bar */}
-          <header className="flex-none flex items-center gap-3 px-6 h-16 border-b border-[#1f2d4e] bg-[#0d1526]">
-            <div className="flex-1" />
+          <header className="flex-none flex items-center gap-3 px-4 lg:px-6 h-16 border-b border-[#1f2d4e] bg-[#0d1526]">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden p-2 text-[#6b7280] hover:text-white hover:bg-[#1f2d4e] rounded-xl transition-colors"
+              aria-label="Open navigation menu"
+            >
+              <span className="material-symbols-outlined text-xl">menu</span>
+            </button>
+
+            {/* Page title */}
+            <h2
+              className="text-white text-sm font-semibold truncate flex-1"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              {pathname === '/admin'
+                ? 'Dashboard'
+                : (pathname
+                    .split('/')
+                    .pop()
+                    ?.replace(/-/g, ' ')
+                    .replace(/^\w/, (c) => c.toUpperCase()) ?? '')}
+            </h2>
+            <AlertBellWidget unreadCount={alertCount} />
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#10b981]/10 border border-[#10b981]/20">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
               <span className="text-[#10b981] text-xs font-medium">Store Online</span>

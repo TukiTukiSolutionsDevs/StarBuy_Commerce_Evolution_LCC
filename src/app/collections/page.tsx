@@ -5,8 +5,8 @@ import { getCollections } from '@/lib/shopify';
 import { Container } from '@/components/ui/Container';
 
 export const metadata: Metadata = {
-  title: 'Collections',
-  description: 'Browse all product collections at Starbuy.',
+  title: 'Collections — StarBuyBaby',
+  description: 'Browse all curated collections at StarBuyBaby.',
 };
 
 export default async function CollectionsPage() {
@@ -19,36 +19,34 @@ export default async function CollectionsPage() {
   }
 
   return (
-    <Container as="main" className="py-12">
+    <Container as="main" className="py-12 bg-[#faf9f6]">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mb-6">
-        <ol className="flex items-center gap-2 text-sm text-slate-500">
+        <ol className="flex items-center gap-2 text-sm text-[#5d605c]">
           <li>
-            <Link href="/" className="hover:text-[#1B2A5E] transition-colors">
+            <Link href="/" className="hover:text-[#795a00] transition-colors">
               Home
             </Link>
           </li>
           <li aria-hidden="true">
-            <span className="material-symbols-outlined text-sm text-slate-300">chevron_right</span>
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
           </li>
-          <li className="text-[#1B2A5E] font-medium">Collections</li>
+          <li className="text-[#303330] font-medium">Collections</li>
         </ol>
       </nav>
 
-      <h1 className="text-4xl font-extrabold text-[#1B2A5E] font-[var(--font-heading)] mb-2">
-        All Collections
-      </h1>
-      <p className="text-slate-500">Browse our curated product categories</p>
+      <h1 className="font-headline text-4xl md:text-5xl text-[#303330] mb-2">All Collections</h1>
+      <p className="text-[#5d605c] leading-relaxed">Browse our curated product categories</p>
 
       {collections.length === 0 ? (
-        <div className="mt-12 rounded-2xl border border-dashed border-gray-300 py-16 text-center">
+        <div className="mt-12 rounded-2xl bg-[#f4f4f0] py-16 text-center">
           <span
-            className="material-symbols-outlined text-5xl text-gray-300 mb-4 block"
+            className="material-symbols-outlined text-5xl text-[#b1b2af] mb-4 block"
             aria-hidden="true"
           >
             category
           </span>
-          <p className="text-slate-500">No collections available yet.</p>
+          <p className="text-[#5d605c]">No collections available yet.</p>
         </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -56,7 +54,7 @@ export default async function CollectionsPage() {
             <Link
               key={collection.id}
               href={`/collections/${collection.handle}`}
-              className="group relative overflow-hidden rounded-2xl bg-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+              className="group relative overflow-hidden rounded-2xl bg-[#f4f4f0] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all duration-500"
             >
               <div className="aspect-[4/3] relative">
                 {collection.image ? (
@@ -65,51 +63,35 @@ export default async function CollectionsPage() {
                     alt={collection.image.altText ?? collection.title}
                     fill
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)]">
-                    <svg
-                      className="h-16 w-16 text-white/30"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1}
+                  <div className="flex h-full items-center justify-center bg-[#f4f4f0]">
+                    <span
+                      className="material-symbols-outlined text-6xl text-[#b1b2af]"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                      aria-hidden="true"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
-                      />
-                    </svg>
+                      category
+                    </span>
                   </div>
                 )}
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#303330]/60 via-[#303330]/10 to-transparent" />
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h2 className="font-heading text-lg font-bold text-white">{collection.title}</h2>
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <h2 className="font-headline text-lg font-bold text-white">{collection.title}</h2>
                 {collection.description && (
                   <p className="mt-1 text-xs text-white/70 line-clamp-2">
                     {collection.description}
                   </p>
                 )}
-                <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-secondary)]">
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#f8cc69] group-hover:gap-2 transition-all">
                   Shop now
-                  <svg
-                    className="h-3 w-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                    />
-                  </svg>
+                  <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                    arrow_forward
+                  </span>
                 </span>
               </div>
             </Link>

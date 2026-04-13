@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     return Response.json({ customers });
   } catch (err) {
     console.error('[api/admin/customers GET]', err);
-    return Response.json({ error: 'Failed to fetch customers' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Failed to fetch customers';
+    return Response.json({ error: message }, { status: 500 });
   }
 }
 

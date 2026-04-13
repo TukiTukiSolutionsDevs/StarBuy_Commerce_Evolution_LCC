@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 // ─── Proper social media SVG icons ────────────────────────────────────────────
 function InstagramIcon() {
@@ -73,17 +72,17 @@ type SocialLink = {
 const SOCIAL_LINKS: SocialLink[] = [
   {
     label: 'Instagram',
-    href: 'https://instagram.com/starbuy',
+    href: 'https://instagram.com/starbuybaby',
     Icon: InstagramIcon,
   },
   {
     label: 'Facebook',
-    href: 'https://facebook.com/starbuy',
+    href: 'https://facebook.com/starbuybaby',
     Icon: FacebookIcon,
   },
   {
     label: 'X (Twitter)',
-    href: 'https://x.com/starbuy',
+    href: 'https://x.com/starbuybaby',
     Icon: XIcon,
   },
 ];
@@ -92,21 +91,15 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#1B2A5E] text-white font-[var(--font-body)] text-sm border-t border-white/10 w-full">
+    <footer className="bg-[#f4f4f0] font-body text-sm w-full">
       {/* Main grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-8 py-12 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 px-6 sm:px-8 py-16 max-w-7xl mx-auto">
         {/* Brand column */}
         <div className="col-span-2 md:col-span-1">
-          <Link href="/" className="mb-6 block" aria-label="Starbuy">
-            <Image
-              src="/StarBuy.png"
-              alt="StarBuy"
-              width={72}
-              height={48}
-              className="h-12 w-auto"
-            />
+          <Link href="/" className="mb-6 block" aria-label="StarBuyBaby">
+            <span className="font-headline italic text-lg text-[#795a00]">StarBuyBaby</span>
           </Link>
-          <p className="text-slate-300 mb-6 max-w-xs leading-relaxed">
+          <p className="text-[#5d605c] mb-6 max-w-xs leading-relaxed">
             Smart shopping, trusted quality. Bringing the best trends directly to your doorstep with
             unmatched service.
           </p>
@@ -119,7 +112,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={social.label}
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 hover:text-[#D4A843] transition-all duration-200"
+                className="w-10 h-10 rounded-xl bg-[#eeeeea] flex items-center justify-center text-[#5d605c] hover:bg-[#795a00] hover:text-[#fff8f0] transition-all duration-500"
               >
                 <social.Icon />
               </a>
@@ -130,7 +123,7 @@ export function Footer() {
         {/* Link columns */}
         {Object.entries(FOOTER_LINKS).map(([section, links]) => (
           <div key={section}>
-            <h3 className="font-bold uppercase tracking-wider text-xs text-white mb-6">
+            <h3 className="font-label font-semibold uppercase tracking-widest text-xs text-[#303330] mb-6">
               {section}
             </h3>
             <ul className="space-y-4" role="list">
@@ -138,7 +131,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-slate-300 hover:text-white hover:underline transition-all"
+                    className="font-body text-xs tracking-wide text-[#b1b2af] hover:text-[#795a00] transition-colors duration-500"
                   >
                     {link.label}
                   </Link>
@@ -149,9 +142,11 @@ export function Footer() {
         ))}
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-white/5 px-8 py-6 text-center text-slate-400 max-w-7xl mx-auto">
-        <p>© {currentYear} Starbuy. Smart shopping, trusted quality.</p>
+      {/* Bottom bar — no border, just spacing shift */}
+      <div className="bg-[#eeeeea] px-8 py-6 text-center">
+        <p className="font-body text-xs tracking-wide text-[#b1b2af]">
+          &copy; {currentYear} StarBuyBaby. Smart shopping, trusted quality.
+        </p>
       </div>
     </footer>
   );

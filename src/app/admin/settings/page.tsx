@@ -43,6 +43,37 @@ type Config = {
   apiKeyStatus?: Record<'claude' | 'openai' | 'gemini' | 'tavily', ApiKeyStatus>;
 };
 
+// ─── Trend Provider Types ──────────────────────────────────────────────────────
+
+type TrendProviderId = 'serpapi' | 'pytrends' | 'tavily' | 'amazon' | 'meta';
+type TrendKeyId =
+  | 'serpapi'
+  | 'amazon-access-key'
+  | 'amazon-secret-key'
+  | 'amazon-partner-tag'
+  | 'meta-access-token';
+
+type TrendKeyStatus = {
+  configured: boolean;
+  source: 'env' | 'runtime' | null;
+  masked: string;
+};
+
+type TrendProviderStatus = {
+  id: TrendProviderId;
+  name: string;
+  reliability: 'HIGH' | 'MEDIUM' | 'LOW';
+  enabled: boolean;
+  hasKey: boolean;
+};
+
+type TrendConfigState = {
+  activeStrategy: 'smart-merge' | 'primary-only' | 'fallback-chain';
+  enabledProviders: TrendProviderId[];
+  cacheEnabled: boolean;
+  cacheTTL: number;
+};
+
 // ─── Provider Metadata ─────────────────────────────────────────────────────────
 
 const PROVIDER_META: Record<
@@ -76,6 +107,79 @@ const PROVIDER_META: Record<
     color: '#f97316',
     envKey: '',
     description: 'Run AI locally — free, private, no API key needed. Requires Ollama running.',
+  },
+};
+
+// ─── Trend Engine Config (types above) ─────────────────────────────────────────
+
+// ─── Trend Provider Metadata ───────────────────────────────────────────────────
+
+const TREND_PROVIDER_META: Record<
+  TrendProviderId,
+  {
+    name: string;
+    icon: string;
+    color: string;
+    reliability: 'HIGH' | 'MEDIUM' | 'LOW';
+    cost: string;
+    description: string;
+    requiresKey: boolean;
+    keyFields: { id: TrendKeyId; label: string; placeholder: string }[];
+  }
+> = {
+  serpapi: {
+    name: 'SerpAPI',
+    icon: 'search',
+    color: '#10b981',
+    reliability: 'HIGH',
+    cost: '~$0.01/search',
+    description: 'Google Trends + SERP data. Most reliable, highest accuracy.',
+    requiresKey: true,
+    keyFields: [{ id: 'serpapi', label: 'API Key', placeholder: 'serpapi-...' }],
+  },
+  pytrends: {
+    name: 'PyTrends',
+    icon: 'trending_up',
+    color: '#6366f1',
+    reliability: 'MEDIUM',
+    cost: 'Free',
+    description: 'Google Trends unofficial API. No key required, rate-limited.',
+    requiresKey: false,
+    keyFields: [],
+  },
+  tavily: {
+    name: 'Tavily',
+    icon: 'travel_explore',
+    color: '#f59e0b',
+    reliability: 'MEDIUM',
+    cost: '~$0.01/search',
+    description: 'Web search trend signals. Uses your shared Tavily AI key.',
+    requiresKey: false,
+    keyFields: [],
+  },
+  amazon: {
+    name: 'Amazon',
+    icon: 'storefront',
+    color: '#f97316',
+    reliability: 'HIGH',
+    cost: 'Free (PA API)',
+    description: 'Amazon bestseller & price data. Requires Product Advertising API.',
+    requiresKey: true,
+    keyFields: [
+      { id: 'amazon-access-key', label: 'Access Key', placeholder: 'AKIA...' },
+      { id: 'amazon-secret-key', label: 'Secret Key', placeholder: 'secret...' },
+      { id: 'amazon-partner-tag', label: 'Partner Tag', placeholder: 'partner-20' },
+    ],
+  },
+  meta: {
+    name: 'Meta Ads',
+    icon: 'ads_click',
+    color: '#3b82f6',
+    reliability: 'LOW',
+    cost: 'Free',
+    description: 'Facebook/Instagram ad trend signals. Requires Meta access token.',
+    requiresKey: true,
+    keyFields: [{ id: 'meta-access-token', label: 'Access Token', placeholder: 'EAAg...' }],
   },
 };
 
@@ -278,6 +382,34 @@ export default function SettingsPage() {
   const [clearingCache, setClearingCache] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // ── Trend Engine state ──────────────────────────────────────────────────────
+  const [trendConfig, setTrendConfig] = useState<TrendConfigState | null>(null);
+  const [trendProviders, setTrendProviders] = useState<TrendProviderStatus[]>([]);
+  const [trendKeyStatuses, setTrendKeyStatuses] = useState<Record<
+    TrendKeyId,
+    TrendKeyStatus
+  > | null>(null);
+  const [trendKeyInputs, setTrendKeyInputs] = useState<Record<TrendKeyId, string>>({
+    serpapi: '',
+    'amazon-access-key': '',
+    'amazon-secret-key': '',
+    'amazon-partner-tag': '',
+    'meta-access-token': '',
+  });
+  const [trendShowKeys, setTrendShowKeys] = useState<Record<TrendKeyId, boolean>>({
+    serpapi: false,
+    'amazon-access-key': false,
+    'amazon-secret-key': false,
+    'amazon-partner-tag': false,
+    'meta-access-token': false,
+  });
+  const [trendTestResults, setTrendTestResults] = useState<
+    Record<string, { ok: boolean; latency: number; error?: string } | null>
+  >({});
+  const [trendTesting, setTrendTesting] = useState('');
+  const [savingTrendConfig, setSavingTrendConfig] = useState(false);
+  const [savingTrendKey, setSavingTrendKey] = useState('');
+
   // Market Research state
   const [searchModes, setSearchModes] = useState({ free: true, tavily: false });
   const [tavilyKey, setTavilyKey] = useState('');
@@ -307,6 +439,28 @@ export default function SettingsPage() {
       .catch(() => toast.error('Failed to load settings'))
       .finally(() => setLoading(false));
   }, [toast]);
+
+  // ─── Trend Config Load ────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/admin/trends/config').then((r) => r.json()),
+      fetch('/api/admin/trends/keys').then((r) => r.json()),
+    ])
+      .then(
+        ([cfgData, keysData]: [
+          { config?: TrendConfigState; providers?: TrendProviderStatus[] },
+          { keys?: Record<TrendKeyId, TrendKeyStatus> },
+        ]) => {
+          if (cfgData.config) setTrendConfig(cfgData.config);
+          if (cfgData.providers) setTrendProviders(cfgData.providers);
+          if (keysData.keys) setTrendKeyStatuses(keysData.keys);
+        },
+      )
+      .catch(() => {
+        /* trend config is optional — no error toast needed */
+      });
+  }, []);
 
   // ─── AI Save ─────────────────────────────────────────────────────────────────
 
@@ -502,6 +656,98 @@ export default function SettingsPage() {
     } catch {
       toast.error('Failed to logout');
       setLoggingOut(false);
+    }
+  }
+
+  // ─── Trend Handlers ───────────────────────────────────────────────────────────
+
+  async function handleSaveTrendConfig() {
+    if (!trendConfig) return;
+    setSavingTrendConfig(true);
+    try {
+      const res = await fetch('/api/admin/trends/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          strategy: trendConfig.activeStrategy,
+          enabledProviders: trendConfig.enabledProviders,
+          cacheEnabled: trendConfig.cacheEnabled,
+          cacheTTL: trendConfig.cacheTTL,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      const data = (await res.json()) as { config?: TrendConfigState };
+      if (data.config) setTrendConfig(data.config);
+      toast.success('Trend settings saved');
+    } catch {
+      toast.error('Failed to save trend settings');
+    } finally {
+      setSavingTrendConfig(false);
+    }
+  }
+
+  function handleToggleTrendProvider(id: TrendProviderId, enabled: boolean) {
+    setTrendProviders((prev) => prev.map((p) => (p.id === id ? { ...p, enabled } : p)));
+    setTrendConfig((prev) => {
+      if (!prev) return prev;
+      const enabledProviders = enabled
+        ? ([...prev.enabledProviders, id] as TrendProviderId[])
+        : prev.enabledProviders.filter((p) => p !== id);
+      return { ...prev, enabledProviders };
+    });
+  }
+
+  async function handleSaveTrendKey(keyId: TrendKeyId) {
+    const key = trendKeyInputs[keyId];
+    if (!key.trim()) {
+      toast.error('Enter a key first');
+      return;
+    }
+    setSavingTrendKey(keyId);
+    try {
+      const res = await fetch('/api/admin/trends/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId: keyId, key: key.trim() }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      const data = (await res.json()) as { status?: TrendKeyStatus };
+      if (data.status) {
+        setTrendKeyStatuses((prev) => (prev ? { ...prev, [keyId]: data.status! } : prev));
+      }
+      setTrendKeyInputs((prev) => ({ ...prev, [keyId]: '' }));
+      toast.success('Key saved');
+    } catch {
+      toast.error('Failed to save key');
+    } finally {
+      setSavingTrendKey('');
+    }
+  }
+
+  async function handleTestTrendProvider(providerId: TrendProviderId) {
+    setTrendTesting(providerId);
+    try {
+      const res = await fetch('/api/admin/trends/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId }),
+      });
+      const data = (await res.json()) as { success: boolean; latency: number; error?: string };
+      setTrendTestResults((prev) => ({
+        ...prev,
+        [providerId]: { ok: data.success, latency: data.latency, error: data.error },
+      }));
+    } catch (err) {
+      setTrendTestResults((prev) => ({
+        ...prev,
+        [providerId]: {
+          ok: false,
+          latency: 0,
+          error: err instanceof Error ? err.message : 'Failed',
+        },
+      }));
+    } finally {
+      setTrendTesting('');
     }
   }
 
@@ -1563,6 +1809,280 @@ export default function SettingsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SECTION 9 — Trend Data Providers
+      ════════════════════════════════════════════════════════════════════════ */}
+      <section className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+        <SectionHeader
+          icon="trending_up"
+          iconColor="text-[#6366f1]"
+          title="Trend Data Providers"
+          description="Multi-source trend aggregation for product research intelligence"
+        />
+
+        <div className="p-6 space-y-6">
+          {trendProviders.length === 0 ? (
+            <div className="flex items-center justify-center py-8 text-[#6b7280] text-sm gap-2">
+              <span className="material-symbols-outlined text-[#374151] animate-spin">
+                progress_activity
+              </span>
+              Loading provider configuration…
+            </div>
+          ) : (
+            <>
+              {/* Provider Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {trendProviders.map((provider) => {
+                  const meta = TREND_PROVIDER_META[provider.id];
+                  const testResult = trendTestResults[provider.id] ?? null;
+                  const isTesting = trendTesting === provider.id;
+                  const statusColor =
+                    provider.enabled && provider.hasKey
+                      ? '#10b981'
+                      : provider.enabled
+                        ? '#f59e0b'
+                        : '#374151';
+
+                  return (
+                    <div
+                      key={provider.id}
+                      className="bg-[#0d1526] border border-[#1f2d4e] rounded-2xl p-4 space-y-3"
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: `${meta.color}15` }}
+                          >
+                            <span
+                              className="material-symbols-outlined text-sm"
+                              style={{ color: meta.color }}
+                            >
+                              {meta.icon}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-white text-sm font-medium flex items-center gap-1.5">
+                              {meta.name}
+                              <span
+                                className="text-[10px] px-1.5 py-0.5 rounded-full font-normal"
+                                style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
+                              >
+                                {provider.reliability}
+                              </span>
+                            </p>
+                            <p className="text-[10px] text-[#374151]">{meta.cost}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: statusColor }}
+                          />
+                          <Toggle
+                            enabled={provider.enabled}
+                            onChange={(v) => handleToggleTrendProvider(provider.id, v)}
+                            size="sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-[#6b7280] text-xs">{meta.description}</p>
+
+                      {/* API Key Fields */}
+                      {meta.requiresKey &&
+                        meta.keyFields.map((field) => {
+                          const keyStatus = trendKeyStatuses?.[field.id];
+                          const inputVal = trendKeyInputs[field.id] ?? '';
+                          const showVal = trendShowKeys[field.id] ?? false;
+                          return (
+                            <div key={field.id} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <label className="text-[10px] text-[#9ca3af]">{field.label}</label>
+                                {keyStatus?.configured && (
+                                  <span className="text-[10px] text-[#10b981] font-mono">
+                                    {keyStatus.masked}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex gap-1.5">
+                                <div className="relative flex-1">
+                                  <input
+                                    type={showVal ? 'text' : 'password'}
+                                    value={inputVal}
+                                    onChange={(e) =>
+                                      setTrendKeyInputs((prev) => ({
+                                        ...prev,
+                                        [field.id]: e.target.value,
+                                      }))
+                                    }
+                                    placeholder={
+                                      keyStatus?.configured
+                                        ? 'Enter new key to replace...'
+                                        : field.placeholder
+                                    }
+                                    className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#6366f1]/50 font-mono pr-7"
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      setTrendShowKeys((prev) => ({
+                                        ...prev,
+                                        [field.id]: !prev[field.id],
+                                      }))
+                                    }
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#6b7280]"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">
+                                      {showVal ? 'visibility_off' : 'visibility'}
+                                    </span>
+                                  </button>
+                                </div>
+                                <button
+                                  onClick={() => handleSaveTrendKey(field.id)}
+                                  disabled={!inputVal.trim() || savingTrendKey === field.id}
+                                  className="bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#6366f1] border border-[#6366f1]/20 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 flex items-center"
+                                >
+                                  {savingTrendKey === field.id ? (
+                                    <span className="material-symbols-outlined text-sm animate-spin">
+                                      progress_activity
+                                    </span>
+                                  ) : (
+                                    <span className="material-symbols-outlined text-sm">save</span>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                      {/* Test Connection */}
+                      <div className="flex items-center gap-2 pt-1 border-t border-[#1f2d4e]">
+                        <button
+                          onClick={() => handleTestTrendProvider(provider.id)}
+                          disabled={isTesting}
+                          className="flex items-center gap-1.5 text-xs text-[#9ca3af] hover:text-white border border-[#1f2d4e] hover:border-[#374151] rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+                        >
+                          {isTesting ? (
+                            <span className="material-symbols-outlined text-sm animate-spin">
+                              progress_activity
+                            </span>
+                          ) : (
+                            <span className="material-symbols-outlined text-sm">bolt</span>
+                          )}
+                          Test
+                        </button>
+                        {testResult && (
+                          <span
+                            className={`flex items-center gap-1 text-xs ${testResult.ok ? 'text-[#10b981]' : 'text-[#ef4444]'}`}
+                          >
+                            <span className="material-symbols-outlined text-sm">
+                              {testResult.ok ? 'check_circle' : 'error'}
+                            </span>
+                            {testResult.ok
+                              ? `${testResult.latency}ms`
+                              : (testResult.error ?? 'Failed')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Strategy Selector */}
+              <div className="border-t border-[#1f2d4e] pt-5">
+                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#6366f1]">merge</span>
+                  Aggregation Strategy
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  {(
+                    [
+                      {
+                        value: 'smart-merge' as const,
+                        label: 'Smart Merge',
+                        desc: 'Weighted average across all providers',
+                      },
+                      {
+                        value: 'primary-only' as const,
+                        label: 'Primary Only',
+                        desc: 'Highest reliability provider only',
+                      },
+                      {
+                        value: 'fallback-chain' as const,
+                        label: 'Fallback Chain',
+                        desc: 'Try in order, return first success',
+                      },
+                    ] as {
+                      value: TrendConfigState['activeStrategy'];
+                      label: string;
+                      desc: string;
+                    }[]
+                  ).map((s) => (
+                    <button
+                      key={s.value}
+                      onClick={() =>
+                        setTrendConfig((prev) =>
+                          prev ? { ...prev, activeStrategy: s.value } : prev,
+                        )
+                      }
+                      className={`text-left rounded-xl p-3 border transition-all ${
+                        trendConfig?.activeStrategy === s.value
+                          ? 'border-[#6366f1] bg-[#6366f1]/10 text-white'
+                          : 'border-[#1f2d4e] text-[#9ca3af] hover:border-[#374151]'
+                      }`}
+                    >
+                      <p className="text-xs font-medium mb-1">{s.label}</p>
+                      <p className="text-[10px] text-[#6b7280] leading-relaxed">{s.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cache Toggle */}
+              <div className="flex items-center justify-between py-3 px-4 bg-[#0d1526] rounded-xl">
+                <div>
+                  <p className="text-sm text-white font-medium flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm text-[#6366f1]">speed</span>
+                    Result Cache
+                  </p>
+                  <p className="text-xs text-[#6b7280] mt-0.5">
+                    Cache provider responses · Default TTL 6h · Reduces API calls and latency
+                  </p>
+                </div>
+                <Toggle
+                  enabled={trendConfig?.cacheEnabled ?? true}
+                  onChange={(v) =>
+                    setTrendConfig((prev) => (prev ? { ...prev, cacheEnabled: v } : prev))
+                  }
+                  size="sm"
+                />
+              </div>
+
+              {/* Save */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSaveTrendConfig}
+                  disabled={savingTrendConfig || !trendConfig}
+                  className="bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-[#1f2d4e] text-white font-semibold rounded-xl px-8 py-3 text-sm transition-colors flex items-center gap-2"
+                >
+                  {savingTrendConfig ? (
+                    <span className="material-symbols-outlined text-base animate-spin">
+                      progress_activity
+                    </span>
+                  ) : (
+                    <span className="material-symbols-outlined text-base">save</span>
+                  )}
+                  Save Trend Settings
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

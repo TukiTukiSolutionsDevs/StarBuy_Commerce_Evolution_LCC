@@ -23,7 +23,7 @@ export type AdminDiscount = {
       node: {
         id: string;
         code: string;
-        usageCount: number;
+        usageCount?: number;
       };
     }>;
   };
@@ -69,8 +69,7 @@ export async function createDiscountCode(
                 edges {
                   node {
                     id
-                    code
-                    usageCount
+                     code
                   }
                 }
               }
@@ -126,7 +125,7 @@ export async function createDiscountCode(
           endsAt: string | null;
           usageLimit: number | null;
           codes: {
-            edges: Array<{ node: { id: string; code: string; usageCount: number } }>;
+            edges: Array<{ node: { id: string; code: string } }>;
           };
           customerGets: {
             value: { percentage?: number; amount?: { amount: string; currencyCode: string } };
@@ -206,7 +205,6 @@ export async function listDiscounts(limit: number = 20): Promise<AdminDiscount[]
                     node {
                       id
                       code
-                      usageCount
                     }
                   }
                 }
@@ -233,14 +231,6 @@ export async function listDiscounts(limit: number = 20): Promise<AdminDiscount[]
                     node {
                       id
                       code
-                      usageCount
-                    }
-                  }
-                }
-                customerGets {
-                  value {
-                    ... on DiscountShippingDestinationSelection {
-                      allEntitled
                     }
                   }
                 }
@@ -265,7 +255,7 @@ export async function listDiscounts(limit: number = 20): Promise<AdminDiscount[]
             endsAt?: string | null;
             usageLimit?: number | null;
             codes?: {
-              edges: Array<{ node: { id: string; code: string; usageCount: number } }>;
+              edges: Array<{ node: { id: string; code: string } }>;
             };
             customerGets?: {
               value: { percentage?: number; amount?: { amount: string; currencyCode: string } };
@@ -324,8 +314,7 @@ export async function updateDiscount(
                 edges {
                   node {
                     id
-                    code
-                    usageCount
+                     code
                   }
                 }
               }
@@ -379,7 +368,7 @@ export async function updateDiscount(
           endsAt: string | null;
           usageLimit: number | null;
           codes: {
-            edges: Array<{ node: { id: string; code: string; usageCount: number } }>;
+            edges: Array<{ node: { id: string; code: string } }>;
           };
           customerGets: {
             value: { percentage?: number; amount?: { amount: string; currencyCode: string } };
