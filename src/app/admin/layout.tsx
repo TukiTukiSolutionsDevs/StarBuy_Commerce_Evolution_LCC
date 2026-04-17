@@ -211,7 +211,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             }`}
           >
             <Image
-              src="/StarBuy.png"
+              src="/logo.png"
               alt="StarBuy"
               width={40}
               height={40}

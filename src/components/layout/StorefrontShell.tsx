@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
@@ -16,9 +17,10 @@ export function StorefrontShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <Header />
-      {/* pt accounts for fixed header (announcement ~36px + nav 64px) */}
-      <main className="flex-1 bg-[#faf9f6] pt-[100px]">{children}</main>
+      <Suspense fallback={<div className="h-[100px]" />}>
+        <Header />
+      </Suspense>
+      <main className="flex-1 bg-[#faf5f0] pt-[100px]">{children}</main>
       <Footer />
       <BackToTop />
     </>

@@ -87,9 +87,9 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
 
   if (handle === 'all') {
     return {
-      title: 'All Products — StarBuyBaby',
+      title: 'All Baby Essentials — StarBuyBaby',
       description:
-        'Browse all products at StarBuyBaby. Curated essentials, celestial quality, and elegant finds.',
+        'Browse all baby essentials at StarBuyBaby. Safe, beautiful products curated by parents for little ones.',
     };
   }
 
@@ -169,14 +169,16 @@ export default async function CollectionPage({ params, searchParams }: Collectio
                 chevron_right
               </span>
             </li>
-            <li className="text-[#303330] font-semibold">All Products</li>
+            <li className="text-[#303330] font-semibold">All Baby Essentials</li>
           </ol>
         </nav>
 
         {/* Collection Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">All Products</h1>
+            <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">
+              All Baby Essentials
+            </h1>
             <p className="font-label text-xs uppercase tracking-widest text-[#5d605c] mt-2">
               {products.length} {products.length === 1 ? 'product' : 'products'}
             </p>
@@ -358,7 +360,9 @@ function EmptyState() {
       >
         inventory_2
       </span>
-      <p className="text-[#5d605c]">No products found. Try adjusting your filters.</p>
+      <p className="text-[#5d605c]">
+        No baby essentials match your filters yet. Try adjusting or browse all products.
+      </p>
     </div>
   );
 }

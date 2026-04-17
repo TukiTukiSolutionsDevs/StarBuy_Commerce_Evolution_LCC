@@ -43,12 +43,12 @@ export async function generateMetadata({ params }: PolicyPageProps): Promise<Met
   const policy = await getPolicyData(handle);
 
   if (!policy) {
-    return { title: 'Policy Not Found — Starbuy' };
+    return { title: 'Policy Not Found — StarBuyBaby' };
   }
 
   return {
-    title: `${policy.title} — Starbuy`,
-    description: `Read Starbuy's ${policy.title.toLowerCase()}.`,
+    title: `${policy.title} — StarBuyBaby`,
+    description: `Read StarBuyBaby's ${policy.title.toLowerCase()}.`,
     robots: { index: true, follow: true },
   };
 }
@@ -69,12 +69,27 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
   ];
 
   return (
-    <Container as="main" className="py-16">
+    <Container as="main" className="py-12 sm:py-16 bg-[#faf9f6]">
+      {/* Breadcrumbs */}
+      <nav aria-label="Breadcrumb" className="mb-8">
+        <ol className="flex items-center gap-2 text-sm text-[#5d605c]">
+          <li>
+            <Link href="/" className="hover:text-[#795a00] transition-colors">
+              Home
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-[#b1b2af]">chevron_right</span>
+          </li>
+          <li className="text-[#303330] font-medium">{policy.title}</li>
+        </ol>
+      </nav>
+
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
         {/* Sidebar nav */}
         <aside className="lg:col-span-1">
-          <div className="sticky top-8">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)] mb-3">
+          <div className="sticky top-24">
+            <h2 className="font-label text-xs font-semibold uppercase tracking-widest text-[#5d605c] mb-4">
               Policies
             </h2>
             <nav>
@@ -86,10 +101,10 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
                       <Link
                         href={p.href}
                         className={[
-                          'block rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors',
+                          'block rounded-xl px-4 py-2.5 text-sm transition-all duration-300',
                           isActive
-                            ? 'bg-[var(--color-primary)] font-semibold text-white'
-                            : 'text-[var(--color-text-secondary)] hover:bg-gray-100 hover:text-[var(--color-text-primary)]',
+                            ? 'bg-[#795a00] font-semibold text-[#fff8f0]'
+                            : 'text-[#5d605c] hover:bg-[#f4f4f0] hover:text-[#303330]',
                         ].join(' ')}
                         aria-current={isActive ? 'page' : undefined}
                       >
@@ -105,29 +120,40 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
 
         {/* Policy content */}
         <article className="lg:col-span-3">
-          <h1 className="font-heading text-4xl font-bold text-[#1B2A5E] mb-8">{policy.title}</h1>
+          <h1 className="font-headline text-4xl text-[#303330] mb-8">{policy.title}</h1>
 
           {policy.body ? (
             <div
               className={[
                 'prose prose-lg max-w-none',
-                'text-gray-700',
-                '[&_h1]:font-heading [&_h1]:text-[#1B2A5E]',
-                '[&_h2]:font-heading [&_h2]:text-[#1B2A5E]',
-                '[&_h3]:font-heading [&_h3]:text-[#1B2A5E]',
-                '[&_a]:text-[#1B2A5E] [&_a:hover]:text-[#2a3f7e]',
-                '[&_strong]:text-gray-900',
+                'text-[#5d605c]',
+                '[&_h1]:font-headline [&_h1]:text-[#303330]',
+                '[&_h2]:font-headline [&_h2]:text-[#303330]',
+                '[&_h3]:font-headline [&_h3]:text-[#303330]',
+                '[&_a]:text-[#795a00] [&_a:hover]:text-[#6b4f00]',
+                '[&_strong]:text-[#303330]',
               ].join(' ')}
               dangerouslySetInnerHTML={{ __html: policy.body }}
             />
           ) : (
-            <p className="text-[var(--color-text-secondary)]">
-              This policy is not yet available. Please check back soon or{' '}
-              <Link href="/contact" className="text-[var(--color-primary)] underline">
-                contact us
-              </Link>{' '}
-              for more information.
-            </p>
+            <div className="rounded-2xl bg-[#f4f4f0] p-8 text-center">
+              <span
+                className="material-symbols-outlined text-5xl text-[#b1b2af] mb-4 block"
+                aria-hidden="true"
+              >
+                description
+              </span>
+              <p className="text-[#5d605c] mb-4">
+                This policy is not yet available. Please check back soon or{' '}
+                <Link
+                  href="/contact"
+                  className="text-[#795a00] hover:text-[#6b4f00] underline transition-colors"
+                >
+                  contact us
+                </Link>{' '}
+                for more information.
+              </p>
+            </div>
           )}
         </article>
       </div>

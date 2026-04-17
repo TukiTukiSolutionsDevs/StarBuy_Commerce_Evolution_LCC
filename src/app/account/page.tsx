@@ -7,8 +7,8 @@ import { Container } from '@/components/ui/Container';
 import { AccountNav } from '@/components/account/AccountNav';
 
 export const metadata: Metadata = {
-  title: 'My Account — Starbuy',
-  description: 'Manage your Starbuy account, orders, and profile.',
+  title: 'My Account — StarBuyBaby',
+  description: 'Manage your StarBuyBaby account, orders, and profile.',
   robots: { index: false, follow: false },
 };
 
@@ -35,19 +35,17 @@ export default async function AccountPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
         {/* Sidebar nav */}
         <aside className="lg:col-span-1">
-          <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-4 shadow-[var(--shadow-card)]">
+          <div className="rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
             {/* Avatar / name */}
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-100 mb-4">
+            <div className="flex items-center gap-3 pb-4 border-b border-[#e1e3df] mb-4">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white text-sm font-bold">
                 {(customer.firstName?.[0] ?? customer.email[0]).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                <p className="truncate text-sm font-semibold text-[#303330]">
                   {fullName || 'My Account'}
                 </p>
-                <p className="truncate text-xs text-[var(--color-text-secondary)]">
-                  {customer.email}
-                </p>
+                <p className="truncate text-xs text-[#5d605c]">{customer.email}</p>
               </div>
             </div>
             <AccountNav />
@@ -57,63 +55,62 @@ export default async function AccountPage() {
         {/* Main content */}
         <div className="lg:col-span-3 space-y-6">
           {/* Welcome banner */}
-          <div className="rounded-[var(--radius-lg)] bg-[var(--color-primary)] p-6 text-white">
-            <h1 className="font-heading text-2xl font-bold">
-              Welcome back{fullName ? `, ${customer.firstName}` : ''}! 👋
+          <div
+            className="rounded-2xl p-6 text-[#fff8f0]"
+            style={{ background: 'radial-gradient(circle at center, #f8cc69 0%, #795a00 100%)' }}
+          >
+            <h1 className="font-headline text-2xl font-bold text-[#fff8f0]">
+              Welcome back{fullName ? `, ${customer.firstName}` : ''}!
             </h1>
-            <p className="mt-1 text-white/70 text-sm">
+            <p className="mt-1 text-[#fff8f0]/70 text-sm">
               Manage your orders, profile, and account preferences.
             </p>
           </div>
 
           {/* Stats cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-5 shadow-[var(--shadow-card)]">
-              <p className="text-sm text-[var(--color-text-secondary)]">Total Orders</p>
-              <p className="mt-1 text-3xl font-bold text-[var(--color-text-primary)]">
-                {orderCount}
-              </p>
+            <div className="rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+              <p className="text-sm text-[#5d605c]">Total Orders</p>
+              <p className="mt-1 text-3xl font-bold text-[#303330]">{orderCount}</p>
             </div>
-            <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-5 shadow-[var(--shadow-card)]">
-              <p className="text-sm text-[var(--color-text-secondary)]">Saved Addresses</p>
-              <p className="mt-1 text-3xl font-bold text-[var(--color-text-primary)]">
+            <div className="rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+              <p className="text-sm text-[#5d605c]">Saved Addresses</p>
+              <p className="mt-1 text-3xl font-bold text-[#303330]">
                 {customer.addresses?.edges?.length ?? 0}
               </p>
             </div>
-            <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-5 shadow-[var(--shadow-card)]">
-              <p className="text-sm text-[var(--color-text-secondary)]">Member Since</p>
-              <p className="mt-1 text-lg font-bold text-[var(--color-text-primary)]">
+            <div className="rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+              <p className="text-sm text-[#5d605c]">Member Since</p>
+              <p className="mt-1 text-lg font-bold text-[#303330]">
                 {new Date(customer.createdAt).getFullYear()}
               </p>
             </div>
           </div>
 
           {/* Account info */}
-          <div className="rounded-[var(--radius-lg)] border border-gray-200 bg-white p-6 shadow-[var(--shadow-card)]">
-            <h2 className="font-heading text-lg font-bold text-[#1B2A5E] mb-4">
+          <div className="rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+            <h2 className="font-headline text-lg font-bold text-[#303330] mb-4">
               Account Information
             </h2>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">
+                <dt className="text-xs font-medium uppercase tracking-wider text-[#5d605c]">
                   Name
                 </dt>
-                <dd className="mt-1 text-sm text-[var(--color-text-primary)]">{fullName || '—'}</dd>
+                <dd className="mt-1 text-sm text-[#303330]">{fullName || '—'}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">
+                <dt className="text-xs font-medium uppercase tracking-wider text-[#5d605c]">
                   Email
                 </dt>
-                <dd className="mt-1 text-sm text-[var(--color-text-primary)]">{customer.email}</dd>
+                <dd className="mt-1 text-sm text-[#303330]">{customer.email}</dd>
               </div>
               {customer.phone && (
                 <div>
-                  <dt className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">
+                  <dt className="text-xs font-medium uppercase tracking-wider text-[#5d605c]">
                     Phone
                   </dt>
-                  <dd className="mt-1 text-sm text-[var(--color-text-primary)]">
-                    {customer.phone}
-                  </dd>
+                  <dd className="mt-1 text-sm text-[#303330]">{customer.phone}</dd>
                 </div>
               )}
             </dl>
@@ -123,7 +120,7 @@ export default async function AccountPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Link
               href="/account/orders"
-              className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-gray-200 bg-white p-5 shadow-[var(--shadow-card)] hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-card-hover)] transition-all"
+              className="flex items-center gap-4 rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all"
             >
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
                 <svg
@@ -141,10 +138,8 @@ export default async function AccountPage() {
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-sm text-[var(--color-text-primary)]">
-                  Order History
-                </p>
-                <p className="text-xs text-[var(--color-text-secondary)]">
+                <p className="font-semibold text-sm text-[#303330]">Order History</p>
+                <p className="text-xs text-[#5d605c]">
                   {orderCount} {orderCount === 1 ? 'order' : 'orders'}
                 </p>
               </div>
@@ -152,7 +147,7 @@ export default async function AccountPage() {
 
             <Link
               href="/collections/all"
-              className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-gray-200 bg-white p-5 shadow-[var(--shadow-card)] hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-card-hover)] transition-all"
+              className="flex items-center gap-4 rounded-2xl bg-[#ffffff] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all"
             >
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-primary)]">
                 <svg
@@ -170,10 +165,8 @@ export default async function AccountPage() {
                 </svg>
               </div>
               <div>
-                <p className="font-semibold text-sm text-[var(--color-text-primary)]">
-                  Continue Shopping
-                </p>
-                <p className="text-xs text-[var(--color-text-secondary)]">Browse our catalog</p>
+                <p className="font-semibold text-sm text-[#303330]">Continue Shopping</p>
+                <p className="text-xs text-[#5d605c]">Browse our catalog</p>
               </div>
             </Link>
           </div>

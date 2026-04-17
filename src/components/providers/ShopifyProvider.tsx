@@ -19,7 +19,7 @@ export function ShopifyProvider({ children }: ShopifyProviderProps) {
     <HydrogenShopifyProvider
       storeDomain={`https://${storeDomain}`}
       storefrontToken={storefrontToken}
-      storefrontApiVersion="2026-04"
+      storefrontApiVersion="2026-01"
       countryIsoCode="US"
       languageIsoCode="EN"
     >

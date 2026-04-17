@@ -62,7 +62,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${notoSerif.variable} ${manrope.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-[#faf9f6] text-[#303330] font-body">
+      <body className="flex min-h-full flex-col bg-[#faf5f0] text-[#1a1a2e] font-body">
         {/*
           Material Symbols Outlined font for icons.
           Placed as a script-safe inline link — App Router layouts can include arbitrary JSX in body.

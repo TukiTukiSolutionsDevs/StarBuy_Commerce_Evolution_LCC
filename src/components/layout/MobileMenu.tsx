@@ -106,9 +106,7 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4">
-          <span className="font-headline font-black text-xl tracking-widest text-[#795a00]">
-            STARBUYBABY
-          </span>
+          <img src="/logo.png" alt="StarBuyBaby" className="h-14 w-auto" />
           <button
             onClick={onClose}
             aria-label="Close menu"

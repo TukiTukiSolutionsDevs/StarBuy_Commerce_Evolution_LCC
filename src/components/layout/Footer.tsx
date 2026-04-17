@@ -97,11 +97,11 @@ export function Footer() {
         {/* Brand column */}
         <div className="col-span-2 md:col-span-1">
           <Link href="/" className="mb-6 block" aria-label="StarBuyBaby">
-            <span className="font-headline italic text-lg text-[#795a00]">StarBuyBaby</span>
+            <img src="/logo.png" alt="StarBuyBaby" className="h-16 w-auto" />
           </Link>
           <p className="text-[#5d605c] mb-6 max-w-xs leading-relaxed">
-            Smart shopping, trusted quality. Bringing the best trends directly to your doorstep with
-            unmatched service.
+            Curated baby essentials parents trust and little ones love. Safe, beautiful, and
+            designed to make every moment magical.
           </p>
           {/* Social icons */}
           <div className="flex gap-3">

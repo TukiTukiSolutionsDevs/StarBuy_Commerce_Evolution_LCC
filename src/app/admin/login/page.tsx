@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
       <div className="relative w-full max-w-sm">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <img src="/StarBuy.png" alt="StarBuy" className="h-20 w-auto mx-auto mb-4" />
+          <img src="/logo.png" alt="StarBuy" className="h-20 w-auto mx-auto mb-4" />
           <h1
             className="text-2xl font-bold"
             style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}

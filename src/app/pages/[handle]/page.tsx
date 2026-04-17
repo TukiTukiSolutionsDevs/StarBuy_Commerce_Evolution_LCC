@@ -39,21 +39,37 @@ export default async function CmsPage({ params }: CmsPageProps) {
   }
 
   return (
-    <Container as="main" className="py-16" narrow>
-      <h1 className="font-heading text-4xl font-bold text-[#1B2A5E] mb-6">{page.title}</h1>
+    <Container as="main" className="py-12 sm:py-16 bg-[#faf9f6]" narrow>
+      <h1 className="font-headline text-4xl text-[#303330] mb-8">{page.title}</h1>
 
       {/* Shopify page HTML body */}
       {page.body ? (
         <div
-          className="prose prose-lg max-w-none text-gray-700 [&_h2]:font-heading [&_h2]:text-[#1B2A5E] [&_h3]:font-heading [&_h3]:text-[#1B2A5E] [&_a]:text-[#1B2A5E] [&_a:hover]:text-[#2a3f7e]"
+          className={[
+            'prose prose-lg max-w-none',
+            'text-[#5d605c]',
+            '[&_h1]:font-headline [&_h1]:text-[#303330]',
+            '[&_h2]:font-headline [&_h2]:text-[#303330]',
+            '[&_h3]:font-headline [&_h3]:text-[#303330]',
+            '[&_a]:text-[#795a00] [&_a:hover]:text-[#6b4f00]',
+            '[&_strong]:text-[#303330]',
+          ].join(' ')}
           dangerouslySetInnerHTML={{ __html: page.body }}
         />
       ) : (
-        <p className="text-[var(--color-text-secondary)]">This page has no content yet.</p>
+        <div className="rounded-2xl bg-[#f4f4f0] p-8 text-center">
+          <span
+            className="material-symbols-outlined text-5xl text-[#b1b2af] mb-4 block"
+            aria-hidden="true"
+          >
+            article
+          </span>
+          <p className="text-[#5d605c]">This page has no content yet.</p>
+        </div>
       )}
 
       {/* Timestamps */}
-      <p className="mt-8 text-xs text-gray-400">
+      <p className="mt-8 text-xs text-[#b1b2af]">
         Last updated:{' '}
         {new Date(page.updatedAt).toLocaleDateString('en-US', {
           year: 'numeric',

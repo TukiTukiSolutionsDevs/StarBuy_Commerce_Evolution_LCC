@@ -11,10 +11,18 @@ const QUICK_ACTIONS = [
   { icon: 'inventory_2', label: 'Show all products', prompt: 'Show me all products in the store' },
   { icon: 'add_box', label: 'Create product', prompt: 'I want to create a new product' },
   { icon: 'receipt_long', label: 'Recent orders', prompt: 'Show me the 10 most recent orders' },
-  { icon: 'warehouse', label: 'Check inventory', prompt: 'Show me inventory levels for all products' },
+  {
+    icon: 'warehouse',
+    label: 'Check inventory',
+    prompt: 'Show me inventory levels for all products',
+  },
   { icon: 'sell', label: 'Create discount', prompt: 'I want to create a new discount code' },
   { icon: 'people', label: 'Recent customers', prompt: 'Show me the most recent customers' },
-  { icon: 'local_shipping', label: 'Pending orders', prompt: 'Show me all open/unfulfilled orders' },
+  {
+    icon: 'local_shipping',
+    label: 'Pending orders',
+    prompt: 'Show me all open/unfulfilled orders',
+  },
   { icon: 'collections_bookmark', label: 'List collections', prompt: 'Show me all collections' },
 ] as const;
 
@@ -59,16 +67,23 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCallResult }) {
   };
 
   const icon = toolIcons[toolCall.toolName] ?? 'build';
-  const isDestructive = ['deleteProduct', 'cancelOrder', 'refundOrder', 'deleteCustomer', 'removeFromCollection'].includes(toolCall.toolName);
+  const isDestructive = [
+    'deleteProduct',
+    'cancelOrder',
+    'refundOrder',
+    'deleteCustomer',
+    'removeFromCollection',
+  ].includes(toolCall.toolName);
   const resultData = toolCall.output;
-  const isSuccess = !!resultData && typeof resultData === 'object' && !('error' in (resultData as Record<string, unknown>));
+  const isSuccess =
+    !!resultData &&
+    typeof resultData === 'object' &&
+    !('error' in (resultData as Record<string, unknown>));
 
   return (
     <div
       className={`rounded-xl border text-xs overflow-hidden ${
-        isDestructive
-          ? 'border-red-500/20 bg-red-500/5'
-          : 'border-[#1f2d4e] bg-[#0f1729]'
+        isDestructive ? 'border-red-500/20 bg-red-500/5' : 'border-[#1f2d4e] bg-[#0f1729]'
       }`}
     >
       <button
@@ -82,9 +97,7 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCallResult }) {
         >
           {icon}
         </span>
-        <span className="text-[#9ca3af] font-mono flex-1">
-          {toolCall.toolName}
-        </span>
+        <span className="text-[#9ca3af] font-mono flex-1">{toolCall.toolName}</span>
         {isSuccess ? (
           <span className="material-symbols-outlined text-[#10b981] text-sm">check_circle</span>
         ) : (
@@ -143,7 +156,9 @@ function MessageBubble({ message }: { message: UIMessage }) {
         </span>
       </div>
 
-      <div className={`flex-1 max-w-[80%] ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-2`}>
+      <div
+        className={`flex-1 max-w-[80%] ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-2`}
+      >
         {textContent && (
           <div
             className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
@@ -225,10 +240,7 @@ function MessageContent({ content }: { content: string }) {
 // ─── Main Chat ──────────────────────────────────────────────────────────────────
 
 export default function AdminChat() {
-  const transport = useMemo(
-    () => new DefaultChatTransport({ api: '/api/admin/chat' }),
-    []
-  );
+  const transport = useMemo(() => new DefaultChatTransport({ api: '/api/admin/chat' }), []);
 
   const { messages, sendMessage, status, error } = useChat({ transport });
 
@@ -276,12 +288,14 @@ export default function AdminChat() {
         }`}
       >
         <div className="flex items-center gap-3 px-4 py-5 border-b border-[#1f2d4e]">
-          <img src="/StarBuy.png" alt="StarBuy" className="h-9 w-auto flex-none" />
+          <img src="/logo.png" alt="StarBuy" className="h-9 w-auto flex-none" />
           <div className="text-[#6b7280] text-xs">Admin</div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
-          <p className="text-[#374151] text-xs font-medium uppercase tracking-widest mb-3">Quick Actions</p>
+          <p className="text-[#374151] text-xs font-medium uppercase tracking-widest mb-3">
+            Quick Actions
+          </p>
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.label}
@@ -310,11 +324,19 @@ export default function AdminChat() {
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center gap-3 px-4 py-3 border-b border-[#1f2d4e] bg-[#0d1526]">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-[#6b7280] hover:text-white transition-colors">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-[#6b7280] hover:text-white transition-colors"
+          >
             <span className="material-symbols-outlined">{sidebarOpen ? 'menu_open' : 'menu'}</span>
           </button>
           <div className="flex-1">
-            <h1 className="text-white font-semibold text-sm" style={{ fontFamily: 'var(--font-heading)' }}>Chat</h1>
+            <h1
+              className="text-white font-semibold text-sm"
+              style={{ fontFamily: 'var(--font-heading)' }}
+            >
+              Chat
+            </h1>
           </div>
           <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#10b981]/10 border border-[#10b981]/20">
             <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
@@ -333,12 +355,18 @@ export default function AdminChat() {
               {isLoading && (
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#1b2a5e] flex items-center justify-center flex-none">
-                    <span className="material-symbols-outlined text-[#d4a843] text-base">smart_toy</span>
+                    <span className="material-symbols-outlined text-[#d4a843] text-base">
+                      smart_toy
+                    </span>
                   </div>
                   <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1 items-center">
                       {[0, 1, 2].map((i) => (
-                        <span key={i} className="w-1.5 h-1.5 bg-[#d4a843] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                        <span
+                          key={i}
+                          className="w-1.5 h-1.5 bg-[#d4a843] rounded-full animate-bounce"
+                          style={{ animationDelay: `${i * 0.15}s` }}
+                        />
                       ))}
                     </div>
                   </div>
@@ -393,13 +421,16 @@ export default function AdminChat() {
 function WelcomeScreen({ onAction }: { onAction: (prompt: string) => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-4">
-      <img src="/StarBuy.png" alt="StarBuy" className="h-20 w-auto mb-6" />
-      <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+      <img src="/logo.png" alt="StarBuy" className="h-20 w-auto mb-6" />
+      <h2
+        className="text-2xl font-bold text-white mb-2"
+        style={{ fontFamily: 'var(--font-heading)' }}
+      >
         Admin Assistant
       </h2>
       <p className="text-[#6b7280] text-sm max-w-md mb-8 leading-relaxed">
-        Your AI-powered store manager. Ask me to search products, manage orders,
-        check inventory, create discounts, and more.
+        Your AI-powered store manager. Ask me to search products, manage orders, check inventory,
+        create discounts, and more.
       </p>
       <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
         {QUICK_ACTIONS.slice(0, 4).map((action) => (

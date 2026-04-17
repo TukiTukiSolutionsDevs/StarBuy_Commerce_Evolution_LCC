@@ -1,6 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Fix Turbopack resolving modules from parent directory due to multiple lockfiles
+  turbopack: {
+    root: __dirname,
+  },
+
   // Required for Docker deployment — generates .next/standalone with minimal runtime
   output: 'standalone',
 

@@ -10,7 +10,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   sale: 'bg-[var(--color-error)] text-white',
   new: 'bg-[var(--color-secondary)] text-[var(--color-primary)]',
   trending: 'bg-[var(--color-primary)] text-white',
-  default: 'bg-[var(--color-border)] text-[var(--color-text-secondary)]',
+  default: 'bg-[#eeeeea] text-[#5d605c]',
 };
 
 export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {

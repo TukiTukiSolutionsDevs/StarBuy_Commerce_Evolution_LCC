@@ -11,7 +11,16 @@ export async function shopifyFetch<T>({
   revalidate,
   tags,
 }: ShopifyFetchOptions): Promise<T> {
-  const endpoint = `https://${process.env.SHOPIFY_STORE_DOMAIN}/api/${process.env.SHOPIFY_API_VERSION}/graphql.json`;
+  const domain = process.env.SHOPIFY_STORE_DOMAIN;
+  const apiVersion = process.env.SHOPIFY_API_VERSION;
+
+  if (!domain || !apiVersion) {
+    throw new Error(
+      'Shopify environment variables not configured (SHOPIFY_STORE_DOMAIN, SHOPIFY_API_VERSION)',
+    );
+  }
+
+  const endpoint = `https://${domain}/api/${apiVersion}/graphql.json`;
 
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -39,9 +48,7 @@ export async function shopifyFetch<T>({
   };
 
   if (json.errors) {
-    throw new Error(
-      `Shopify GraphQL error: ${json.errors.map((e) => e.message).join(', ')}`
-    );
+    throw new Error(`Shopify GraphQL error: ${json.errors.map((e) => e.message).join(', ')}`);
   }
 
   return json.data as T;

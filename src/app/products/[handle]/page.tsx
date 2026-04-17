@@ -177,7 +177,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Related products */}
       {relatedProducts.length > 0 && (
         <section className="mb-20">
-          <h2 className="font-headline text-3xl text-[#303330] mb-8">You May Also Like</h2>
+          <h2 className="font-headline text-3xl text-[#303330] mb-8">Other Parents Also Love</h2>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-8">
             {relatedProducts.map((rp) => (
               <ProductCard key={rp.id} product={rp} />

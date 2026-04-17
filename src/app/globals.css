@@ -1,33 +1,44 @@
 @import 'tailwindcss';
 
 @theme {
-  /* ── Colors — Celestial Pastel (MD3-inspired) ──────────────────────── */
-  --color-primary: #795a00;
+  /* ── Colors — Celestial Stellar (Baby Luxury) ────────────────────────── */
+  --color-primary: #c9a84c;
   --color-primary-container: #f8cc69;
-  --color-primary-dim: #6b4f00;
-  --color-on-primary: #fff8f0;
+  --color-primary-dim: #b8963a;
+  --color-on-primary: #1a1a2e;
   --color-on-primary-container: #5c4300;
-  --color-secondary: #0060ad;
-  --color-secondary-container: #d4e3ff;
-  --color-on-secondary: #f8f8ff;
-  --color-on-secondary-container: #005396;
-  --color-tertiary: #675c5e;
-  --color-tertiary-container: #f4e5e7;
-  --color-surface: #faf9f6;
-  --color-surface-container-low: #f4f4f0;
-  --color-surface-container: #eeeeea;
-  --color-surface-container-high: #e8e8e4;
-  --color-surface-container-highest: #e1e3df;
+  --color-secondary: #7b6b9d;
+  --color-secondary-container: #e8daf0;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #2d1b4e;
+  --color-tertiary: #c4908a;
+  --color-tertiary-container: #f5e1dc;
+  --color-surface: #faf5f0;
+  --color-surface-container-low: #f5ede5;
+  --color-surface-container: #f0e8e0;
+  --color-surface-container-high: #ebe3db;
+  --color-surface-container-highest: #e5ddd5;
   --color-surface-container-lowest: #ffffff;
-  --color-on-surface: #303330;
-  --color-on-surface-variant: #5d605c;
-  --color-outline: #797b78;
-  --color-outline-variant: #b1b2af;
+  --color-on-surface: #1a1a2e;
+  --color-on-surface-variant: #6b6580;
+  --color-outline: #8a8498;
+  --color-outline-variant: #c4bfd0;
   --color-error: #ac3149;
   --color-error-container: #f76a80;
-  --color-inverse-surface: #0d0f0d;
+  --color-inverse-surface: #1a1a2e;
   --color-inverse-primary: #f8cc69;
-  --color-background: #faf9f6;
+  --color-background: #faf5f0;
+
+  /* ── Extended Celestial Palette ─────────────────────────────────────── */
+  --color-blush: #f5e1dc;
+  --color-blush-deep: #e8c4c0;
+  --color-lavender: #e8daf0;
+  --color-lavender-deep: #d4c5e2;
+  --color-indigo: #1a1a3e;
+  --color-indigo-light: #2d1b4e;
+  --color-gold: #c9a84c;
+  --color-gold-light: #f8cc69;
+  --color-rose: #d4a0a0;
 
   /* ── Typography (next/font vars injected by layout.tsx) ─────────────── */
   --font-headline: var(--font-headline-loaded, 'Noto Serif'), Georgia, serif;
@@ -142,5 +153,68 @@ button {
 /* ── Brand gradients ─────────────────────────────────────────────────────── */
 
 .stardust-gradient {
-  background: radial-gradient(circle at center, #f8cc69 0%, #795a00 100%);
+  background: linear-gradient(135deg, #f8cc69 0%, #c9a84c 50%, #b8963a 100%);
+}
+
+/* ── Hero celestial animations ───────────────────────────────────────────── */
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(248, 204, 105, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(248, 204, 105, 0.4);
+  }
+}
+
+@keyframes scroll-hint {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(8px);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle var(--twinkle-duration, 3s) var(--twinkle-delay, 0s) ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: float-up 0.8s ease-out both;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-scroll-hint {
+  animation: scroll-hint 2s ease-in-out infinite;
 }

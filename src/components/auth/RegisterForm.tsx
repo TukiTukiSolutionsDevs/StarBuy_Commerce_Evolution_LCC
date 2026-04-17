@@ -57,7 +57,7 @@ export function RegisterForm() {
         }),
       });
 
-      const data = await res.json() as { success: boolean; error?: string; autoLogin?: boolean };
+      const data = (await res.json()) as { success: boolean; error?: string; autoLogin?: boolean };
 
       if (!data.success) {
         setError(data.error ?? 'Could not create account. Please try again.');
@@ -84,7 +84,7 @@ export function RegisterForm() {
       {error && (
         <div
           role="alert"
-          className="rounded-[var(--radius-md)] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
         >
           {error}
         </div>
@@ -95,7 +95,7 @@ export function RegisterForm() {
         <div>
           <label
             htmlFor="reg-first-name"
-            className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+            className="block text-sm font-medium text-[#303330] mb-1.5"
           >
             First name
           </label>
@@ -108,13 +108,13 @@ export function RegisterForm() {
             onChange={handleChange('firstName')}
             disabled={isLoading}
             placeholder="Jane"
-            className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+            className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
           />
         </div>
         <div>
           <label
             htmlFor="reg-last-name"
-            className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+            className="block text-sm font-medium text-[#303330] mb-1.5"
           >
             Last name
           </label>
@@ -127,17 +127,14 @@ export function RegisterForm() {
             onChange={handleChange('lastName')}
             disabled={isLoading}
             placeholder="Smith"
-            className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+            className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
           />
         </div>
       </div>
 
       {/* Email */}
       <div>
-        <label
-          htmlFor="reg-email"
-          className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
-        >
+        <label htmlFor="reg-email" className="block text-sm font-medium text-[#303330] mb-1.5">
           Email address <span className="text-red-500">*</span>
         </label>
         <input
@@ -150,16 +147,13 @@ export function RegisterForm() {
           onChange={handleChange('email')}
           disabled={isLoading}
           placeholder="you@example.com"
-          className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+          className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
         />
       </div>
 
       {/* Password */}
       <div>
-        <label
-          htmlFor="reg-password"
-          className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
-        >
+        <label htmlFor="reg-password" className="block text-sm font-medium text-[#303330] mb-1.5">
           Password <span className="text-red-500">*</span>
         </label>
         <input
@@ -172,7 +166,7 @@ export function RegisterForm() {
           onChange={handleChange('password')}
           disabled={isLoading}
           placeholder="Min. 5 characters"
-          className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+          className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
         />
       </div>
 
@@ -180,7 +174,7 @@ export function RegisterForm() {
       <div>
         <label
           htmlFor="reg-confirm-password"
-          className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+          className="block text-sm font-medium text-[#303330] mb-1.5"
         >
           Confirm password <span className="text-red-500">*</span>
         </label>
@@ -194,27 +188,21 @@ export function RegisterForm() {
           onChange={handleChange('confirmPassword')}
           disabled={isLoading}
           placeholder="••••••••"
-          className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+          className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
         />
       </div>
 
       {/* Submit */}
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        loading={isLoading}
-      >
+      <Button type="submit" variant="primary" size="lg" fullWidth loading={isLoading}>
         {isLoading ? 'Creating account…' : 'Create Account'}
       </Button>
 
       {/* Login link */}
-      <p className="text-center text-sm text-[var(--color-text-secondary)]">
+      <p className="text-center text-sm text-[#5d605c]">
         Already have an account?{' '}
         <Link
           href="/account/login"
-          className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"
+          className="font-medium text-[#795a00] hover:text-[#6b4f00] transition-colors"
         >
           Sign in
         </Link>

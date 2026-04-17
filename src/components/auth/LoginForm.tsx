@@ -30,7 +30,7 @@ export function LoginForm() {
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      const data = await res.json() as { success: boolean; error?: string };
+      const data = (await res.json()) as { success: boolean; error?: string };
 
       if (!data.success) {
         setError(data.error ?? 'Invalid email or password. Please try again.');
@@ -52,7 +52,7 @@ export function LoginForm() {
       {error && (
         <div
           role="alert"
-          className="rounded-[var(--radius-md)] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
         >
           {error}
         </div>
@@ -60,10 +60,7 @@ export function LoginForm() {
 
       {/* Email */}
       <div>
-        <label
-          htmlFor="login-email"
-          className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
-        >
+        <label htmlFor="login-email" className="block text-sm font-medium text-[#303330] mb-1.5">
           Email address
         </label>
         <input
@@ -76,22 +73,19 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           placeholder="you@example.com"
-          className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+          className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
         />
       </div>
 
       {/* Password */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label
-            htmlFor="login-password"
-            className="block text-sm font-medium text-[var(--color-text-primary)]"
-          >
+          <label htmlFor="login-password" className="block text-sm font-medium text-[#303330]">
             Password
           </label>
           <Link
             href="/account/forgot-password"
-            className="text-xs font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"
+            className="text-xs font-medium text-[#795a00] hover:text-[#6b4f00] transition-colors"
           >
             Forgot password?
           </Link>
@@ -106,27 +100,21 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
           placeholder="••••••••"
-          className="w-full rounded-[var(--radius-md)] border border-gray-300 bg-white px-3 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-gray-400 transition-colors focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-60"
+          className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] px-3 py-2.5 text-sm text-[#303330] placeholder-[#b1b2af] transition-colors focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 disabled:opacity-60"
         />
       </div>
 
       {/* Submit */}
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        loading={isLoading}
-      >
+      <Button type="submit" variant="primary" size="lg" fullWidth loading={isLoading}>
         {isLoading ? 'Signing in…' : 'Sign In'}
       </Button>
 
       {/* Register link */}
-      <p className="text-center text-sm text-[var(--color-text-secondary)]">
+      <p className="text-center text-sm text-[#5d605c]">
         Don&apos;t have an account?{' '}
         <Link
           href="/account/register"
-          className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"
+          className="font-medium text-[#795a00] hover:text-[#6b4f00] transition-colors"
         >
           Create one
         </Link>

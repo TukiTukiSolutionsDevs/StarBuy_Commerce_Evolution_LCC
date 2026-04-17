@@ -24,7 +24,7 @@ export function VariantSelector({ options, variants, onVariantChange }: VariantS
 
     // Find matching variant
     const matchingVariant = variants.find((v) =>
-      v.selectedOptions.every((so) => newOptions[so.name] === so.value)
+      v.selectedOptions.every((so) => newOptions[so.name] === so.value),
     );
     if (matchingVariant) {
       onVariantChange(matchingVariant);
@@ -35,11 +35,9 @@ export function VariantSelector({ options, variants, onVariantChange }: VariantS
     <div className="space-y-4">
       {options.map((option) => (
         <div key={option.id}>
-          <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+          <label className="block text-sm font-semibold text-[#303330] mb-2">
             {option.name}:{' '}
-            <span className="font-normal text-[var(--color-text-secondary)]">
-              {selectedOptions[option.name]}
-            </span>
+            <span className="font-normal text-[#5d605c]">{selectedOptions[option.name]}</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {option.values.map((value) => {
@@ -47,7 +45,7 @@ export function VariantSelector({ options, variants, onVariantChange }: VariantS
               // Check if this option combination leads to an available variant
               const testOptions = { ...selectedOptions, [option.name]: value };
               const matchingVariant = variants.find((v) =>
-                v.selectedOptions.every((so) => testOptions[so.name] === so.value)
+                v.selectedOptions.every((so) => testOptions[so.name] === so.value),
               );
               const isAvailable = matchingVariant?.availableForSale !== false;
 
@@ -57,13 +55,11 @@ export function VariantSelector({ options, variants, onVariantChange }: VariantS
                   onClick={() => handleSelect(option.name, value)}
                   disabled={!isAvailable}
                   className={[
-                    'min-w-[40px] rounded-[var(--radius-md)] border px-3 py-1.5 text-sm font-medium transition-all',
+                    'min-w-[40px] rounded-xl border px-3 py-1.5 text-sm font-medium transition-all',
                     isSelected
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
-                      : 'border-gray-300 bg-white text-[var(--color-text-primary)] hover:border-[var(--color-primary)]',
-                    !isAvailable
-                      ? 'opacity-40 cursor-not-allowed line-through'
-                      : 'cursor-pointer',
+                      ? 'border-[#795a00] bg-[#795a00] text-[#fff8f0]'
+                      : 'border-[#e1e3df] bg-[#ffffff] text-[#303330] hover:border-[#795a00]',
+                    !isAvailable ? 'opacity-40 cursor-not-allowed line-through' : 'cursor-pointer',
                   ].join(' ')}
                 >
                   {value}

@@ -32,7 +32,7 @@ export function SearchForm({ initialQuery = '', onClose, autoFocus = false }: Se
       <div className="relative flex-1">
         {isPending ? (
           <span
-            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-[#1B2A5E] animate-spin"
+            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-[#795a00] animate-spin"
             aria-hidden="true"
           >
             progress_activity
@@ -61,13 +61,13 @@ export function SearchForm({ initialQuery = '', onClose, autoFocus = false }: Se
           placeholder="Search products..."
           autoFocus={autoFocus}
           disabled={isPending}
-          className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm text-[#1A1A2E] placeholder-gray-400 focus:border-[#1B2A5E] focus:outline-none focus:ring-2 focus:ring-[#1B2A5E]/20 transition-all disabled:opacity-70"
+          className="w-full rounded-xl border border-[#e1e3df] bg-[#ffffff] py-2.5 pl-10 pr-4 text-sm text-[#303330] placeholder-[#b1b2af] focus:border-[#795a00] focus:outline-none focus:ring-2 focus:ring-[#795a00]/20 transition-all disabled:opacity-70 font-body"
         />
       </div>
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-lg bg-[#1B2A5E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#2a3f7e] transition-colors disabled:opacity-70 flex items-center gap-1.5"
+        className="rounded-xl bg-[#795a00] px-4 py-2.5 text-sm font-bold text-[#fff8f0] hover:bg-[#6b4f00] transition-colors disabled:opacity-70 flex items-center gap-1.5"
       >
         {isPending ? (
           <>

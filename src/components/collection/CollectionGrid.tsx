@@ -94,7 +94,9 @@ export function CollectionGrid({
         >
           inventory_2
         </span>
-        <p className="text-[#5d605c]">No products found. Try adjusting your filters.</p>
+        <p className="text-[#5d605c]">
+          No baby essentials match your filters yet. Try adjusting or browse all products.
+        </p>
       </div>
     );
   }
@@ -135,7 +137,7 @@ export function CollectionGrid({
               </>
             ) : (
               <>
-                Load More Products
+                Load More Baby Essentials
                 <svg
                   className="h-4 w-4"
                   fill="none"

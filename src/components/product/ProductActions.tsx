@@ -59,15 +59,15 @@ export function ProductActions({ product }: ProductActionsProps) {
     <div className="space-y-6">
       {/* Price — Stitch style */}
       <div className="flex items-baseline gap-4">
-        <span className="text-4xl font-bold text-[#1B2A5E]">
+        <span className="text-4xl font-bold text-[#795a00]">
           {formatPrice(currentPrice.amount, currentPrice.currencyCode)}
         </span>
         {hasDiscount && currentCompareAt && (
           <>
-            <span className="text-xl text-slate-400 line-through">
+            <span className="text-xl text-[#b1b2af] line-through">
               {formatPrice(currentCompareAt.amount, currentCompareAt.currencyCode)}
             </span>
-            <span className="bg-[#D4A843] text-white text-xs font-bold px-2 py-1 rounded">
+            <span className="bg-[#ac3149] text-white text-xs font-bold px-2 py-1 rounded-full">
               Save {savingsPct}%
             </span>
           </>
@@ -130,11 +130,15 @@ export function ProductActions({ product }: ProductActionsProps) {
       )}
 
       {/* Shipping note — Stitch style */}
-      <div className="flex items-center gap-3 p-4 bg-[#F8F9FC] rounded-lg border border-slate-100">
-        <span className="material-symbols-outlined text-[#1B2A5E]" aria-hidden="true">
+      <div className="flex items-center gap-3 p-4 bg-[#f4f4f0] rounded-xl">
+        <span
+          className="material-symbols-outlined text-[#795a00]"
+          style={{ fontVariationSettings: "'FILL' 1" }}
+          aria-hidden="true"
+        >
           local_shipping
         </span>
-        <span className="text-sm font-medium text-[#1A1A2E]">Free shipping on orders over $50</span>
+        <span className="text-sm font-medium text-[#303330]">Free shipping on orders over $50</span>
       </div>
     </div>
   );

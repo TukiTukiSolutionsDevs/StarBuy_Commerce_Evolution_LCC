@@ -3,25 +3,27 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getProducts, getCollections } from '@/lib/shopify';
 import { ProductCard } from '@/components/ui/ProductCard';
+import { HeroSection } from '@/components/home/HeroSection';
+import { BrandStorySection } from '@/components/home/BrandStorySection';
 import { NewsletterSection } from '@/components/home/NewsletterSection';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
-  title: 'StarBuyBaby — Celestial Shopping for Modern Living',
+  title: 'StarBuyBaby — Curated Baby Essentials Parents Trust',
   description:
-    'Discover curated essentials, trending products, and premium finds at StarBuyBaby. Elegant shopping, fast shipping, and celestial quality.',
+    'Shop safe, beautiful baby essentials at StarBuyBaby. From nursery must-haves to feeding gear — curated by parents, loved by little ones. Free shipping on orders over $50.',
   openGraph: {
-    title: 'StarBuyBaby — Celestial Shopping for Modern Living',
+    title: 'StarBuyBaby — Curated Baby Essentials Parents Trust',
     description:
-      'Curated essentials and premium finds at StarBuyBaby. Elegant shopping experience.',
+      'Safe, beautiful baby essentials curated by parents. Nursery, feeding, gear & more.',
     url: '/',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StarBuyBaby — Celestial Shopping for Modern Living',
-    description: 'Curated essentials and premium finds at StarBuyBaby.',
+    title: 'StarBuyBaby — Curated Baby Essentials Parents Trust',
+    description: 'Safe, beautiful baby essentials curated by parents at StarBuyBaby.',
   },
 };
 
@@ -29,23 +31,23 @@ export const metadata: Metadata = {
 const TRUST_ITEMS = [
   {
     icon: 'local_shipping',
-    title: 'Free Shipping',
-    description: 'On all orders over $50 across the country.',
+    title: 'Free Baby Shipping',
+    description: "Free on all orders over $50. Because diaper runs shouldn't cost extra.",
   },
   {
     icon: 'keyboard_return',
-    title: 'Easy Returns',
-    description: '30-day no-questions-asked return policy.',
+    title: 'Hassle-Free Returns',
+    description: '30-day easy returns. We know babies grow fast — no stress if sizes change.',
   },
   {
-    icon: 'verified_user',
-    title: 'Secure Payment',
-    description: 'Your data is protected by 256-bit SSL encryption.',
+    icon: 'health_and_safety',
+    title: 'Safety Certified',
+    description: "Every product is tested and certified. Your little one's safety comes first.",
   },
   {
     icon: 'support_agent',
-    title: '24/7 Support',
-    description: 'Our team is always here to help you out.',
+    title: 'Parent Support Team',
+    description: "Real parents on our support team — we get it, and we're here 24/7.",
   },
 ];
 
@@ -78,43 +80,17 @@ export default async function HomePage() {
       <OrganizationJsonLd />
       <WebSiteJsonLd />
 
-      {/* ── Hero Section (Stitch-inspired) ──────────────────────────────── */}
-      <section className="relative px-6 pt-20 pb-24 md:pt-28 md:pb-32 mb-20 overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute -top-10 -left-20 w-64 h-64 bg-[#bcd6ff]/30 blur-[100px] rounded-full -z-10" />
-        <div className="absolute top-40 -right-20 w-80 h-80 bg-[#f8cc69]/20 blur-[120px] rounded-full -z-10" />
-
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-6">
-            The Ethereal Collection
-          </p>
-          <h1 className="font-headline text-5xl md:text-7xl text-[#303330] leading-tight tracking-tight mb-6">
-            StarBuyBaby
-          </h1>
-          <p className="font-body text-[#5d605c] max-w-xl mx-auto leading-relaxed text-lg mb-10">
-            Curated essentials for modern living. Discover celestial quality, timeless design, and
-            products that elevate your everyday.
-          </p>
-          <Link
-            href="/collections/all"
-            className="inline-block px-10 py-4 rounded-lg font-bold tracking-widest text-[#fff8f0] hover:shadow-[0_0_20px_rgba(121,90,0,0.3)] transition-all duration-500"
-            style={{
-              background: 'radial-gradient(circle at center, #f8cc69 0%, #795a00 100%)',
-            }}
-          >
-            Shop Now
-          </Link>
-        </div>
-      </section>
+      {/* ── Hero Section ──────────────────────────────────────────────── */}
+      <HeroSection />
 
       {/* ── Featured Collections — Bento Grid ────────────────────────────── */}
       <section className="px-6 mb-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-3">
-              Curated For You
+            <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
+              Curated For Your Family
             </p>
-            <h2 className="font-headline text-4xl text-[#303330]">Featured Collections</h2>
+            <h2 className="font-headline text-4xl text-[#1a1a2e]">Featured Baby Collections</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -125,7 +101,7 @@ export default async function HomePage() {
                   ? `/collections/${featuredCollection.handle}`
                   : '/collections/all'
               }
-              className="group md:col-span-2 bg-[#f4f4f0] rounded-xl p-10 transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.06)]"
+              className="group md:col-span-2 bg-gradient-to-br from-[#f5e1dc] to-[#faf5f0] rounded-[1.5rem] p-10 transition-all duration-500 hover:shadow-[0_16px_48px_rgba(45,27,78,0.08)]"
             >
               {featuredCollection?.image && (
                 <div className="relative w-full aspect-[2/1] rounded-lg overflow-hidden mb-6">
@@ -138,19 +114,19 @@ export default async function HomePage() {
                   />
                 </div>
               )}
-              <h3 className="font-headline text-3xl text-[#303330] mb-2">
+              <h3 className="font-headline text-3xl text-[#1a1a2e] mb-2">
                 {featuredCollection?.title ?? 'All Products'}
               </h3>
-              <p className="text-[#5d605c] max-w-sm">
+              <p className="text-[#6b6580] max-w-sm">
                 {featuredCollection?.description ??
-                  'Browse our complete collection of curated essentials.'}
+                  'Browse our complete collection of curated baby essentials.'}
               </p>
             </Link>
 
             {/* Smaller accent card */}
             <Link
               href={accentCollection ? `/collections/${accentCollection.handle}` : '/collections'}
-              className="group bg-[#d4e3ff] rounded-xl p-8 text-[#005396] transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.06)] flex flex-col justify-end"
+              className="group bg-gradient-to-br from-[#e8daf0] to-[#d4c5e2] rounded-[1.5rem] p-8 text-[#2d1b4e] transition-all duration-500 hover:shadow-[0_16px_48px_rgba(45,27,78,0.12)] flex flex-col justify-end"
             >
               {accentCollection?.image && (
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-6">
@@ -166,32 +142,32 @@ export default async function HomePage() {
               <h3 className="font-headline text-3xl mb-2">
                 {accentCollection?.title ?? 'Browse Collections'}
               </h3>
-              <p className="text-[#005396]/70 max-w-sm">
-                {accentCollection?.description ?? 'Explore our curated categories.'}
+              <p className="text-[#2d1b4e]/70 max-w-sm">
+                {accentCollection?.description ?? 'Explore our curated baby categories.'}
               </p>
             </Link>
 
             {/* Full-width promo card */}
             <Link
               href={promoCollection ? `/collections/${promoCollection.handle}` : '/collections/all'}
-              className="group md:col-span-3 bg-[#ffffff] rounded-xl p-8 md:p-12 shadow-[0_32px_64px_rgba(0,0,0,0.04)] transition-all duration-500 hover:shadow-[0_32px_64px_rgba(0,0,0,0.08)] flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+              className="group md:col-span-3 bg-white rounded-[1.5rem] p-8 md:p-12 shadow-[0_4px_24px_rgba(45,27,78,0.06)] transition-all duration-500 hover:shadow-[0_16px_48px_rgba(45,27,78,0.12)] flex flex-col md:flex-row md:items-center md:justify-between gap-6"
             >
               <div>
-                <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-3">
-                  Special Offer
+                <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
+                  New Arrivals
                 </p>
-                <h3 className="font-headline text-3xl text-[#303330] mb-2">
+                <h3 className="font-headline text-3xl text-[#1a1a2e] mb-2">
                   {promoCollection?.title ?? 'Discover More'}
                 </h3>
-                <p className="text-[#5d605c] max-w-md">
+                <p className="text-[#6b6580] max-w-md">
                   {promoCollection?.description ??
-                    'Explore curated selections with celestial quality and fast shipping.'}
+                    'Discover the latest baby essentials — safe, beautiful, and parent-approved.'}
                 </p>
               </div>
               <span
-                className="inline-block px-8 py-3 rounded-lg font-bold tracking-widest text-[#fff8f0] text-sm shrink-0"
+                className="inline-block px-8 py-3 rounded-full font-bold tracking-widest text-[#1a1a2e] text-sm shrink-0"
                 style={{
-                  background: 'radial-gradient(circle at center, #f8cc69 0%, #795a00 100%)',
+                  background: 'linear-gradient(135deg, #f8cc69 0%, #c9a84c 50%, #b8963a 100%)',
                 }}
               >
                 Shop Now
@@ -201,12 +177,17 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Brand Storytelling ─────────────────────────────────────────── */}
+      <BrandStorySection />
+
       {/* ── Trending Products ─────────────────────────────────────────────── */}
-      <section className="bg-[#f4f4f0] py-20 -mx-0 px-6 mb-20">
+      <section className="bg-[#f5ede5] py-20 -mx-0 px-6 mb-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-headline text-4xl text-[#303330] mb-4">Trending Now</h2>
-            <p className="text-[#5d605c] text-lg">Handpicked favorites our customers love</p>
+            <h2 className="font-headline text-4xl text-[#1a1a2e] mb-4">Bestsellers Parents Love</h2>
+            <p className="text-[#6b6580] text-lg">
+              Top-rated baby essentials flying off the shelves
+            </p>
           </div>
 
           {products.length > 0 ? (
@@ -216,17 +197,19 @@ export default async function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl bg-[#ffffff] py-16 text-center shadow-[0_32px_64px_rgba(0,0,0,0.04)]">
-              <p className="text-[#5d605c]">Products are being curated. Check back soon!</p>
+            <div className="rounded-[1.5rem] bg-white py-16 text-center shadow-[0_4px_24px_rgba(45,27,78,0.06)]">
+              <p className="text-[#6b6580]">
+                We&apos;re curating the best baby essentials for you. Check back soon!
+              </p>
             </div>
           )}
 
           <div className="text-center mt-10">
             <Link
               href="/collections/all"
-              className="inline-flex items-center gap-2 font-body font-bold text-[#795a00] hover:text-[#6b4f00] transition-colors"
+              className="inline-flex items-center gap-2 font-body font-bold text-[#c9a84c] hover:text-[#b8963a] transition-colors"
             >
-              View All Products
+              View All Baby Essentials
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 arrow_forward
               </span>
@@ -238,26 +221,26 @@ export default async function HomePage() {
       {/* ── Trust Section ─────────────────────────────────────────────────── */}
       <section className="px-6 mb-20">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-headline text-3xl text-[#303330] text-center mb-12">
-            Why Shop With StarBuyBaby?
+          <h2 className="font-headline text-3xl text-[#1a1a2e] text-center mb-12">
+            Why Parents Choose StarBuyBaby
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {TRUST_ITEMS.map((item) => (
               <div
                 key={item.title}
-                className="text-center group bg-[#ffffff] rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all duration-500"
+                className="text-center group bg-white rounded-[1.5rem] p-8 shadow-[0_4px_24px_rgba(45,27,78,0.06)] hover:shadow-[0_16px_48px_rgba(45,27,78,0.12)] transition-all duration-500"
               >
-                <div className="w-14 h-14 bg-[#f4f4f0] rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:bg-[#f8cc69]/20 transition-colors duration-500">
+                <div className="w-14 h-14 bg-[#f5ede5] rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:bg-[#f8cc69]/20 transition-colors duration-500">
                   <span
-                    className="material-symbols-outlined text-[#795a00] text-2xl"
+                    className="material-symbols-outlined text-[#c9a84c] text-2xl"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                     aria-hidden="true"
                   >
                     {item.icon}
                   </span>
                 </div>
-                <h3 className="font-body font-bold text-sm mb-2 text-[#303330]">{item.title}</h3>
-                <p className="text-[#5d605c] text-sm leading-relaxed">{item.description}</p>
+                <h3 className="font-body font-bold text-sm mb-2 text-[#1a1a2e]">{item.title}</h3>
+                <p className="text-[#6b6580] text-sm leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>

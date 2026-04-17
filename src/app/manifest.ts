@@ -18,12 +18,12 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#d4a843',
     icons: [
       {
-        src: '/StarBuy.png',
+        src: '/logo.png',
         sizes: '192x192',
         type: 'image/png',
       },
       {
-        src: '/StarBuy.png',
+        src: '/logo.png',
         sizes: '512x512',
         type: 'image/png',
       },

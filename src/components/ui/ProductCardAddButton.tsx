@@ -41,7 +41,7 @@ export function ProductCardAddButton({ variantId, productTitle }: ProductCardAdd
       aria-label={`Add ${productTitle} to cart`}
       className={[
         'p-2 rounded-lg transition-all active:scale-95 flex items-center justify-center',
-        added ? 'bg-emerald-500 text-white' : 'bg-[#1B2A5E] hover:bg-[#2a3f7e] text-white',
+        added ? 'bg-emerald-500 text-white' : 'bg-[#795a00] hover:bg-[#6b4f00] text-[#fff8f0]',
         isLoading ? 'opacity-70 cursor-wait' : '',
       ]
         .filter(Boolean)
