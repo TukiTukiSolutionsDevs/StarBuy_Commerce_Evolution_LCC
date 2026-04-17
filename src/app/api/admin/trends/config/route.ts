@@ -7,7 +7,14 @@
 
 import type { NextRequest } from 'next/server';
 import { verifyAdminToken, ADMIN_TOKEN_COOKIE } from '@/lib/admin-auth';
-import { readConfig, saveConfig, getAvailableProviders, AggregationStrategy } from '@/lib/trends';
+import {
+  readConfig,
+  saveConfig,
+  getAvailableProviders,
+  AggregationStrategy,
+  getProviderKeyStatus,
+} from '@/lib/trends';
+import { getApiKey as getAiApiKey } from '@/lib/ai/api-keys';
 import type { ProviderId, TrendConfig } from '@/lib/trends';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +37,59 @@ export async function GET(request: NextRequest) {
   try {
     const config = readConfig();
     const providers = getAvailableProviders();
-    return Response.json({ config, providers });
+    const trendKeyStatus = getProviderKeyStatus();
+    const tavilyConfigured = !!getAiApiKey('tavily');
+
+    // Build a simple map: which enabled providers actually have working API keys?
+    const providerReadiness: Record<
+      string,
+      { enabled: boolean; hasKey: boolean; reason?: string }
+    > = {};
+    for (const pid of config.enabledProviders) {
+      if (pid === 'tavily') {
+        providerReadiness[pid] = {
+          enabled: true,
+          hasKey: tavilyConfigured,
+          reason: tavilyConfigured ? undefined : 'Add TAVILY_API_KEY in Settings or .env.local',
+        };
+      } else if (pid === 'pytrends') {
+        providerReadiness[pid] = {
+          enabled: true,
+          hasKey: false,
+          reason: 'Requires Python backend (not available)',
+        };
+      } else if (pid === 'serpapi') {
+        providerReadiness[pid] = {
+          enabled: true,
+          hasKey: trendKeyStatus.serpapi.configured,
+          reason: trendKeyStatus.serpapi.configured
+            ? undefined
+            : 'Add SERPAPI_KEY in Settings or .env.local',
+        };
+      } else if (pid === 'amazon') {
+        const hasAll =
+          trendKeyStatus['amazon-access-key'].configured &&
+          trendKeyStatus['amazon-secret-key'].configured &&
+          trendKeyStatus['amazon-partner-tag'].configured;
+        providerReadiness[pid] = {
+          enabled: true,
+          hasKey: hasAll,
+          reason: hasAll ? undefined : 'Add Amazon API credentials in Settings',
+        };
+      } else if (pid === 'meta') {
+        providerReadiness[pid] = {
+          enabled: true,
+          hasKey: trendKeyStatus['meta-access-token'].configured,
+          reason: trendKeyStatus['meta-access-token'].configured
+            ? undefined
+            : 'Add META_ACCESS_TOKEN in Settings',
+        };
+      }
+    }
+
+    const readyCount = Object.values(providerReadiness).filter((p) => p.hasKey).length;
+
+    return Response.json({ config, providers, providerReadiness, readyCount });
   } catch (err) {
     console.error('[api/admin/trends/config GET]', err);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

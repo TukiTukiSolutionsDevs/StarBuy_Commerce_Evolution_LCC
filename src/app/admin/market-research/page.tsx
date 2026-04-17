@@ -764,6 +764,32 @@ export default function MarketResearchPage() {
             {searching ? 'Analyzing…' : '🚀 Analyze Market'}
           </button>
         </div>
+
+        {/* Mode disclaimer */}
+        {searchMode === 'free' && (
+          <div className="flex items-start gap-2 bg-[#6b8cff]/5 border border-[#6b8cff]/20 rounded-xl px-4 py-2.5">
+            <span className="material-symbols-outlined text-[#6b8cff] text-sm flex-none mt-0.5">
+              info
+            </span>
+            <p className="text-[#6b8cff] text-[11px] leading-relaxed">
+              <strong>AI Analysis mode</strong> — Results are based on the AI model&apos;s training
+              data, not real-time internet data. Prices and product links are estimates. For live
+              web data with real links, switch to <strong>Web Search (Tavily)</strong>.
+            </p>
+          </div>
+        )}
+        {searchMode === 'tavily' && (
+          <div className="flex items-start gap-2 bg-[#f59e0b]/5 border border-[#f59e0b]/20 rounded-xl px-4 py-2.5">
+            <span className="material-symbols-outlined text-[#f59e0b] text-sm flex-none mt-0.5">
+              bolt
+            </span>
+            <p className="text-[#f59e0b] text-[11px] leading-relaxed">
+              <strong>Web Search mode</strong> — Searches the real internet for current product
+              data, prices, and direct marketplace links. Uses your Tavily API credits (1,000
+              free/month).
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── Loading State with Progress ─────────────────────────────── */}

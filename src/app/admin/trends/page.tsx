@@ -87,10 +87,18 @@ const US_STATES = [
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface ProviderReadiness {
+  enabled: boolean;
+  hasKey: boolean;
+  reason?: string;
+}
+
 interface EngineStatusData {
   strategy: string;
   enabledCount: number;
   cacheEnabled: boolean;
+  readyCount: number;
+  providerReadiness: Record<string, ProviderReadiness>;
 }
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
@@ -354,12 +362,16 @@ export default function TrendEnginePage() {
             enabledProviders: string[];
             cacheEnabled: boolean;
           };
+          readyCount?: number;
+          providerReadiness?: Record<string, ProviderReadiness>;
         }) => {
           if (data.config) {
             setEngineConfig({
               strategy: data.config.activeStrategy,
               enabledCount: data.config.enabledProviders.length,
               cacheEnabled: data.config.cacheEnabled,
+              readyCount: data.readyCount ?? 0,
+              providerReadiness: data.providerReadiness ?? {},
             });
           }
         },
@@ -420,6 +432,52 @@ export default function TrendEnginePage() {
 
       {/* ── Engine Status Bar ── */}
       {engineConfig && <EngineStatusBar data={engineConfig} />}
+
+      {/* ── No Providers Warning ── */}
+      {engineConfig && engineConfig.readyCount === 0 && (
+        <div className="bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-2xl p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-[#ef4444] text-xl flex-none mt-0.5">
+              warning
+            </span>
+            <div className="space-y-2">
+              <h3 className="text-[#ef4444] font-semibold text-sm">
+                No trend providers configured
+              </h3>
+              <p className="text-[#f87171] text-xs leading-relaxed">
+                Searches will return empty results because none of your enabled providers have API
+                keys configured. You need at least one working provider to use the Trend Engine.
+              </p>
+              <div className="space-y-1.5">
+                {Object.entries(engineConfig.providerReadiness).map(([pid, info]) => (
+                  <div key={pid} className="flex items-center gap-2 text-xs">
+                    <span
+                      className={`w-2 h-2 rounded-full flex-none ${info.hasKey ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`}
+                    />
+                    <span className="text-white font-medium capitalize">{pid}</span>
+                    {!info.hasKey && info.reason && (
+                      <span className="text-[#f87171]">— {info.reason}</span>
+                    )}
+                    {info.hasKey && <span className="text-[#10b981]">— Ready</span>}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <Link
+                  href="/admin/settings"
+                  className="inline-flex items-center gap-1.5 bg-[#ef4444] hover:bg-[#dc2626] text-white font-semibold rounded-xl px-4 py-2 text-xs transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">settings</span>
+                  Go to Settings
+                </Link>
+                <span className="text-[#f87171] text-[10px]">
+                  Fastest option: add a free Tavily API key (1,000 searches/month)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Search Section ── */}
       <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6 space-y-4">
