@@ -484,6 +484,108 @@ export default function TrendEnginePage() {
           </button>
         </form>
 
+        {/* Search suggestions — guides for new users */}
+        {!searchInput && searchStatus !== 'searching' && (
+          <div className="space-y-3">
+            <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider">
+              Not sure what to search? Try one of these:
+            </p>
+
+            {/* Popular product ideas */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[#d4a843]" style={{ fontSize: 14 }}>
+                  local_fire_department
+                </span>
+                <span className="text-[#9ca3af] text-[11px] font-medium">Hot Right Now</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'LED face mask',
+                  'portable blender',
+                  'smart ring',
+                  'car phone mount',
+                  'mini projector',
+                ].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setSearchInput(s);
+                      void handleSearch(s);
+                    }}
+                    className="bg-[#d4a843]/10 hover:bg-[#d4a843]/20 border border-[#d4a843]/20 hover:border-[#d4a843]/40 text-[#d4a843] rounded-full px-3 py-1.5 text-xs font-medium transition-all"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* By category */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[#6366f1]" style={{ fontSize: 14 }}>
+                  category
+                </span>
+                <span className="text-[#9ca3af] text-[11px] font-medium">By Category</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: '🏠 Home & Garden', q: 'smart home gadgets, garden tools' },
+                  { label: '💄 Beauty', q: 'skincare tools, hair accessories' },
+                  { label: '🎮 Electronics', q: 'wireless earbuds, gaming accessories' },
+                  { label: '🐾 Pet Supplies', q: 'dog toys, cat accessories' },
+                  { label: '👶 Baby & Kids', q: 'montessori toys, baby gadgets' },
+                  { label: '🏋️ Fitness', q: 'resistance bands, massage gun' },
+                  { label: '👗 Fashion', q: 'sunglasses, minimalist jewelry' },
+                  { label: '🚗 Auto', q: 'car organizer, dash cam' },
+                ].map((item) => (
+                  <button
+                    key={item.q}
+                    onClick={() => {
+                      setSearchInput(item.q);
+                      void handleSearch(item.q);
+                    }}
+                    className="bg-[#0d1526] hover:bg-[#1f2d4e] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-full px-3 py-1.5 text-xs transition-all"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Pro tips */}
+            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl px-4 py-3 mt-2">
+              <div className="flex items-start gap-2">
+                <span
+                  className="material-symbols-outlined text-[#10b981] flex-none mt-0.5"
+                  style={{ fontSize: 16 }}
+                >
+                  tips_and_updates
+                </span>
+                <div className="text-[#6b7280] text-xs leading-relaxed space-y-1">
+                  <p>
+                    <span className="text-[#9ca3af] font-medium">Tip:</span> You can search multiple
+                    products at once — just separate them with commas.
+                  </p>
+                  <p>
+                    Example:{' '}
+                    <button
+                      onClick={() => {
+                        setSearchInput('yoga mat, resistance bands, foam roller');
+                        void handleSearch('yoga mat, resistance bands, foam roller');
+                      }}
+                      className="text-[#d4a843] hover:underline"
+                    >
+                      yoga mat, resistance bands, foam roller
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Recent searches */}
         {recentSearches.length > 0 && (
           <div>
