@@ -1,0 +1,195 @@
+/**
+ * Admin Design Tokens — Phase 0
+ *
+ * CSS custom properties for the admin panel theme system.
+ * Dark theme maps to current hardcoded colors (zero visual change).
+ * Light theme is new — professional, clean, high contrast.
+ *
+ * Usage: `var(--admin-bg)` or via Tailwind `bg-admin`
+ * Switched via `data-admin-theme="dark|light"` on the admin root.
+ */
+
+/* ─── Dark Theme (default — matches current hardcoded colors) ──────────── */
+
+[data-admin-theme='dark'] {
+  /* Backgrounds */
+  --admin-bg: #0a0f1e;
+  --admin-bg-sidebar: #0d1526;
+  --admin-bg-card: #111827;
+  --admin-bg-elevated: #0d1526;
+  --admin-bg-input: #0a0f1e;
+  --admin-bg-hover: #1b2a5e40;
+
+  /* Borders */
+  --admin-border: #1f2d4e;
+  --admin-border-hover: #374151;
+  --admin-border-active: #d4a843;
+
+  /* Text */
+  --admin-text: #ffffff;
+  --admin-text-heading: #f9fafb;
+  --admin-text-body: #e5e7eb;
+  --admin-text-secondary: #9ca3af;
+  --admin-text-muted: #6b7280;
+  --admin-text-disabled: #374151;
+
+  /* Brand */
+  --admin-brand: #d4a843;
+  --admin-brand-hover: #b8922e;
+  --admin-brand-bg: #d4a84310;
+  --admin-brand-border: #d4a84330;
+
+  /* Accent */
+  --admin-accent: #6366f1;
+  --admin-accent-hover: #5558e6;
+  --admin-accent-bg: #6366f115;
+
+  /* Semantic */
+  --admin-success: #10b981;
+  --admin-success-bg: #10b98110;
+  --admin-warning: #f59e0b;
+  --admin-warning-bg: #f59e0b10;
+  --admin-error: #ef4444;
+  --admin-error-bg: #ef444410;
+  --admin-info: #6b8cff;
+  --admin-info-bg: #6b8cff10;
+
+  /* Shadows */
+  --admin-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --admin-shadow-dropdown: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Misc */
+  --admin-overlay: rgba(0, 0, 0, 0.6);
+  --admin-scrollbar-track: #0a0f1e;
+  --admin-scrollbar-thumb: #1f2d4e;
+}
+
+/* ─── Light Theme ──────────────────────────────────────────────────────── */
+
+[data-admin-theme='light'] {
+  /* Backgrounds */
+  --admin-bg: #f8f9fb;
+  --admin-bg-sidebar: #ffffff;
+  --admin-bg-card: #ffffff;
+  --admin-bg-elevated: #f1f3f8;
+  --admin-bg-input: #f1f3f8;
+  --admin-bg-hover: #e8ebf0;
+
+  /* Borders */
+  --admin-border: #e2e5eb;
+  --admin-border-hover: #cbd0d8;
+  --admin-border-active: #b8922e;
+
+  /* Text */
+  --admin-text: #111827;
+  --admin-text-heading: #0f172a;
+  --admin-text-body: #374151;
+  --admin-text-secondary: #6b7280;
+  --admin-text-muted: #9ca3af;
+  --admin-text-disabled: #d1d5db;
+
+  /* Brand */
+  --admin-brand: #b8922e;
+  --admin-brand-hover: #a07d24;
+  --admin-brand-bg: #b8922e10;
+  --admin-brand-border: #b8922e30;
+
+  /* Accent */
+  --admin-accent: #4f46e5;
+  --admin-accent-hover: #4338ca;
+  --admin-accent-bg: #4f46e510;
+
+  /* Semantic */
+  --admin-success: #059669;
+  --admin-success-bg: #05966910;
+  --admin-warning: #d97706;
+  --admin-warning-bg: #d9770610;
+  --admin-error: #dc2626;
+  --admin-error-bg: #dc262610;
+  --admin-info: #2563eb;
+  --admin-info-bg: #2563eb10;
+
+  /* Shadows */
+  --admin-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --admin-shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Misc */
+  --admin-overlay: rgba(0, 0, 0, 0.3);
+  --admin-scrollbar-track: #f1f3f8;
+  --admin-scrollbar-thumb: #cbd0d8;
+}
+
+/* ─── Admin Typography Classes ─────────────────────────────────────────── */
+
+.admin-h1 {
+  font-family: var(--font-headline);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--admin-text-heading);
+}
+
+.admin-h2 {
+  font-family: var(--font-headline);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--admin-text-heading);
+}
+
+.admin-h3 {
+  font-family: var(--font-headline);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--admin-text);
+}
+
+.admin-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-text-muted);
+}
+
+.admin-caption {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--admin-text-secondary);
+}
+
+.admin-body {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--admin-text-body);
+}
+
+/* ─── Admin Scrollbar ──────────────────────────────────────────────────── */
+
+[data-admin-theme] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+[data-admin-theme] ::-webkit-scrollbar-track {
+  background: var(--admin-scrollbar-track);
+}
+
+[data-admin-theme] ::-webkit-scrollbar-thumb {
+  background: var(--admin-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+[data-admin-theme] ::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-border-hover);
+}
+
+/* ─── Admin Focus Ring ─────────────────────────────────────────────────── */
+
+[data-admin-theme] :focus-visible {
+  outline: 2px solid var(--admin-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
