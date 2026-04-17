@@ -13,6 +13,17 @@ export type ResearchSignal = {
   strength: 'strong' | 'moderate' | 'weak';
 };
 
+export type MarketplaceListing = {
+  marketplace: 'amazon' | 'aliexpress' | 'temu' | 'cjdropshipping' | 'ebay' | 'walmart' | 'other';
+  productUrl: string; // DIRECT link to the product page — user clicks and sees the product
+  price: string; // e.g. "$12.99" or "$8.50-$15.00"
+  currency: string; // e.g. "USD"
+  title: string; // product title on that marketplace
+  rating?: string; // e.g. "4.5/5 (2,340 reviews)"
+  shippingInfo?: string; // e.g. "Free shipping", "Ships in 7-15 days"
+  imageUrl?: string; // product image URL from the marketplace
+};
+
 export type ResearchResult = {
   id: string;
   title: string;
@@ -26,6 +37,8 @@ export type ResearchResult = {
   };
   signals: ResearchSignal[];
   priceRange: { supplier: string; retail: string; marginPercent: string };
+  /** Direct product listings on marketplaces — user can click and buy */
+  listings: MarketplaceListing[];
   recommendation: 'hot' | 'promising' | 'saturated' | 'pass';
   reasoning: string;
   sources: Array<{ title: string; url: string; snippet: string }>;

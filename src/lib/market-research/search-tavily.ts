@@ -29,6 +29,7 @@ export type TavilySearchOptions = {
   searchDepth?: 'basic' | 'advanced';
   maxResults?: number;
   includeAnswer?: boolean;
+  includeDomains?: string[];
 };
 
 // ─── Public API ──────────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ export async function searchTavily(
       search_depth: options?.searchDepth ?? 'basic',
       max_results: options?.maxResults ?? 5,
       include_answer: options?.includeAnswer ?? true,
+      ...(options?.includeDomains?.length ? { include_domains: options.includeDomains } : {}),
     }),
   });
 

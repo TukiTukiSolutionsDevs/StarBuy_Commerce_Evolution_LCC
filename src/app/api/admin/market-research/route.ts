@@ -80,26 +80,71 @@ function autoDetect(preferred: string, preferredModel: string) {
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(query: string, category: string | undefined, sessionId: string): string {
+function buildSystemPrompt(
+  query: string,
+  category: string | undefined,
+  sessionId: string,
+  searchMode: SearchMode,
+): string {
+  const modeLabel = searchMode === 'tavily' ? 'tavily' : 'free';
   return `You are a Market Intelligence Agent for StarBuy, a Shopify dropshipping store.
 
-Your job is to research winning products for the following request:
+Your job is to find SPECIFIC, REAL PRODUCTS the user can buy RIGHT NOW on marketplaces.
 - Query: "${query}"
 ${category ? `- Category: "${category}"` : ''}
 - Session ID: ${sessionId}
+- Search Mode: "${modeLabel}"
 
 Note: The user's query may be in any language (English, Spanish, etc.). Always understand the intent and research products accordingly, but write your output in English.
 
+## CRITICAL: The user wants DIRECT PRODUCT LINKS
+
+The user does NOT want:
+- Blog posts or articles about products
+- TikTok videos or YouTube links talking about products
+- Forum discussions or Reddit threads
+- Generic category recommendations
+
+The user DOES want:
+- EXACT product names (e.g. "Baseus 65W GaN USB-C Charger")
+- DIRECT links to buy on Amazon, AliExpress, Temu, eBay, Walmart
+- REAL prices on each marketplace
+- Price comparison across suppliers vs retail
+
 ## Research Methodology
 
-Follow this EXACT sequence. You MUST call the tools in order:
+Follow this EXACT sequence. You MUST call the tools in order with searchMode: "${modeLabel}":
 
-1. **searchTrends** — Search for trending products in this niche (searchMode: "free")
-2. **searchTikTokTrends** — Check TikTok viral potential (searchMode: "free")
-3. **searchCompetition** — Analyze competition and market saturation (searchMode: "free")
-4. **searchSupplierPrices** — Find wholesale costs on AliExpress/CJDropshipping (searchMode: "free")
-5. **searchReviews** — Get customer feedback and product quality signals (searchMode: "free")
-6. **saveResearchResult** — CRITICAL: You MUST call this tool for EACH product you recommend. Session ID: "${sessionId}"
+1. **searchTrends** — Identify specific trending products in this niche
+2. **searchTikTokTrends** — Find products going viral on TikTok (specific product names, not trends)
+3. **searchCompetition** — Check competition for the specific products found
+4. **searchSupplierPrices** — Find these EXACT products on AliExpress, CJDropshipping, Temu with prices and DIRECT links
+5. **searchRetailProducts** — Find these EXACT products on Amazon, eBay, Walmart with prices and DIRECT links
+6. **searchReviews** — Get customer feedback and quality signals
+7. **saveResearchResult** — CRITICAL: Save EACH product with its marketplace listings. Session ID: "${sessionId}"
+
+## CRITICAL RULE: You MUST include listings[]
+
+When calling saveResearchResult, you MUST include the "listings" array with DIRECT product URLs.
+Each listing MUST have:
+- marketplace: "amazon" | "aliexpress" | "temu" | "cjdropshipping" | "ebay" | "walmart"
+- productUrl: The DIRECT URL to the product page (user clicks → sees product → can buy)
+- price: The actual price (e.g. "$12.99")
+- title: Product title on that marketplace
+
+Example listing:
+{
+  "marketplace": "aliexpress",
+  "productUrl": "https://www.aliexpress.com/item/1005006XXXXX.html",
+  "price": "$5.99",
+  "currency": "USD",
+  "title": "LED Galaxy Projector Night Light"
+}
+
+If you cannot find a direct URL, construct the marketplace search URL:
+- Amazon: https://www.amazon.com/s?k=PRODUCT+NAME
+- AliExpress: https://www.aliexpress.com/wholesale?SearchText=PRODUCT+NAME
+- Temu: https://www.temu.com/search_result.html?search_key=PRODUCT+NAME
 
 ## CRITICAL RULE: You MUST call saveResearchResult
 
@@ -128,13 +173,15 @@ After saving all products with saveResearchResult, write a brief summary:
 
 #### 1. Product Name
 - Overall: XX/100 | Trend: XX | Demand: XX | Competition: XX | Margin: XX
-- Supplier: $X-Y | Retail: $X-Y | Margin: ~XX%
+- 🛒 AliExpress: $X.XX — [link]
+- 🛒 Amazon: $XX.XX — [link]
+- Margin: ~XX%
 - Recommendation: hot/promising/saturated/pass
 - Why: Brief reasoning
 
 Repeat for each product (aim for 3-5 products minimum).
 
-Be systematic, data-driven, and concise. Always call the tools.`;
+Be systematic, data-driven, and ALWAYS include direct product links. The user needs to click and buy.`;
 }
 
 // ─── Extract Products from AI Summary Text ────────────────────────────────────
@@ -219,6 +266,7 @@ function extractProductsFromSummary(summary: string): ResearchResult[] {
       title,
       description: reasoning.slice(0, 200),
       scores: { trend, demand, competition, margin, overall },
+      listings: [],
       signals: [
         {
           source: 'AI Analysis',
@@ -349,7 +397,7 @@ export async function POST(request: NextRequest) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const model = (await resolveModel(provider, modelName, apiKey)) as any;
-    const systemPrompt = buildSystemPrompt(query, category, sessionId);
+    const systemPrompt = buildSystemPrompt(query, category, sessionId, searchMode);
 
     const result = streamText({
       model,

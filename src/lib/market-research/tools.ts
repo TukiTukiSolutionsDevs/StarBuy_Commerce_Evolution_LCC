@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { searchWeb } from './search-free';
 import { searchTavilyNormalized } from './search-tavily';
 import { saveSession, getSession } from './store';
-import type { SearchMode, ResearchResult, ResearchSignal } from './types';
+import type { SearchMode, ResearchResult, ResearchSignal, MarketplaceListing } from './types';
 import type { SearchResult } from './search-free';
 
 // ─── Shared search dispatcher ─────────────────────────────────────────────────────
@@ -98,18 +98,68 @@ export const searchCompetitionTool = tool({
 
 export const searchSupplierPricesTool = tool({
   description:
-    'Find supplier prices from AliExpress, CJDropshipping, and other wholesale sources. Returns pricing data to calculate potential margins.',
+    'Find DIRECT product listings with prices on supplier marketplaces (AliExpress, CJDropshipping, Temu). Returns actual product page URLs where you can see the price and buy.',
   inputSchema: zodSchema(
     z.object({
-      query: z.string().describe('Product to find supplier prices for'),
+      query: z
+        .string()
+        .describe('Specific product name to find on supplier sites (e.g. "LED galaxy projector")'),
       searchMode: SearchModeSchema,
       maxResults: z.number().int().min(1).max(10).optional().default(5),
     }),
   ),
   execute: async ({ query, searchMode, maxResults = 5 }) => {
-    const fullQuery = `${query} aliexpress cjdropshipping price wholesale`;
-    const results = await search(fullQuery, searchMode as SearchMode, maxResults);
-    return { query: fullQuery, results };
+    // Search each marketplace separately for direct product links
+    const aliQuery = `site:aliexpress.com "${query}" price`;
+    const cjQuery = `site:cjdropshipping.com "${query}"`;
+    const temuQuery = `site:temu.com "${query}" price`;
+
+    const [aliResults, cjResults, temuResults] = await Promise.all([
+      search(aliQuery, searchMode as SearchMode, maxResults),
+      search(cjQuery, searchMode as SearchMode, Math.ceil(maxResults / 2)),
+      search(temuQuery, searchMode as SearchMode, Math.ceil(maxResults / 2)),
+    ]);
+
+    return {
+      query,
+      aliexpress: aliResults,
+      cjdropshipping: cjResults,
+      temu: temuResults,
+    };
+  },
+});
+
+// ─── Tool 4b: searchRetailProducts ────────────────────────────────────────────────
+
+export const searchRetailProductsTool = tool({
+  description:
+    'Find DIRECT product listings on retail marketplaces (Amazon, eBay, Walmart) with prices and ratings. Returns actual product page URLs the user can click to see and buy.',
+  inputSchema: zodSchema(
+    z.object({
+      query: z
+        .string()
+        .describe('Specific product name to find on Amazon (e.g. "LED galaxy projector")'),
+      searchMode: SearchModeSchema,
+      maxResults: z.number().int().min(1).max(10).optional().default(5),
+    }),
+  ),
+  execute: async ({ query, searchMode, maxResults = 5 }) => {
+    const amazonQuery = `site:amazon.com "${query}" price`;
+    const ebayQuery = `site:ebay.com "${query}" price`;
+    const walmartQuery = `site:walmart.com "${query}" price`;
+
+    const [amazonResults, ebayResults, walmartResults] = await Promise.all([
+      search(amazonQuery, searchMode as SearchMode, maxResults),
+      search(ebayQuery, searchMode as SearchMode, Math.ceil(maxResults / 2)),
+      search(walmartQuery, searchMode as SearchMode, Math.ceil(maxResults / 2)),
+    ]);
+
+    return {
+      query,
+      amazon: amazonResults,
+      ebay: ebayResults,
+      walmart: walmartResults,
+    };
   },
 });
 
@@ -142,7 +192,7 @@ export const saveResearchResultTool = tool({
       sessionId: z.string().describe('The research session ID to save this result into'),
       result: z
         .object({
-          title: z.string().describe('Product title'),
+          title: z.string().describe('Product title — the exact product name'),
           description: z.string().describe('Product description and key features'),
           scores: z.object({
             trend: z.number().min(0).max(100).describe('Trend score 0-100'),
@@ -169,6 +219,41 @@ export const saveResearchResultTool = tool({
             retail: z.string().describe('Suggested retail price (e.g. "$25-35")'),
             marginPercent: z.string().describe('Estimated margin (e.g. "68%")'),
           }),
+          listings: z
+            .array(
+              z.object({
+                marketplace: z
+                  .enum([
+                    'amazon',
+                    'aliexpress',
+                    'temu',
+                    'cjdropshipping',
+                    'ebay',
+                    'walmart',
+                    'other',
+                  ])
+                  .describe('Which marketplace this listing is from'),
+                productUrl: z
+                  .string()
+                  .describe(
+                    'DIRECT URL to the product page — user clicks and sees the product ready to buy',
+                  ),
+                price: z
+                  .string()
+                  .describe('Price on this marketplace (e.g. "$12.99" or "$8.50-$15.00")'),
+                currency: z.string().optional().default('USD').describe('Currency code'),
+                title: z.string().describe('Product title as shown on this marketplace'),
+                rating: z.string().optional().describe('Rating (e.g. "4.5/5 (2,340 reviews)")'),
+                shippingInfo: z
+                  .string()
+                  .optional()
+                  .describe('Shipping info (e.g. "Free shipping", "Ships in 7-15 days")'),
+                imageUrl: z.string().optional().describe('Product image URL from the marketplace'),
+              }),
+            )
+            .describe(
+              'REQUIRED: Direct product listings on marketplaces. Each must have a real productUrl the user can click to see and buy the product.',
+            ),
           recommendation: z
             .enum(['hot', 'promising', 'saturated', 'pass'])
             .describe('Final recommendation'),
@@ -183,7 +268,7 @@ export const saveResearchResultTool = tool({
             )
             .describe('Source URLs used in the research'),
         })
-        .describe('Fully scored research result'),
+        .describe('Fully scored research result with DIRECT marketplace links'),
     }),
   ),
   execute: async ({ sessionId, result }) => {
@@ -196,6 +281,7 @@ export const saveResearchResultTool = tool({
       id: `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       ...result,
       signals: result.signals as ResearchSignal[],
+      listings: (result.listings ?? []) as MarketplaceListing[],
       researchedAt: Date.now(),
     };
 
@@ -217,6 +303,7 @@ export const marketResearchTools = {
   searchTikTokTrends: searchTikTokTrendsTool,
   searchCompetition: searchCompetitionTool,
   searchSupplierPrices: searchSupplierPricesTool,
+  searchRetailProducts: searchRetailProductsTool,
   searchReviews: searchReviewsTool,
   saveResearchResult: saveResearchResultTool,
 };

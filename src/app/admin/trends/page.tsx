@@ -325,9 +325,26 @@ export default function TrendEnginePage() {
     }
   }, []);
 
-  // ── Mount: config + recent searches + trending now ────────────────────────────
+  // ── Load trending now on demand (NOT automatic) ────────────────────────────
+  const loadTrendingNow = useCallback(() => {
+    const trendKeywords = getTrendingNowKeywords();
+    setTrendingStatus('loading');
+    fetch('/api/admin/trends/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keywords: trendKeywords }),
+    })
+      .then((r) => r.json())
+      .then((data: { results?: AggregatedTrendResult[] }) => {
+        setTrendingNow(data.results ?? []);
+        setTrendingStatus('done');
+      })
+      .catch(() => setTrendingStatus('error'));
+  }, []);
+
+  // ── Mount: config + recent searches ONLY (no auto-fetch) ──────────────────
   useEffect(() => {
-    // Engine config
+    // Engine config — free, no tokens
     fetch('/api/admin/trends/config')
       .then((r) => r.json())
       .then(
@@ -351,23 +368,8 @@ export default function TrendEnginePage() {
         /* non-critical */
       });
 
-    // Recent searches
+    // Recent searches from localStorage — free
     setRecentSearches(loadRecentSearches());
-
-    // Trending Now — single POST with top keywords across top 4 categories
-    const trendKeywords = getTrendingNowKeywords();
-    setTrendingStatus('loading');
-    fetch('/api/admin/trends/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keywords: trendKeywords }),
-    })
-      .then((r) => r.json())
-      .then((data: { results?: AggregatedTrendResult[] }) => {
-        setTrendingNow(data.results ?? []);
-        setTrendingStatus('done');
-      })
-      .catch(() => setTrendingStatus('error'));
   }, []);
 
   // ── URL autorun ───────────────────────────────────────────────────────────────
@@ -578,7 +580,86 @@ export default function TrendEnginePage() {
         </div>
       )}
 
-      {/* ── Trending Now (idle state only) ── */}
+      {/* ── Getting Started Guide (idle state, no search yet) ── */}
+      {searchStatus === 'idle' && trendingStatus === 'idle' && (
+        <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#d4a843]/15 flex items-center justify-center flex-none">
+              <span className="material-symbols-outlined text-[#d4a843]" style={{ fontSize: 22 }}>
+                lightbulb
+              </span>
+            </div>
+            <div>
+              <h2 className="text-white font-semibold text-base">How to use the Trend Engine</h2>
+              <p className="text-[#6b7280] text-xs mt-0.5">
+                Find what products are selling right now — before your competitors do
+              </p>
+            </div>
+          </div>
+
+          {/* Step by step guide */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#d4a843] text-[#0d1526] text-xs font-bold flex items-center justify-center">
+                  1
+                </span>
+                <span className="text-white text-sm font-medium">Search a product idea</span>
+              </div>
+              <p className="text-[#6b7280] text-xs leading-relaxed">
+                Type a product or niche in the search bar above. Example:{' '}
+                <span className="text-[#d4a843]">&quot;wireless earbuds&quot;</span> or{' '}
+                <span className="text-[#d4a843]">&quot;pet grooming&quot;</span>
+              </p>
+            </div>
+
+            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#d4a843] text-[#0d1526] text-xs font-bold flex items-center justify-center">
+                  2
+                </span>
+                <span className="text-white text-sm font-medium">Review the trend score</span>
+              </div>
+              <p className="text-[#6b7280] text-xs leading-relaxed">
+                Each result shows a <span className="text-[#10b981]">score from 0-100</span>. Higher
+                = more trending. Look for <span className="text-[#10b981]">rising</span> or{' '}
+                <span className="text-[#10b981]">hot</span> products.
+              </p>
+            </div>
+
+            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#d4a843] text-[#0d1526] text-xs font-bold flex items-center justify-center">
+                  3
+                </span>
+                <span className="text-white text-sm font-medium">Add to Research</span>
+              </div>
+              <p className="text-[#6b7280] text-xs leading-relaxed">
+                Found something promising? Click{' '}
+                <span className="text-[#d4a843]">&quot;+ Research&quot;</span> to save it. Then go
+                to <span className="text-[#d4a843]">Market Intel</span> for deep analysis with
+                prices and links.
+              </p>
+            </div>
+          </div>
+
+          {/* Quick actions */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2 border-t border-[#1f2d4e]">
+            <button
+              onClick={loadTrendingNow}
+              className="flex items-center gap-2 bg-[#6366f1] hover:bg-[#5558e6] text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">trending_up</span>
+              Show me what&apos;s trending now
+            </button>
+            <span className="text-[#374151] text-xs">
+              This will search popular keywords across categories (uses provider credits)
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Trending Now results (after user clicks the button) ── */}
       {searchStatus === 'idle' && trendingStatus !== 'idle' && (
         <div>
           <div className="flex items-center gap-2 mb-4">
@@ -619,6 +700,18 @@ export default function TrendEnginePage() {
               </Link>
               .
             </p>
+          )}
+
+          {trendingStatus === 'error' && (
+            <div className="flex flex-col items-center py-8">
+              <p className="text-[#ef4444] text-sm mb-3">Failed to load trending data</p>
+              <button
+                onClick={loadTrendingNow}
+                className="text-[#6366f1] hover:text-[#818cf8] text-sm transition-colors"
+              >
+                Try again
+              </button>
+            </div>
           )}
         </div>
       )}

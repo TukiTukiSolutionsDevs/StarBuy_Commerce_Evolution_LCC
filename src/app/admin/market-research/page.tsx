@@ -161,10 +161,61 @@ function ResultCard({
         </div>
       )}
 
-      {/* Price range */}
+      {/* Marketplace Listings — DIRECT product links */}
+      {result.listings && result.listings.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[#374151] text-[10px] font-semibold uppercase tracking-wider">
+            Buy on Marketplaces
+          </p>
+          {result.listings.map((listing, i) => {
+            const marketplaceColors: Record<string, { bg: string; text: string; icon: string }> = {
+              amazon: { bg: 'bg-[#ff9900]/10', text: 'text-[#ff9900]', icon: '🛒' },
+              aliexpress: { bg: 'bg-[#e62e04]/10', text: 'text-[#e62e04]', icon: '🇨🇳' },
+              temu: { bg: 'bg-[#fb7701]/10', text: 'text-[#fb7701]', icon: '🏪' },
+              cjdropshipping: { bg: 'bg-[#1a73e8]/10', text: 'text-[#1a73e8]', icon: '📦' },
+              ebay: { bg: 'bg-[#e53238]/10', text: 'text-[#e53238]', icon: '🏷️' },
+              walmart: { bg: 'bg-[#0071dc]/10', text: 'text-[#0071dc]', icon: '🏬' },
+              other: { bg: 'bg-[#6b7280]/10', text: 'text-[#6b7280]', icon: '🔗' },
+            };
+            const colors = marketplaceColors[listing.marketplace] ?? marketplaceColors.other;
+
+            return (
+              <a
+                key={i}
+                href={listing.productUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-3 ${colors.bg} border border-[#1f2d4e] rounded-xl px-4 py-2.5 hover:border-[#374151] transition-all group`}
+              >
+                <span className="text-lg flex-none">{colors.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-bold uppercase ${colors.text}`}>
+                      {listing.marketplace}
+                    </span>
+                    <span className="text-white text-sm font-bold">{listing.price}</span>
+                    {listing.rating && (
+                      <span className="text-[#d4a843] text-[10px]">{listing.rating}</span>
+                    )}
+                  </div>
+                  <p className="text-[#9ca3af] text-[10px] truncate mt-0.5">{listing.title}</p>
+                  {listing.shippingInfo && (
+                    <p className="text-[#6b7280] text-[10px]">{listing.shippingInfo}</p>
+                  )}
+                </div>
+                <span className="material-symbols-outlined text-[#374151] group-hover:text-white text-base transition-colors flex-none">
+                  open_in_new
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Price range summary */}
       <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5">
         <p className="text-[#6b7280] text-[10px] font-semibold uppercase tracking-wider mb-1">
-          Price Range
+          Price Summary
         </p>
         <p className="text-[#e5e7eb] text-xs font-mono">
           Supplier: {result.priceRange.supplier} → Retail: {result.priceRange.retail}
@@ -483,13 +534,16 @@ export default function MarketResearchPage() {
           if (chunk.value) {
             const text = decoder.decode(chunk.value, { stream: true });
             // Jump progress when we detect specific tool calls in the stream
-            if (text.includes('searchTrends')) advanceTo(20, '🔍 Searching general trends...');
-            if (text.includes('searchTikTok')) advanceTo(35, '📱 Analyzing TikTok virality...');
-            if (text.includes('searchCompetition')) advanceTo(50, '🏪 Assessing competition...');
+            if (text.includes('searchTrends')) advanceTo(15, '🔍 Searching general trends...');
+            if (text.includes('searchTikTok')) advanceTo(28, '📱 Analyzing TikTok virality...');
+            if (text.includes('searchCompetition')) advanceTo(40, '🏪 Assessing competition...');
             if (text.includes('searchSupplierPrices'))
-              advanceTo(65, '💰 Researching supplier prices...');
+              advanceTo(52, '💰 Finding products on AliExpress, Temu...');
+            if (text.includes('searchRetailProducts'))
+              advanceTo(65, '🛒 Finding products on Amazon, eBay, Walmart...');
             if (text.includes('searchReviews')) advanceTo(78, '⭐ Analyzing reviews & ratings...');
-            if (text.includes('saveResearchResult')) advanceTo(88, '💾 Saving scored results...');
+            if (text.includes('saveResearchResult'))
+              advanceTo(88, '💾 Saving products with links...');
           }
         }
       }
