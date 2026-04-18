@@ -941,7 +941,9 @@ export default function AutomationsPage() {
                 {stat.icon}
               </span>
               <div>
-                <p className="text-white text-lg font-bold leading-none">{stat.value}</p>
+                <p className="text-[var(--admin-text-heading)] text-lg font-bold leading-none">
+                  {stat.value}
+                </p>
                 <p className="text-[var(--admin-text-muted)] text-[10px] font-medium mt-0.5">
                   {stat.label}
                 </p>
