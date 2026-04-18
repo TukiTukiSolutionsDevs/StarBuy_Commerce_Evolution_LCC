@@ -54,11 +54,11 @@ export function PulseEventCard({ event, onMarkRead }: PulseEventCardProps) {
   return (
     <div
       data-testid="pulse-event-card"
-      className={`rounded-lg border p-3 transition-all ${
-        event.isRead
-          ? 'border-[#1f2d4e]/50 bg-[#0d1526]/50 opacity-60'
-          : 'border-[#1f2d4e] bg-[#0d1526]'
-      }`}
+      className={`rounded-lg p-3 transition-all ${event.isRead ? 'opacity-60' : ''}`}
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -76,8 +76,10 @@ export function PulseEventCard({ event, onMarkRead }: PulseEventCardProps) {
           </span>
 
           {/* Category + State */}
-          <p className="text-sm font-medium text-white truncate">{event.categoryLabel}</p>
-          <p className="text-xs text-[#6b7280]">
+          <p className="text-sm font-medium truncate" style={{ color: 'var(--admin-text)' }}>
+            {event.categoryLabel}
+          </p>
+          <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
             {event.stateName} ({event.stateCode})
           </p>
         </div>
@@ -86,26 +88,35 @@ export function PulseEventCard({ event, onMarkRead }: PulseEventCardProps) {
         <div className="text-right flex-shrink-0">
           <p
             data-testid="delta-value"
-            className={`text-lg font-bold ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}
+            className="text-lg font-bold"
+            style={{ color: isPositive ? 'var(--admin-success)' : 'var(--admin-error)' }}
           >
             {formatDelta(event.deltaPercent)}
           </p>
-          <p className="text-[10px] text-[#4b5563]">
+          <p className="text-[10px]" style={{ color: 'var(--admin-text-muted)' }}>
             {event.previousScore} → {event.currentScore}
           </p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#1f2d4e]/50">
-        <span data-testid="time-ago" className="text-[10px] text-[#4b5563]">
+      <div
+        className="flex items-center justify-between mt-2 pt-2 border-t"
+        style={{ borderColor: 'var(--admin-border)' }}
+      >
+        <span
+          data-testid="time-ago"
+          className="text-[10px]"
+          style={{ color: 'var(--admin-text-muted)' }}
+        >
           {formatTimeAgo(event.detectedAt)}
         </span>
         {!event.isRead && onMarkRead && (
           <button
             data-testid="mark-read-btn"
             onClick={() => onMarkRead(event.id)}
-            className="text-[10px] text-[#3b82f6] hover:text-[#60a5fa] transition-colors"
+            className="text-[10px] transition-colors"
+            style={{ color: 'var(--admin-brand)' }}
           >
             Mark read
           </button>

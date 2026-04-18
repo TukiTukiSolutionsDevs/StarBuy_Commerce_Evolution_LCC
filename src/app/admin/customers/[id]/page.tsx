@@ -1,7 +1,10 @@
 'use client';
 
 /**
- * Admin Customer Profile Page
+ * Admin Customer Profile Page — Phase 3
+ *
+ * Migrated to use admin design tokens and shared UI components.
+ * Zero hardcoded hex colors.
  *
  * Full customer detail: contact info, editable notes, marketing consent toggle,
  * addresses, tags manager, purchase stats, quick actions.
@@ -18,6 +21,7 @@ type PageProps = { params: Promise<{ id: string }> };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────────
 
+// Intentional: fixed avatar palette for visual differentiation — not admin theme colors
 const AVATAR_COLORS = ['#d4a843', '#10b981', '#6b8cff', '#ef4444', '#8b5cf6', '#f59e0b'];
 
 function getInitials(first: string | null, last: string | null): string {
@@ -64,11 +68,11 @@ function formatAddressLine(addr: AdminAddress): string {
 
 // ─── State Badge ──────────────────────────────────────────────────────────────────
 
-const STATE_STYLE: Record<string, { color: string; label: string }> = {
-  ENABLED: { color: '#10b981', label: 'Enabled' },
-  DISABLED: { color: '#ef4444', label: 'Disabled' },
-  INVITED: { color: '#d4a843', label: 'Invited' },
-  DECLINED: { color: '#6b7280', label: 'Declined' },
+const STATE_STYLE: Record<string, { token: string; label: string }> = {
+  ENABLED: { token: 'var(--admin-success)', label: 'Enabled' },
+  DISABLED: { token: 'var(--admin-error)', label: 'Disabled' },
+  INVITED: { token: 'var(--admin-brand)', label: 'Invited' },
+  DECLINED: { token: 'var(--admin-text-muted)', label: 'Declined' },
 };
 
 function StateBadge({ state }: { state: string }) {
@@ -76,9 +80,9 @@ function StateBadge({ state }: { state: string }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ backgroundColor: `${s.color}18`, color: s.color }}
+      style={{ backgroundColor: `color-mix(in srgb, ${s.token} 10%, transparent)`, color: s.token }}
     >
-      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: s.color }} />
+      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: s.token }} />
       {s.label}
     </span>
   );
@@ -98,16 +102,25 @@ function Card({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#1f2d4e]">
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
+    >
+      <div
+        className="flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: '1px solid var(--admin-border)' }}
+      >
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#6b7280] text-base">{icon}</span>
-          <h3
-            className="font-semibold text-sm"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+          <span
+            className="material-symbols-outlined text-base"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
-            {title}
-          </h3>
+            {icon}
+          </span>
+          <h3 className="admin-h3">{title}</h3>
         </div>
         {action}
       </div>
@@ -120,9 +133,16 @@ function Card({
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2 border-b border-[#1f2d4e]/50 last:border-0">
-      <span className="text-[#6b7280] text-xs flex-none">{label}</span>
-      <span className="text-[#e5e7eb] text-xs text-right">{value}</span>
+    <div
+      className="flex items-start justify-between gap-4 py-2 last:border-0"
+      style={{ borderBottom: '1px solid color-mix(in srgb, var(--admin-border) 50%, transparent)' }}
+    >
+      <span className="text-xs flex-none" style={{ color: 'var(--admin-text-muted)' }}>
+        {label}
+      </span>
+      <span className="text-xs text-right" style={{ color: 'var(--admin-text-body)' }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -187,16 +207,27 @@ function TagsManager({
     <div className="space-y-3">
       {/* Existing tags */}
       <div className="flex flex-wrap gap-2 min-h-[36px]">
-        {tags.length === 0 && <span className="text-[#374151] text-xs italic">No tags</span>}
+        {tags.length === 0 && (
+          <span className="text-xs italic" style={{ color: 'var(--admin-text-disabled)' }}>
+            No tags
+          </span>
+        )}
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#1f2d4e] text-[#9ca3af] group"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium group"
+            style={{
+              backgroundColor: 'var(--admin-border)',
+              color: 'var(--admin-text-secondary)',
+            }}
           >
             {tag}
             <button
               onClick={() => removeTag(tag)}
-              className="ml-0.5 text-[#6b7280] hover:text-[#ef4444] transition-colors"
+              className="ml-0.5 transition-colors"
+              style={{ color: 'var(--admin-text-muted)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--admin-error)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--admin-text-muted)')}
               title={`Remove "${tag}"`}
             >
               <span className="material-symbols-outlined text-sm leading-none">close</span>
@@ -218,12 +249,40 @@ function TagsManager({
             }
           }}
           placeholder="Add a tag…"
-          className="flex-1 bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2 text-xs outline-none transition-colors"
+          className="flex-1 rounded-xl px-3 py-2 text-xs outline-none transition-colors"
+          style={
+            {
+              backgroundColor: 'var(--admin-bg-input)',
+              border: '1px solid var(--admin-border)',
+              color: 'var(--admin-text)',
+              '--tw-placeholder-color': 'var(--admin-text-disabled)',
+            } as React.CSSProperties
+          }
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-brand)';
+            e.currentTarget.style.boxShadow = '0 0 0 1px var(--admin-brand)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-border)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
         />
         <button
           onClick={addTag}
           disabled={!input.trim()}
-          className="px-3 py-2 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] disabled:opacity-40 text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+          className="px-3 py-2 rounded-xl disabled:opacity-40 text-xs font-medium transition-all"
+          style={{
+            backgroundColor: 'var(--admin-border)',
+            color: 'var(--admin-text-secondary)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+            e.currentTarget.style.color = 'var(--admin-text)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--admin-border)';
+            e.currentTarget.style.color = 'var(--admin-text-secondary)';
+          }}
         >
           Add
         </button>
@@ -234,7 +293,11 @@ function TagsManager({
         <button
           onClick={save}
           disabled={saving}
-          className="w-full flex items-center justify-center gap-2 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] text-[#0a0f1e] font-semibold rounded-xl py-2 text-xs transition-colors"
+          className="w-full flex items-center justify-center gap-2 font-semibold rounded-xl py-2 text-xs transition-colors"
+          style={{
+            backgroundColor: saving ? 'var(--admin-border)' : 'var(--admin-brand)',
+            color: saving ? 'var(--admin-text-secondary)' : 'var(--admin-bg)',
+          }}
         >
           {saving ? (
             <>
@@ -297,13 +360,30 @@ function NotesEditor({
         onChange={(e) => setNote(e.target.value)}
         placeholder="Add a note about this customer…"
         rows={4}
-        className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2.5 text-sm outline-none transition-colors resize-none"
+        className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors resize-none"
+        style={{
+          backgroundColor: 'var(--admin-bg-input)',
+          border: '1px solid var(--admin-border)',
+          color: 'var(--admin-text)',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = 'var(--admin-brand)';
+          e.currentTarget.style.boxShadow = '0 0 0 1px var(--admin-brand)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = 'var(--admin-border)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       />
       {dirty && (
         <button
           onClick={save}
           disabled={saving}
-          className="w-full flex items-center justify-center gap-2 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] text-[#0a0f1e] font-semibold rounded-xl py-2 text-xs transition-colors"
+          className="w-full flex items-center justify-center gap-2 font-semibold rounded-xl py-2 text-xs transition-colors"
+          style={{
+            backgroundColor: saving ? 'var(--admin-border)' : 'var(--admin-brand)',
+            color: saving ? 'var(--admin-text-secondary)' : 'var(--admin-bg)',
+          }}
         >
           {saving ? (
             <>
@@ -363,10 +443,10 @@ function MarketingToggle({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-[#e5e7eb] text-sm font-medium">
+        <p className="text-sm font-medium" style={{ color: 'var(--admin-text-body)' }}>
           {value ? 'Subscribed' : 'Not subscribed'}
         </p>
-        <p className="text-[#6b7280] text-xs mt-0.5">
+        <p className="text-xs mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
           {value
             ? 'Customer receives marketing emails'
             : 'Customer does not receive marketing emails'}
@@ -378,13 +458,17 @@ function MarketingToggle({
         aria-checked={value}
         onClick={toggle}
         disabled={saving}
-        className={`relative w-11 h-6 rounded-full transition-colors flex-none disabled:opacity-50 ${
-          value ? 'bg-[#10b981]' : 'bg-[#1f2d4e]'
-        }`}
+        className="relative w-11 h-6 rounded-full transition-colors flex-none disabled:opacity-50"
+        style={{
+          backgroundColor: value ? 'var(--admin-success)' : 'var(--admin-border)',
+        }}
       >
         {saving ? (
           <span className="absolute inset-0 flex items-center justify-center">
-            <span className="material-symbols-outlined text-xs text-white animate-spin">
+            <span
+              className="material-symbols-outlined text-xs animate-spin"
+              style={{ color: 'var(--admin-text)' }}
+            >
               progress_activity
             </span>
           </span>
@@ -406,19 +490,40 @@ function AddressBlock({ address, isDefault }: { address: AdminAddress; isDefault
   const name = [address.firstName, address.lastName].filter(Boolean).join(' ');
   return (
     <div
-      className={`rounded-xl p-3 border ${
-        isDefault ? 'border-[#d4a843]/40 bg-[#d4a843]/5' : 'border-[#1f2d4e] bg-[#0a0f1e]/50'
-      }`}
+      className="rounded-xl p-3"
+      style={{
+        border: `1px solid ${isDefault ? 'var(--admin-brand-border)' : 'var(--admin-border)'}`,
+        backgroundColor: isDefault
+          ? 'var(--admin-brand-bg)'
+          : 'color-mix(in srgb, var(--admin-bg) 50%, transparent)',
+      }}
     >
       {isDefault && (
-        <span className="text-[#d4a843] text-[10px] font-semibold uppercase tracking-wider mb-1 block">
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wider mb-1 block"
+          style={{ color: 'var(--admin-brand)' }}
+        >
           Default
         </span>
       )}
-      {name && <p className="text-[#e5e7eb] text-xs font-medium">{name}</p>}
-      {address.company && <p className="text-[#9ca3af] text-xs">{address.company}</p>}
-      <p className="text-[#9ca3af] text-xs mt-0.5">{formatAddressLine(address)}</p>
-      {address.phone && <p className="text-[#9ca3af] text-xs mt-0.5">{address.phone}</p>}
+      {name && (
+        <p className="text-xs font-medium" style={{ color: 'var(--admin-text-body)' }}>
+          {name}
+        </p>
+      )}
+      {address.company && (
+        <p className="text-xs" style={{ color: 'var(--admin-text-secondary)' }}>
+          {address.company}
+        </p>
+      )}
+      <p className="text-xs mt-0.5" style={{ color: 'var(--admin-text-secondary)' }}>
+        {formatAddressLine(address)}
+      </p>
+      {address.phone && (
+        <p className="text-xs mt-0.5" style={{ color: 'var(--admin-text-secondary)' }}>
+          {address.phone}
+        </p>
+      )}
     </div>
   );
 }
@@ -426,7 +531,12 @@ function AddressBlock({ address, isDefault }: { address: AdminAddress; isDefault
 // ─── Skeleton ─────────────────────────────────────────────────────────────────────
 
 function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return <div style={style} className={`bg-[#1f2d4e] rounded animate-pulse ${className ?? ''}`} />;
+  return (
+    <div
+      style={{ backgroundColor: 'var(--admin-border)', ...style }}
+      className={`rounded animate-pulse ${className ?? ''}`}
+    />
+  );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────────
@@ -463,12 +573,22 @@ export default function CustomerProfilePage({ params }: PageProps) {
     return (
       <div className="p-6 max-w-5xl mx-auto">
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <span className="material-symbols-outlined text-[#ef4444] text-5xl mb-4">person_off</span>
-          <p className="text-[#ef4444] font-semibold mb-1">Customer not found</p>
-          <p className="text-[#6b7280] text-sm mb-6">{error}</p>
+          <span
+            className="material-symbols-outlined text-5xl mb-4"
+            style={{ color: 'var(--admin-error)' }}
+          >
+            person_off
+          </span>
+          <p className="font-semibold mb-1" style={{ color: 'var(--admin-error)' }}>
+            Customer not found
+          </p>
+          <p className="text-sm mb-6" style={{ color: 'var(--admin-text-muted)' }}>
+            {error}
+          </p>
           <Link
             href="/admin/customers"
-            className="flex items-center gap-2 text-[#d4a843] hover:text-[#e4c06a] text-sm transition-colors"
+            className="flex items-center gap-2 text-sm transition-colors"
+            style={{ color: 'var(--admin-brand)' }}
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Back to customers
@@ -498,7 +618,12 @@ export default function CustomerProfilePage({ params }: PageProps) {
       <div className="flex items-center gap-4 flex-wrap">
         <Link
           href="/admin/customers"
-          className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#111827] border border-[#1f2d4e] text-[#6b7280] hover:text-white hover:border-[#374151] transition-all"
+          className="flex items-center justify-center w-9 h-9 rounded-xl transition-all"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+            color: 'var(--admin-text-muted)',
+          }}
         >
           <span className="material-symbols-outlined text-xl">arrow_back</span>
         </Link>
@@ -514,19 +639,16 @@ export default function CustomerProfilePage({ params }: PageProps) {
         ) : (
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center flex-none text-sm font-bold text-[#0a0f1e]"
-              style={{ backgroundColor: avatarBg }}
+              className="w-12 h-12 rounded-full flex items-center justify-center flex-none text-sm font-bold"
+              style={{ backgroundColor: avatarBg, color: 'var(--admin-bg)' }}
             >
               {initials}
             </div>
             <div>
-              <h1
-                className="text-xl font-bold"
-                style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-              >
-                {fullName}
-              </h1>
-              <p className="text-[#6b7280] text-sm">{customer?.email}</p>
+              <h1 className="admin-h1 text-xl">{fullName}</h1>
+              <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+                {customer?.email}
+              </p>
             </div>
           </div>
         )}
@@ -536,7 +658,10 @@ export default function CustomerProfilePage({ params }: PageProps) {
             {customer.acceptsMarketing && (
               <span
                 className="inline-flex items-center gap-1 text-[10px] font-medium px-2.5 py-1 rounded-full"
-                style={{ backgroundColor: '#10b98118', color: '#10b981' }}
+                style={{
+                  backgroundColor: 'var(--admin-success-bg)',
+                  color: 'var(--admin-success)',
+                }}
               >
                 <span className="material-symbols-outlined text-xs">mark_email_read</span>
                 Marketing
@@ -556,7 +681,14 @@ export default function CustomerProfilePage({ params }: PageProps) {
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex justify-between py-2 border-b border-[#1f2d4e]/50">
+                  <div
+                    key={i}
+                    className="flex justify-between py-2"
+                    style={{
+                      borderBottom:
+                        '1px solid color-mix(in srgb, var(--admin-border) 50%, transparent)',
+                    }}
+                  >
                     <Skeleton className="w-16 h-3" />
                     <Skeleton className="w-32 h-3" />
                   </div>
@@ -572,7 +704,8 @@ export default function CustomerProfilePage({ params }: PageProps) {
                       {customer.email}
                       {customer.verifiedEmail && (
                         <span
-                          className="inline-flex items-center gap-0.5 text-[#10b981] text-[10px]"
+                          className="inline-flex items-center gap-0.5 text-[10px]"
+                          style={{ color: 'var(--admin-success)' }}
                           title="Verified email"
                         >
                           <span className="material-symbols-outlined text-xs">verified</span>
@@ -603,11 +736,15 @@ export default function CustomerProfilePage({ params }: PageProps) {
                   <AddressBlock key={addr.id} address={addr} />
                 ))}
                 {allAddresses.length === 0 && extraAddresses.length === 0 && (
-                  <p className="text-[#374151] text-xs italic">No additional addresses</p>
+                  <p className="text-xs italic" style={{ color: 'var(--admin-text-disabled)' }}>
+                    No additional addresses
+                  </p>
                 )}
               </div>
             ) : (
-              <p className="text-[#374151] text-xs italic">No address on file</p>
+              <p className="text-xs italic" style={{ color: 'var(--admin-text-disabled)' }}>
+                No address on file
+              </p>
             )}
           </Card>
 
@@ -655,7 +792,14 @@ export default function CustomerProfilePage({ params }: PageProps) {
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex justify-between py-2 border-b border-[#1f2d4e]/50">
+                  <div
+                    key={i}
+                    className="flex justify-between py-2"
+                    style={{
+                      borderBottom:
+                        '1px solid color-mix(in srgb, var(--admin-border) 50%, transparent)',
+                    }}
+                  >
                     <Skeleton className="w-16 h-3" />
                     <Skeleton className="w-24 h-3" />
                   </div>
@@ -666,7 +810,7 @@ export default function CustomerProfilePage({ params }: PageProps) {
                 <InfoRow
                   label="Orders placed"
                   value={
-                    <span className="font-semibold" style={{ color: '#d4a843' }}>
+                    <span className="font-semibold" style={{ color: 'var(--admin-brand)' }}>
                       {customer.ordersCount}
                     </span>
                   }
@@ -674,7 +818,7 @@ export default function CustomerProfilePage({ params }: PageProps) {
                 <InfoRow
                   label="Total spent"
                   value={
-                    <span className="font-semibold" style={{ color: '#10b981' }}>
+                    <span className="font-semibold" style={{ color: 'var(--admin-success)' }}>
                       {formatMoney(
                         customer.totalSpentV2.amount,
                         customer.totalSpentV2.currencyCode,
@@ -724,14 +868,22 @@ export default function CustomerProfilePage({ params }: PageProps) {
                   href={`https://admin.shopify.com/store/customers/${id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-xs font-medium transition-all"
+                  style={{
+                    backgroundColor: 'var(--admin-border)',
+                    color: 'var(--admin-text-secondary)',
+                  }}
                 >
                   <span className="material-symbols-outlined text-sm">open_in_new</span>
                   View in Shopify Admin
                 </a>
                 <Link
                   href="/admin/customers"
-                  className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+                  className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-xs font-medium transition-all"
+                  style={{
+                    backgroundColor: 'var(--admin-border)',
+                    color: 'var(--admin-text-secondary)',
+                  }}
                 >
                   <span className="material-symbols-outlined text-sm">people</span>
                   Back to all customers
@@ -742,8 +894,19 @@ export default function CustomerProfilePage({ params }: PageProps) {
 
           {/* Shopify GID */}
           {customer && (
-            <div className="bg-[#0a0f1e] border border-[#1f2d4e]/50 rounded-xl p-3">
-              <p className="text-[#374151] text-[10px] font-mono break-all">{customer.id}</p>
+            <div
+              className="rounded-xl p-3"
+              style={{
+                backgroundColor: 'var(--admin-bg)',
+                border: '1px solid color-mix(in srgb, var(--admin-border) 50%, transparent)',
+              }}
+            >
+              <p
+                className="text-[10px] font-mono break-all"
+                style={{ color: 'var(--admin-text-disabled)' }}
+              >
+                {customer.id}
+              </p>
             </div>
           )}
         </div>

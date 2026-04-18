@@ -23,11 +23,11 @@ interface StateStatCardProps {
 function getTrendConfig(trend: TrendDirection) {
   switch (trend) {
     case 'up':
-      return { icon: 'trending_up', color: 'text-emerald-400' };
+      return { icon: 'trending_up', token: 'var(--admin-success)' };
     case 'down':
-      return { icon: 'trending_down', color: 'text-red-400' };
+      return { icon: 'trending_down', token: 'var(--admin-error)' };
     default:
-      return { icon: 'trending_flat', color: 'text-gray-400' };
+      return { icon: 'trending_flat', token: 'var(--admin-text-muted)' };
   }
 }
 
@@ -39,26 +39,42 @@ export function StateStatCard({ label, value, trend, subtitle }: StateStatCardPr
   return (
     <div
       data-testid="state-stat-card"
-      className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4"
+      className="rounded-xl p-4"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-[#4b5563] mb-1">
+      <p
+        className="text-[10px] font-semibold uppercase tracking-widest mb-1"
+        style={{ color: 'var(--admin-text-muted)' }}
+      >
         {label}
       </p>
       <div className="flex items-end gap-2">
-        <span data-testid="stat-value" className="text-2xl font-bold text-white">
+        <span
+          data-testid="stat-value"
+          className="text-2xl font-bold"
+          style={{ color: 'var(--admin-text)' }}
+        >
           {value}
         </span>
         {trendConfig && (
           <span
             data-testid="stat-trend"
-            className={`material-symbols-outlined text-lg ${trendConfig.color}`}
+            className="material-symbols-outlined text-lg"
+            style={{ color: trendConfig.token }}
           >
             {trendConfig.icon}
           </span>
         )}
       </div>
       {subtitle && (
-        <p data-testid="stat-subtitle" className="text-xs text-[#6b7280] mt-1">
+        <p
+          data-testid="stat-subtitle"
+          className="text-xs mt-1"
+          style={{ color: 'var(--admin-text-muted)' }}
+        >
           {subtitle}
         </p>
       )}

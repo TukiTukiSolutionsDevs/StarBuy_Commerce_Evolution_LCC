@@ -64,7 +64,10 @@ export function StatCompare({ states }: StatCompareProps) {
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr>
-            <th className="text-left text-[10px] uppercase tracking-widest text-[#4b5563] pb-3 pr-4">
+            <th
+              className="text-left text-[10px] uppercase tracking-widest pb-3 pr-4"
+              style={{ color: 'var(--admin-text-muted)' }}
+            >
               Metric
             </th>
             {states.map((s) => (
@@ -72,14 +75,19 @@ export function StatCompare({ states }: StatCompareProps) {
                 <div className="flex flex-col items-center gap-1">
                   <span
                     data-testid={`compare-score-badge-${s.code}`}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                       QUINTILE_BG_COLORS[scoreToQuintile(s.opportunityScore.score)]
                     }`}
+                    style={{ color: '#fff' }}
                   >
                     {s.opportunityScore.score}
                   </span>
-                  <span className="text-white font-semibold text-sm">{s.name}</span>
-                  <span className="text-[#4b5563] text-[10px]">{s.code}</span>
+                  <span className="font-semibold text-sm" style={{ color: 'var(--admin-text)' }}>
+                    {s.name}
+                  </span>
+                  <span className="text-[10px]" style={{ color: 'var(--admin-text-muted)' }}>
+                    {s.code}
+                  </span>
                 </div>
               </th>
             ))}
@@ -90,15 +98,23 @@ export function StatCompare({ states }: StatCompareProps) {
             <tr
               key={row.label}
               data-testid={`compare-row-${row.label.replace(/\s+/g, '-').toLowerCase()}`}
-              className={`border-t border-[#1f2d4e] ${row.highlight ? 'bg-[#1b2a5e]/20' : ''}`}
+              className={`border-t ${row.highlight ? '' : ''}`}
+              style={{
+                borderColor: 'var(--admin-border)',
+                ...(row.highlight ? { backgroundColor: 'var(--admin-bg-elevated)' } : {}),
+              }}
             >
-              <td className="py-2.5 pr-4 text-[#6b7280] text-xs whitespace-nowrap">{row.label}</td>
+              <td
+                className="py-2.5 pr-4 text-xs whitespace-nowrap"
+                style={{ color: 'var(--admin-text-muted)' }}
+              >
+                {row.label}
+              </td>
               {row.values.map((val, i) => (
                 <td
                   key={i}
-                  className={`py-2.5 px-4 text-center text-white ${
-                    row.highlight ? 'font-semibold' : ''
-                  }`}
+                  className={`py-2.5 px-4 text-center ${row.highlight ? 'font-semibold' : ''}`}
+                  style={{ color: 'var(--admin-text)' }}
                 >
                   {val}
                 </td>

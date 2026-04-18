@@ -1,8 +1,10 @@
 'use client';
 
 /**
- * Trend Engine Dashboard — Sprint B
- * Full intelligence platform home. Replaces the Sprint A stub.
+ * Trend Engine Dashboard — Phase 4
+ *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
+ * Full intelligence platform home.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -140,49 +142,75 @@ function EngineStatusBar({ data }: { data: EngineStatusData }) {
   return (
     <div
       data-testid="engine-status-bar"
-      className="flex items-center gap-4 bg-[#0d1526] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-xs flex-wrap"
+      className="flex items-center gap-4 rounded-xl px-4 py-2.5 text-xs flex-wrap"
+      style={{
+        backgroundColor: 'var(--admin-bg-elevated)',
+        border: '1px solid var(--admin-border)',
+      }}
     >
       <div className="flex items-center gap-1.5">
         <span
-          className="material-symbols-outlined text-[#6366f1]"
+          className="material-symbols-outlined"
           aria-hidden="true"
-          style={{ fontSize: 14 }}
+          style={{ fontSize: 14, color: 'var(--admin-accent)' }}
         >
           hub
         </span>
-        <span className="text-[#6b7280]">Strategy:</span>
-        <span className="text-white font-medium">
+        <span style={{ color: 'var(--admin-text-muted)' }}>Strategy:</span>
+        <span className="font-medium" style={{ color: 'var(--admin-text)' }}>
           {STRATEGY_LABELS[data.strategy] ?? data.strategy}
         </span>
       </div>
 
-      <div className="hidden sm:block w-px h-3 bg-[#1f2d4e]" />
+      <div
+        className="hidden sm:block w-px h-3"
+        style={{ backgroundColor: 'var(--admin-border)' }}
+      />
 
       <div className="flex items-center gap-1.5">
         <span
-          className={`w-1.5 h-1.5 rounded-full ${data.enabledCount > 0 ? 'bg-[#10b981]' : 'bg-[#374151]'}`}
+          className="w-1.5 h-1.5 rounded-full"
+          style={{
+            backgroundColor:
+              data.enabledCount > 0 ? 'var(--admin-success)' : 'var(--admin-text-disabled)',
+          }}
         />
-        <span className="text-[#6b7280]">Providers:</span>
-        <span className="text-white font-medium" data-testid="provider-count">
+        <span style={{ color: 'var(--admin-text-muted)' }}>Providers:</span>
+        <span
+          className="font-medium"
+          style={{ color: 'var(--admin-text)' }}
+          data-testid="provider-count"
+        >
           {data.enabledCount}
         </span>
-        <span className="text-[#374151]">enabled</span>
+        <span style={{ color: 'var(--admin-text-disabled)' }}>enabled</span>
       </div>
 
-      <div className="hidden sm:block w-px h-3 bg-[#1f2d4e]" />
+      <div
+        className="hidden sm:block w-px h-3"
+        style={{ backgroundColor: 'var(--admin-border)' }}
+      />
 
       <div className="flex items-center gap-1.5">
         <span
-          className={`w-1.5 h-1.5 rounded-full ${data.cacheEnabled ? 'bg-[#10b981]' : 'bg-[#374151]'}`}
+          className="w-1.5 h-1.5 rounded-full"
+          style={{
+            backgroundColor: data.cacheEnabled
+              ? 'var(--admin-success)'
+              : 'var(--admin-text-disabled)',
+          }}
         />
-        <span className="text-[#6b7280]">Cache:</span>
-        <span className="text-white font-medium">{data.cacheEnabled ? 'On' : 'Off'}</span>
+        <span style={{ color: 'var(--admin-text-muted)' }}>Cache:</span>
+        <span className="font-medium" style={{ color: 'var(--admin-text)' }}>
+          {data.cacheEnabled ? 'On' : 'Off'}
+        </span>
       </div>
 
       <div className="ml-auto">
         <Link
           href="/admin/settings"
-          className="text-[#6366f1] hover:text-[#818cf8] transition-colors"
+          className="transition-colors"
+          style={{ color: 'var(--admin-accent)' }}
         >
           Settings →
         </Link>
@@ -203,13 +231,22 @@ function ResultCard({
   return (
     <div
       data-testid="result-card"
-      className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-5 hover:border-[#6366f1]/30 transition-all flex flex-col gap-4"
+      className="rounded-2xl p-5 transition-all flex flex-col gap-4"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
     >
       {/* Score ring + keyword + state badge */}
       <div className="flex items-start gap-4">
         <ScoreRing score={result.score} state={result.state} size="md" />
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-semibold text-sm mb-1.5 truncate">{result.keyword}</h3>
+          <h3
+            className="font-semibold text-sm mb-1.5 truncate"
+            style={{ color: 'var(--admin-text)' }}
+          >
+            {result.keyword}
+          </h3>
           <TrendStateBadge state={result.state} size="sm" />
         </div>
       </div>
@@ -218,7 +255,14 @@ function ResultCard({
       {result.relatedKeywords.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {result.relatedKeywords.slice(0, 5).map((kw) => (
-            <span key={kw} className="bg-[#1f2d4e] text-[#9ca3af] rounded-full px-2 py-0.5 text-xs">
+            <span
+              key={kw}
+              className="rounded-full px-2 py-0.5 text-xs"
+              style={{
+                backgroundColor: 'var(--admin-border)',
+                color: 'var(--admin-text-secondary)',
+              }}
+            >
               {kw}
             </span>
           ))}
@@ -226,7 +270,10 @@ function ResultCard({
       )}
 
       {/* Footer: sources + "Add to Research" */}
-      <div className="flex items-center justify-between mt-auto pt-1 border-t border-[#1f2d4e]">
+      <div
+        className="flex items-center justify-between mt-auto pt-1"
+        style={{ borderTop: '1px solid var(--admin-border)' }}
+      >
         <SourcePills sources={result.sources} />
         <button
           onClick={() =>
@@ -239,7 +286,11 @@ function ResultCard({
             })
           }
           data-testid="add-to-research-btn"
-          className="text-xs text-[#d4a843] border border-[#d4a843]/30 hover:bg-[#d4a843]/10 rounded-xl px-3 py-1.5 transition-colors"
+          className="text-xs rounded-xl px-3 py-1.5 transition-colors"
+          style={{
+            color: 'var(--admin-brand)',
+            border: '1px solid color-mix(in srgb, var(--admin-brand) 30%, transparent)',
+          }}
         >
           + Research
         </button>
@@ -352,7 +403,6 @@ export default function TrendEnginePage() {
 
   // ── Mount: config + recent searches ONLY (no auto-fetch) ──────────────────
   useEffect(() => {
-    // Engine config — free, no tokens
     fetch('/api/admin/trends/config')
       .then((r) => r.json())
       .then(
@@ -380,7 +430,6 @@ export default function TrendEnginePage() {
         /* non-critical */
       });
 
-    // Recent searches from localStorage — free
     setRecentSearches(loadRecentSearches());
   }, []);
 
@@ -408,23 +457,21 @@ export default function TrendEnginePage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* ── Header ── */}
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-[#6366f1]/15 flex items-center justify-center flex-none">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center flex-none"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--admin-accent) 15%, transparent)' }}
+        >
           <span
-            className="material-symbols-outlined text-[#6366f1]"
+            className="material-symbols-outlined"
             aria-hidden="true"
-            style={{ fontSize: 24 }}
+            style={{ fontSize: 24, color: 'var(--admin-accent)' }}
           >
             trending_up
           </span>
         </div>
         <div>
-          <h1
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            Trend Engine
-          </h1>
-          <p className="text-[#6b7280] text-sm mt-0.5">
+          <h1 className="admin-h1 text-2xl">Trend Engine</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
             Intelligence platform — search, discover, and analyze market trends
           </p>
         </div>
@@ -435,16 +482,25 @@ export default function TrendEnginePage() {
 
       {/* ── No Providers Warning ── */}
       {engineConfig && engineConfig.readyCount === 0 && (
-        <div className="bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-2xl p-5 space-y-3">
+        <div
+          className="rounded-2xl p-5 space-y-3"
+          style={{
+            backgroundColor: 'var(--admin-error-bg)',
+            border: '1px solid color-mix(in srgb, var(--admin-error) 30%, transparent)',
+          }}
+        >
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-[#ef4444] text-xl flex-none mt-0.5">
+            <span
+              className="material-symbols-outlined text-xl flex-none mt-0.5"
+              style={{ color: 'var(--admin-error)' }}
+            >
               warning
             </span>
             <div className="space-y-2">
-              <h3 className="text-[#ef4444] font-semibold text-sm">
+              <h3 className="font-semibold text-sm" style={{ color: 'var(--admin-error)' }}>
                 No trend providers configured
               </h3>
-              <p className="text-[#f87171] text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--admin-error)' }}>
                 Searches will return empty results because none of your enabled providers have API
                 keys configured. You need at least one working provider to use the Trend Engine.
               </p>
@@ -452,25 +508,33 @@ export default function TrendEnginePage() {
                 {Object.entries(engineConfig.providerReadiness).map(([pid, info]) => (
                   <div key={pid} className="flex items-center gap-2 text-xs">
                     <span
-                      className={`w-2 h-2 rounded-full flex-none ${info.hasKey ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`}
+                      className="w-2 h-2 rounded-full flex-none"
+                      style={{
+                        backgroundColor: info.hasKey
+                          ? 'var(--admin-success)'
+                          : 'var(--admin-error)',
+                      }}
                     />
-                    <span className="text-white font-medium capitalize">{pid}</span>
+                    <span className="font-medium capitalize" style={{ color: 'var(--admin-text)' }}>
+                      {pid}
+                    </span>
                     {!info.hasKey && info.reason && (
-                      <span className="text-[#f87171]">— {info.reason}</span>
+                      <span style={{ color: 'var(--admin-error)' }}>— {info.reason}</span>
                     )}
-                    {info.hasKey && <span className="text-[#10b981]">— Ready</span>}
+                    {info.hasKey && <span style={{ color: 'var(--admin-success)' }}>— Ready</span>}
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-3 pt-1">
                 <Link
                   href="/admin/settings"
-                  className="inline-flex items-center gap-1.5 bg-[#ef4444] hover:bg-[#dc2626] text-white font-semibold rounded-xl px-4 py-2 text-xs transition-colors"
+                  className="inline-flex items-center gap-1.5 text-white font-semibold rounded-xl px-4 py-2 text-xs transition-colors"
+                  style={{ backgroundColor: 'var(--admin-error)' }}
                 >
                   <span className="material-symbols-outlined text-sm">settings</span>
                   Go to Settings
                 </Link>
-                <span className="text-[#f87171] text-[10px]">
+                <span className="text-[10px]" style={{ color: 'var(--admin-error)' }}>
                   Fastest option: add a free Tavily API key (1,000 searches/month)
                 </span>
               </div>
@@ -480,14 +544,20 @@ export default function TrendEnginePage() {
       )}
 
       {/* ── Search Section ── */}
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6 space-y-4">
+      <div
+        className="rounded-2xl p-6 space-y-4"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+        }}
+      >
         <form onSubmit={onSubmit} className="flex flex-col sm:flex-row gap-3">
           {/* Search input */}
           <div className="flex-1 relative">
             <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#374151]"
+              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2"
               aria-hidden="true"
-              style={{ fontSize: 18 }}
+              style={{ fontSize: 18, color: 'var(--admin-text-disabled)' }}
             >
               search
             </span>
@@ -496,7 +566,12 @@ export default function TrendEnginePage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search trends... (e.g., montessori toys, wireless earbuds)"
-              className="w-full bg-[#0d1526] border border-[#1f2d4e] text-white placeholder-[#374151] rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+              className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none transition-colors"
+              style={{
+                backgroundColor: 'var(--admin-bg-elevated)',
+                border: '1px solid var(--admin-border)',
+                color: 'var(--admin-text)',
+              }}
             />
           </div>
 
@@ -505,7 +580,12 @@ export default function TrendEnginePage() {
             data-testid="state-selector"
             value={selectedState}
             onChange={(e) => updateSelectedState(e.target.value)}
-            className="bg-[#0d1526] border border-[#1f2d4e] text-white rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-[#d4a843]/50 transition-colors sm:w-44"
+            className="rounded-xl px-3 py-3 text-sm outline-none transition-colors sm:w-44"
+            style={{
+              backgroundColor: 'var(--admin-bg-elevated)',
+              border: '1px solid var(--admin-border)',
+              color: 'var(--admin-text)',
+            }}
           >
             {US_STATES.map((s) => (
               <option key={s.value} value={s.value}>
@@ -519,7 +599,11 @@ export default function TrendEnginePage() {
             type="submit"
             data-testid="search-submit"
             disabled={searchStatus === 'searching'}
-            className="bg-[#d4a843] hover:bg-[#c49833] disabled:opacity-60 disabled:cursor-not-allowed text-[#0d1526] font-semibold rounded-xl px-6 py-3 text-sm transition-colors flex items-center gap-2 justify-center"
+            className="font-semibold rounded-xl px-6 py-3 text-sm transition-colors flex items-center gap-2 justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: 'var(--admin-brand)',
+              color: 'var(--admin-bg)',
+            }}
           >
             {searchStatus === 'searching' ? (
               <>
@@ -545,17 +629,28 @@ export default function TrendEnginePage() {
         {/* Search suggestions — guides for new users */}
         {!searchInput && searchStatus !== 'searching' && (
           <div className="space-y-3">
-            <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider">
+            <p
+              className="text-xs font-medium uppercase tracking-wider"
+              style={{ color: 'var(--admin-text-muted)' }}
+            >
               Not sure what to search? Try one of these:
             </p>
 
             {/* Popular product ideas */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[#d4a843]" style={{ fontSize: 14 }}>
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 14, color: 'var(--admin-brand)' }}
+                >
                   local_fire_department
                 </span>
-                <span className="text-[#9ca3af] text-[11px] font-medium">Hot Right Now</span>
+                <span
+                  className="text-[11px] font-medium"
+                  style={{ color: 'var(--admin-text-secondary)' }}
+                >
+                  Hot Right Now
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -571,7 +666,12 @@ export default function TrendEnginePage() {
                       setSearchInput(s);
                       void handleSearch(s);
                     }}
-                    className="bg-[#d4a843]/10 hover:bg-[#d4a843]/20 border border-[#d4a843]/20 hover:border-[#d4a843]/40 text-[#d4a843] rounded-full px-3 py-1.5 text-xs font-medium transition-all"
+                    className="rounded-full px-3 py-1.5 text-xs font-medium transition-all"
+                    style={{
+                      backgroundColor: 'color-mix(in srgb, var(--admin-brand) 10%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--admin-brand) 20%, transparent)',
+                      color: 'var(--admin-brand)',
+                    }}
                   >
                     {s}
                   </button>
@@ -582,10 +682,18 @@ export default function TrendEnginePage() {
             {/* By category */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[#6366f1]" style={{ fontSize: 14 }}>
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 14, color: 'var(--admin-accent)' }}
+                >
                   category
                 </span>
-                <span className="text-[#9ca3af] text-[11px] font-medium">By Category</span>
+                <span
+                  className="text-[11px] font-medium"
+                  style={{ color: 'var(--admin-text-secondary)' }}
+                >
+                  By Category
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {[
@@ -604,7 +712,12 @@ export default function TrendEnginePage() {
                       setSearchInput(item.q);
                       void handleSearch(item.q);
                     }}
-                    className="bg-[#0d1526] hover:bg-[#1f2d4e] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-full px-3 py-1.5 text-xs transition-all"
+                    className="rounded-full px-3 py-1.5 text-xs transition-all"
+                    style={{
+                      backgroundColor: 'var(--admin-bg-elevated)',
+                      border: '1px solid var(--admin-border)',
+                      color: 'var(--admin-text-secondary)',
+                    }}
                   >
                     {item.label}
                   </button>
@@ -613,18 +726,29 @@ export default function TrendEnginePage() {
             </div>
 
             {/* Pro tips */}
-            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl px-4 py-3 mt-2">
+            <div
+              className="rounded-xl px-4 py-3 mt-2"
+              style={{
+                backgroundColor: 'var(--admin-bg-elevated)',
+                border: '1px solid var(--admin-border)',
+              }}
+            >
               <div className="flex items-start gap-2">
                 <span
-                  className="material-symbols-outlined text-[#10b981] flex-none mt-0.5"
-                  style={{ fontSize: 16 }}
+                  className="material-symbols-outlined flex-none mt-0.5"
+                  style={{ fontSize: 16, color: 'var(--admin-success)' }}
                 >
                   tips_and_updates
                 </span>
-                <div className="text-[#6b7280] text-xs leading-relaxed space-y-1">
+                <div
+                  className="text-xs leading-relaxed space-y-1"
+                  style={{ color: 'var(--admin-text-muted)' }}
+                >
                   <p>
-                    <span className="text-[#9ca3af] font-medium">Tip:</span> You can search multiple
-                    products at once — just separate them with commas.
+                    <span className="font-medium" style={{ color: 'var(--admin-text-secondary)' }}>
+                      Tip:
+                    </span>{' '}
+                    You can search multiple products at once — just separate them with commas.
                   </p>
                   <p>
                     Example:{' '}
@@ -633,7 +757,8 @@ export default function TrendEnginePage() {
                         setSearchInput('yoga mat, resistance bands, foam roller');
                         void handleSearch('yoga mat, resistance bands, foam roller');
                       }}
-                      className="text-[#d4a843] hover:underline"
+                      className="hover:underline"
+                      style={{ color: 'var(--admin-brand)' }}
                     >
                       yoga mat, resistance bands, foam roller
                     </button>
@@ -648,7 +773,10 @@ export default function TrendEnginePage() {
         {recentSearches.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[#6b7280] text-xs font-medium uppercase tracking-wider">
+              <span
+                className="text-xs font-medium uppercase tracking-wider"
+                style={{ color: 'var(--admin-text-muted)' }}
+              >
                 Recent Searches
               </span>
               <button
@@ -656,7 +784,8 @@ export default function TrendEnginePage() {
                   clearAllRecentSearches();
                   setRecentSearches([]);
                 }}
-                className="text-[#374151] hover:text-[#9ca3af] text-xs transition-colors"
+                className="text-xs transition-colors"
+                style={{ color: 'var(--admin-text-disabled)' }}
               >
                 Clear
               </button>
@@ -670,7 +799,12 @@ export default function TrendEnginePage() {
                     setSearchInput(query);
                     void handleSearch(query);
                   }}
-                  className="bg-[#0d1526] hover:bg-[#1f2d4e] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-full px-3 py-1 text-xs transition-all"
+                  className="rounded-full px-3 py-1 text-xs transition-all"
+                  style={{
+                    backgroundColor: 'var(--admin-bg-elevated)',
+                    border: '1px solid var(--admin-border)',
+                    color: 'var(--admin-text-secondary)',
+                  }}
                 >
                   {query}
                 </button>
@@ -691,16 +825,25 @@ export default function TrendEnginePage() {
       {searchStatus === 'error' && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span
-            className="material-symbols-outlined text-[#ef4444] text-5xl mb-3"
+            className="material-symbols-outlined text-5xl mb-3"
             aria-hidden="true"
+            style={{ color: 'var(--admin-error)' }}
           >
             error
           </span>
-          <p className="text-[#ef4444] font-medium mb-1">Failed to fetch trends</p>
-          <p className="text-[#6b7280] text-sm mb-4">{searchError}</p>
+          <p className="font-medium mb-1" style={{ color: 'var(--admin-error)' }}>
+            Failed to fetch trends
+          </p>
+          <p className="text-sm mb-4" style={{ color: 'var(--admin-text-muted)' }}>
+            {searchError}
+          </p>
           <button
             onClick={() => searchInput && void handleSearch(searchInput)}
-            className="flex items-center gap-2 bg-[#d4a843] hover:bg-[#c49833] text-[#0d1526] font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
+            className="flex items-center gap-2 font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
+            style={{
+              backgroundColor: 'var(--admin-brand)',
+              color: 'var(--admin-bg)',
+            }}
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               refresh
@@ -713,19 +856,24 @@ export default function TrendEnginePage() {
       {searchStatus === 'results' && searchResults.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span
-            className="material-symbols-outlined text-[#374151] text-5xl mb-3"
+            className="material-symbols-outlined text-5xl mb-3"
             aria-hidden="true"
+            style={{ color: 'var(--admin-text-disabled)' }}
           >
             search_off
           </span>
-          <p className="text-white font-medium mb-1">No trends found</p>
-          <p className="text-[#6b7280] text-sm">Try different keywords or broaden your search</p>
+          <p className="font-medium mb-1" style={{ color: 'var(--admin-text)' }}>
+            No trends found
+          </p>
+          <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+            Try different keywords or broaden your search
+          </p>
         </div>
       )}
 
       {searchStatus === 'results' && searchResults.length > 0 && (
         <div>
-          <p className="text-[#6b7280] text-xs mb-4">
+          <p className="text-xs mb-4" style={{ color: 'var(--admin-text-muted)' }}>
             {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -742,16 +890,30 @@ export default function TrendEnginePage() {
 
       {/* ── Getting Started Guide (idle state, no search yet) ── */}
       {searchStatus === 'idle' && trendingStatus === 'idle' && (
-        <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-6 space-y-6">
+        <div
+          className="rounded-2xl p-6 space-y-6"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#d4a843]/15 flex items-center justify-center flex-none">
-              <span className="material-symbols-outlined text-[#d4a843]" style={{ fontSize: 22 }}>
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-none"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--admin-brand) 15%, transparent)' }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 22, color: 'var(--admin-brand)' }}
+              >
                 lightbulb
               </span>
             </div>
             <div>
-              <h2 className="text-white font-semibold text-base">How to use the Trend Engine</h2>
-              <p className="text-[#6b7280] text-xs mt-0.5">
+              <h2 className="font-semibold text-base" style={{ color: 'var(--admin-text)' }}>
+                How to use the Trend Engine
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
                 Find what products are selling right now — before your competitors do
               </p>
             </div>
@@ -759,60 +921,99 @@ export default function TrendEnginePage() {
 
           {/* Step by step guide */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 space-y-2">
+            <div
+              className="rounded-xl p-4 space-y-2"
+              style={{
+                backgroundColor: 'var(--admin-bg-elevated)',
+                border: '1px solid var(--admin-border)',
+              }}
+            >
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-[#d4a843] text-[#0d1526] text-xs font-bold flex items-center justify-center">
+                <span
+                  className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
+                >
                   1
                 </span>
-                <span className="text-white text-sm font-medium">Search a product idea</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
+                  Search a product idea
+                </span>
               </div>
-              <p className="text-[#6b7280] text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--admin-text-muted)' }}>
                 Type a product or niche in the search bar above. Example:{' '}
-                <span className="text-[#d4a843]">&quot;wireless earbuds&quot;</span> or{' '}
-                <span className="text-[#d4a843]">&quot;pet grooming&quot;</span>
+                <span style={{ color: 'var(--admin-brand)' }}>&quot;wireless earbuds&quot;</span> or{' '}
+                <span style={{ color: 'var(--admin-brand)' }}>&quot;pet grooming&quot;</span>
               </p>
             </div>
 
-            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 space-y-2">
+            <div
+              className="rounded-xl p-4 space-y-2"
+              style={{
+                backgroundColor: 'var(--admin-bg-elevated)',
+                border: '1px solid var(--admin-border)',
+              }}
+            >
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-[#d4a843] text-[#0d1526] text-xs font-bold flex items-center justify-center">
+                <span
+                  className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
+                >
                   2
                 </span>
-                <span className="text-white text-sm font-medium">Review the trend score</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
+                  Review the trend score
+                </span>
               </div>
-              <p className="text-[#6b7280] text-xs leading-relaxed">
-                Each result shows a <span className="text-[#10b981]">score from 0-100</span>. Higher
-                = more trending. Look for <span className="text-[#10b981]">rising</span> or{' '}
-                <span className="text-[#10b981]">hot</span> products.
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--admin-text-muted)' }}>
+                Each result shows a{' '}
+                <span style={{ color: 'var(--admin-success)' }}>score from 0-100</span>. Higher =
+                more trending. Look for{' '}
+                <span style={{ color: 'var(--admin-success)' }}>rising</span> or{' '}
+                <span style={{ color: 'var(--admin-success)' }}>hot</span> products.
               </p>
             </div>
 
-            <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 space-y-2">
+            <div
+              className="rounded-xl p-4 space-y-2"
+              style={{
+                backgroundColor: 'var(--admin-bg-elevated)',
+                border: '1px solid var(--admin-border)',
+              }}
+            >
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-[#d4a843] text-[#0d1526] text-xs font-bold flex items-center justify-center">
+                <span
+                  className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
+                >
                   3
                 </span>
-                <span className="text-white text-sm font-medium">Add to Research</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--admin-text)' }}>
+                  Add to Research
+                </span>
               </div>
-              <p className="text-[#6b7280] text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--admin-text-muted)' }}>
                 Found something promising? Click{' '}
-                <span className="text-[#d4a843]">&quot;+ Research&quot;</span> to save it. Then go
-                to <span className="text-[#d4a843]">Market Intel</span> for deep analysis with
-                prices and links.
+                <span style={{ color: 'var(--admin-brand)' }}>&quot;+ Research&quot;</span> to save
+                it. Then go to <span style={{ color: 'var(--admin-brand)' }}>Market Intel</span> for
+                deep analysis with prices and links.
               </p>
             </div>
           </div>
 
           {/* Quick actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2 border-t border-[#1f2d4e]">
+          <div
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-2"
+            style={{ borderTop: '1px solid var(--admin-border)' }}
+          >
             <button
               onClick={loadTrendingNow}
-              className="flex items-center gap-2 bg-[#6366f1] hover:bg-[#5558e6] text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
+              className="flex items-center gap-2 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
+              style={{ backgroundColor: 'var(--admin-accent)' }}
             >
               <span className="material-symbols-outlined text-base">trending_up</span>
               Show me what&apos;s trending now
             </button>
-            <span className="text-[#374151] text-xs">
+            <span className="text-xs" style={{ color: 'var(--admin-text-disabled)' }}>
               This will search popular keywords across categories (uses provider credits)
             </span>
           </div>
@@ -824,14 +1025,18 @@ export default function TrendEnginePage() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <span
-              className="material-symbols-outlined text-[#d4a843]"
+              className="material-symbols-outlined"
               aria-hidden="true"
-              style={{ fontSize: 18 }}
+              style={{ fontSize: 18, color: 'var(--admin-brand)' }}
             >
               trending_up
             </span>
-            <h2 className="text-white font-semibold">Trending Now</h2>
-            <span className="text-[#6b7280] text-sm">— Popular across categories</span>
+            <h2 className="font-semibold" style={{ color: 'var(--admin-text)' }}>
+              Trending Now
+            </h2>
+            <span className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+              — Popular across categories
+            </span>
           </div>
 
           {trendingStatus === 'loading' && (
@@ -853,9 +1058,13 @@ export default function TrendEnginePage() {
           )}
 
           {trendingStatus === 'done' && trendingNow.length === 0 && (
-            <p className="text-[#374151] text-sm text-center py-8">
+            <p className="text-sm text-center py-8" style={{ color: 'var(--admin-text-disabled)' }}>
               No trending data available. Configure providers in{' '}
-              <Link href="/admin/settings" className="text-[#6366f1] hover:underline">
+              <Link
+                href="/admin/settings"
+                className="hover:underline"
+                style={{ color: 'var(--admin-accent)' }}
+              >
                 Settings
               </Link>
               .
@@ -864,10 +1073,13 @@ export default function TrendEnginePage() {
 
           {trendingStatus === 'error' && (
             <div className="flex flex-col items-center py-8">
-              <p className="text-[#ef4444] text-sm mb-3">Failed to load trending data</p>
+              <p className="text-sm mb-3" style={{ color: 'var(--admin-error)' }}>
+                Failed to load trending data
+              </p>
               <button
                 onClick={loadTrendingNow}
-                className="text-[#6366f1] hover:text-[#818cf8] text-sm transition-colors"
+                className="text-sm transition-colors"
+                style={{ color: 'var(--admin-accent)' }}
               >
                 Try again
               </button>
@@ -886,8 +1098,11 @@ export default function TrendEnginePage() {
       )}
 
       {/* ── Quick Category Links ── */}
-      <div className="border-t border-[#1f2d4e] pt-6">
-        <p className="text-[#6b7280] text-xs font-medium uppercase tracking-wider mb-3">
+      <div className="pt-6" style={{ borderTop: '1px solid var(--admin-border)' }}>
+        <p
+          className="text-xs font-medium uppercase tracking-wider mb-3"
+          style={{ color: 'var(--admin-text-muted)' }}
+        >
           Explore by Category
         </p>
         <div className="flex flex-wrap gap-2">
@@ -896,7 +1111,12 @@ export default function TrendEnginePage() {
               key={cat.id}
               data-testid="category-link"
               onClick={() => router.push(`/admin/explorer/${cat.id}`)}
-              className="flex items-center gap-1.5 bg-[#111827] hover:bg-[#1f2d4e] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-3 py-1.5 text-xs font-medium transition-all"
+              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all"
+              style={{
+                backgroundColor: 'var(--admin-bg-card)',
+                border: '1px solid var(--admin-border)',
+                color: 'var(--admin-text-secondary)',
+              }}
             >
               <span
                 className="material-symbols-outlined"

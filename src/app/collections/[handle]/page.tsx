@@ -176,7 +176,7 @@ export default async function CollectionPage({ params, searchParams }: Collectio
         {/* Collection Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">
+            <h1 className="font-headline text-3xl md:text-5xl text-[#303330]">
               All Baby Essentials
             </h1>
             <p className="font-label text-xs uppercase tracking-widest text-[#5d605c] mt-2">
@@ -271,7 +271,7 @@ export default async function CollectionPage({ params, searchParams }: Collectio
       {/* Collection Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">{collection.title}</h1>
+          <h1 className="font-headline text-3xl md:text-5xl text-[#303330]">{collection.title}</h1>
           {collection.description && (
             <p className="text-[#5d605c] leading-relaxed max-w-2xl mt-2">
               {collection.description}

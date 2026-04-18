@@ -1,10 +1,11 @@
 'use client';
 
 /**
- * Admin Product Metafields Page
+ * Admin Product Metafields Page — Phase 3
  *
  * Route: /admin/products/{id}/metafields
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Manage all metafields for a product:
  * view existing, add new, edit values, delete.
  */
@@ -58,6 +59,14 @@ const TYPE_OPTIONS: Array<{ value: MetafieldType; label: string; icon: string }>
   { value: 'color', label: 'Color', icon: 'palette' },
 ];
 
+// ─── Shared input style ────────────────────────────────────────────────────────
+
+const inputStyle: React.CSSProperties = {
+  backgroundColor: 'var(--admin-bg)',
+  border: '1px solid var(--admin-border)',
+  color: 'var(--admin-text)',
+};
+
 // ─── Metafield Modal ───────────────────────────────────────────────────────────
 
 function MetafieldModal({
@@ -94,11 +103,15 @@ function MetafieldModal({
                 key={v}
                 type="button"
                 onClick={() => setForm((f) => ({ ...f, value: v }))}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all capitalize ${
-                  form.value === v
-                    ? 'bg-[#d4a843]/10 border-[#d4a843] text-[#d4a843]'
-                    : 'bg-[#0a0f1e] border-[#1f2d4e] text-[#6b7280] hover:border-[#374151]'
-                }`}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all capitalize"
+                style={{
+                  backgroundColor:
+                    form.value === v
+                      ? 'color-mix(in srgb, var(--admin-brand) 10%, transparent)'
+                      : 'var(--admin-bg)',
+                  border: `1px solid ${form.value === v ? 'var(--admin-brand)' : 'var(--admin-border)'}`,
+                  color: form.value === v ? 'var(--admin-brand)' : 'var(--admin-text-muted)',
+                }}
               >
                 {v}
               </button>
@@ -113,7 +126,8 @@ function MetafieldModal({
               type="color"
               value={form.value || '#000000'}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-              className="w-12 h-10 rounded-lg border border-[#1f2d4e] bg-transparent cursor-pointer"
+              className="w-12 h-10 rounded-lg cursor-pointer"
+              style={{ border: '1px solid var(--admin-border)', backgroundColor: 'transparent' }}
             />
             <input
               type="text"
@@ -121,7 +135,8 @@ function MetafieldModal({
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
               placeholder="#000000"
               pattern="^#[0-9A-Fa-f]{6}$"
-              className="flex-1 bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-4 py-2.5 text-white text-sm placeholder-[#374151] outline-none transition-colors font-mono"
+              className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none transition-colors font-mono"
+              style={inputStyle}
             />
           </div>
         );
@@ -132,7 +147,8 @@ function MetafieldModal({
             type="date"
             value={form.value}
             onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-            className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-4 py-2.5 text-white text-sm outline-none transition-colors"
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+            style={inputStyle}
           />
         );
 
@@ -144,7 +160,8 @@ function MetafieldModal({
             placeholder='{"key": "value"}'
             rows={5}
             spellCheck={false}
-            className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-4 py-2.5 text-white text-sm placeholder-[#374151] outline-none transition-colors resize-none font-mono"
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors resize-none font-mono"
+            style={inputStyle}
           />
         );
 
@@ -157,7 +174,8 @@ function MetafieldModal({
             value={form.value}
             onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
             placeholder="0"
-            className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-4 py-2.5 text-white text-sm placeholder-[#374151] outline-none transition-colors"
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+            style={inputStyle}
           />
         );
 
@@ -167,8 +185,9 @@ function MetafieldModal({
             type="text"
             value={form.value}
             onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-            placeholder="Value…"
-            className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-4 py-2.5 text-white text-sm placeholder-[#374151] outline-none transition-colors"
+            placeholder="Value..."
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+            style={inputStyle}
           />
         );
     }
@@ -176,19 +195,34 @@ function MetafieldModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ backgroundColor: 'var(--admin-overlay)' }}
+        onClick={onClose}
+      />
+      <div
+        className="relative z-10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#1f2d4e] sticky top-0 bg-[#111827] z-10">
-          <h2
-            className="font-bold text-lg"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-          >
+        <div
+          className="flex items-center justify-between p-6 sticky top-0 z-10"
+          style={{
+            borderBottom: '1px solid var(--admin-border)',
+            backgroundColor: 'var(--admin-bg-card)',
+          }}
+        >
+          <h2 className="admin-h2 text-lg">
             {mode === 'create' ? 'Add Metafield' : 'Edit Metafield'}
           </h2>
           <button
             onClick={onClose}
-            className="text-[#6b7280] hover:text-white transition-colors p-1 rounded-lg"
+            className="transition-colors p-1 rounded-lg"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
@@ -199,8 +233,8 @@ function MetafieldModal({
           {/* Namespace + Key row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-[#9ca3af] mb-1.5 font-medium">
-                Namespace <span className="text-[#ef4444]">*</span>
+              <label className="admin-label block mb-1.5">
+                Namespace <span style={{ color: 'var(--admin-error)' }}>*</span>
               </label>
               <input
                 type="text"
@@ -209,12 +243,13 @@ function MetafieldModal({
                 onChange={(e) => setForm((f) => ({ ...f, namespace: e.target.value }))}
                 placeholder="custom"
                 disabled={mode === 'edit'}
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-3 py-2.5 text-white text-sm placeholder-[#374151] outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                style={inputStyle}
               />
             </div>
             <div>
-              <label className="block text-sm text-[#9ca3af] mb-1.5 font-medium">
-                Key <span className="text-[#ef4444]">*</span>
+              <label className="admin-label block mb-1.5">
+                Key <span style={{ color: 'var(--admin-error)' }}>*</span>
               </label>
               <input
                 type="text"
@@ -223,14 +258,15 @@ function MetafieldModal({
                 onChange={(e) => setForm((f) => ({ ...f, key: e.target.value }))}
                 placeholder="my_key"
                 disabled={mode === 'edit'}
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] rounded-xl px-3 py-2.5 text-white text-sm placeholder-[#374151] outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+                style={inputStyle}
               />
             </div>
           </div>
 
           {/* Type */}
           <div>
-            <label className="block text-sm text-[#9ca3af] mb-2 font-medium">Type</label>
+            <label className="admin-label block mb-2">Type</label>
             <div className="grid grid-cols-4 gap-2">
               {TYPE_OPTIONS.map((opt) => (
                 <button
@@ -238,11 +274,16 @@ function MetafieldModal({
                   type="button"
                   disabled={mode === 'edit'}
                   onClick={() => setForm((f) => ({ ...f, type: opt.value, value: '' }))}
-                  className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-all ${
-                    form.type === opt.value
-                      ? 'bg-[#d4a843]/10 border-[#d4a843] text-[#d4a843]'
-                      : 'bg-[#0a0f1e] border-[#1f2d4e] text-[#6b7280] hover:border-[#374151]'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor:
+                      form.type === opt.value
+                        ? 'color-mix(in srgb, var(--admin-brand) 10%, transparent)'
+                        : 'var(--admin-bg)',
+                    border: `1px solid ${form.type === opt.value ? 'var(--admin-brand)' : 'var(--admin-border)'}`,
+                    color:
+                      form.type === opt.value ? 'var(--admin-brand)' : 'var(--admin-text-muted)',
+                  }}
                 >
                   <span className="material-symbols-outlined text-base">{opt.icon}</span>
                   {opt.label}
@@ -253,8 +294,8 @@ function MetafieldModal({
 
           {/* Value */}
           <div>
-            <label className="block text-sm text-[#9ca3af] mb-1.5 font-medium">
-              Value <span className="text-[#ef4444]">*</span>
+            <label className="admin-label block mb-1.5">
+              Value <span style={{ color: 'var(--admin-error)' }}>*</span>
             </label>
             {renderValueInput()}
           </div>
@@ -264,19 +305,27 @@ function MetafieldModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-[#1f2d4e] text-[#6b7280] hover:text-white hover:border-[#374151] text-sm font-medium transition-all"
+              className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{
+                border: '1px solid var(--admin-border)',
+                color: 'var(--admin-text-muted)',
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-[#d4a843] hover:bg-[#e4c06a] text-black text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: 'var(--admin-brand)',
+                color: 'var(--admin-bg)',
+              }}
             >
               {saving ? (
                 <>
                   <span className="material-symbols-outlined text-sm animate-spin">autorenew</span>
-                  Saving…
+                  Saving...
                 </>
               ) : mode === 'create' ? (
                 'Add Metafield'
@@ -315,22 +364,42 @@ function ConfirmDeleteModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-md shadow-2xl p-6">
+      <div
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ backgroundColor: 'var(--admin-overlay)' }}
+        onClick={onClose}
+      />
+      <div
+        className="relative z-10 rounded-2xl w-full max-w-md p-6"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
+      >
         <div className="flex items-start gap-4 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-[#ef4444]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span className="material-symbols-outlined text-[#ef4444] text-xl">warning</span>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+            style={{ backgroundColor: 'var(--admin-error-bg)' }}
+          >
+            <span
+              className="material-symbols-outlined text-xl"
+              style={{ color: 'var(--admin-error)' }}
+            >
+              warning
+            </span>
           </div>
           <div>
-            <h2
-              className="font-bold text-lg mb-1"
-              style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-            >
-              Delete Metafield
-            </h2>
-            <p className="text-[#6b7280] text-sm leading-relaxed">
+            <h2 className="admin-h2 text-lg mb-1">Delete Metafield</h2>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--admin-text-muted)' }}>
               Delete metafield{' '}
-              <span className="text-white font-mono text-xs bg-[#0a0f1e] px-1.5 py-0.5 rounded">
+              <span
+                className="font-mono text-xs px-1.5 py-0.5 rounded"
+                style={{
+                  color: 'var(--admin-text)',
+                  backgroundColor: 'var(--admin-bg)',
+                }}
+              >
                 {metafield.namespace}.{metafield.key}
               </span>
               ? This action cannot be undone.
@@ -341,19 +410,24 @@ function ConfirmDeleteModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-[#1f2d4e] text-[#6b7280] hover:text-white hover:border-[#374151] text-sm font-medium transition-all"
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all"
+            style={{
+              border: '1px solid var(--admin-border)',
+              color: 'var(--admin-text-muted)',
+            }}
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={deleting}
-            className="flex-1 py-2.5 rounded-xl bg-[#ef4444] hover:bg-red-400 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{ backgroundColor: 'var(--admin-error)' }}
           >
             {deleting ? (
               <>
                 <span className="material-symbols-outlined text-sm animate-spin">autorenew</span>
-                Deleting…
+                Deleting...
               </>
             ) : (
               <>
@@ -375,10 +449,12 @@ function ValuePreview({ type, value }: { type: string; value: string }) {
     return (
       <div className="flex items-center gap-2">
         <span
-          className="w-4 h-4 rounded-full border border-[#1f2d4e] flex-shrink-0"
-          style={{ backgroundColor: value }}
+          className="w-4 h-4 rounded-full flex-shrink-0"
+          style={{ backgroundColor: value, border: '1px solid var(--admin-border)' }}
         />
-        <span className="text-[#9ca3af] text-sm font-mono">{value}</span>
+        <span className="text-sm font-mono" style={{ color: 'var(--admin-text-secondary)' }}>
+          {value}
+        </span>
       </div>
     );
   }
@@ -386,9 +462,14 @@ function ValuePreview({ type, value }: { type: string; value: string }) {
   if (type === 'boolean') {
     return (
       <span
-        className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-          value === 'true' ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-[#6b7280]/10 text-[#6b7280]'
-        }`}
+        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+        style={{
+          backgroundColor:
+            value === 'true'
+              ? 'var(--admin-success-bg)'
+              : 'color-mix(in srgb, var(--admin-text-muted) 10%, transparent)',
+          color: value === 'true' ? 'var(--admin-success)' : 'var(--admin-text-muted)',
+        }}
       >
         <span className="material-symbols-outlined text-sm">
           {value === 'true' ? 'check_circle' : 'cancel'}
@@ -399,10 +480,24 @@ function ValuePreview({ type, value }: { type: string; value: string }) {
   }
 
   if (type === 'json') {
-    return <span className="text-[#9ca3af] text-xs font-mono line-clamp-1 max-w-xs">{value}</span>;
+    return (
+      <span
+        className="text-xs font-mono line-clamp-1 max-w-xs"
+        style={{ color: 'var(--admin-text-secondary)' }}
+      >
+        {value}
+      </span>
+    );
   }
 
-  return <span className="text-[#9ca3af] text-sm line-clamp-1 max-w-xs">{value || '—'}</span>;
+  return (
+    <span
+      className="text-sm line-clamp-1 max-w-xs"
+      style={{ color: 'var(--admin-text-secondary)' }}
+    >
+      {value || '\u2014'}
+    </span>
+  );
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
@@ -521,10 +616,13 @@ export default function ProductMetafieldsPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+      <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--admin-text-muted)' }}>
         <button
           onClick={() => router.push('/admin/products')}
-          className="hover:text-white transition-colors"
+          className="transition-colors"
+          style={{ color: 'var(--admin-text-muted)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--admin-text)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--admin-text-muted)')}
         >
           Products
         </button>
@@ -532,7 +630,8 @@ export default function ProductMetafieldsPage() {
         {productTitle ? (
           <Link
             href={`/admin/products`}
-            className="hover:text-white transition-colors line-clamp-1 max-w-[200px]"
+            className="transition-colors line-clamp-1 max-w-[200px]"
+            style={{ color: 'var(--admin-text-muted)' }}
             title={productTitle}
           >
             {productTitle}
@@ -541,29 +640,29 @@ export default function ProductMetafieldsPage() {
           <span className="font-mono text-xs">{productId}</span>
         )}
         <span className="material-symbols-outlined text-sm">chevron_right</span>
-        <span className="text-white font-medium">Metafields</span>
+        <span className="font-medium" style={{ color: 'var(--admin-text)' }}>
+          Metafields
+        </span>
       </div>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-          >
-            Metafields
-          </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
+          <h1 className="admin-h1 text-2xl">Metafields</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
             {loading
-              ? 'Loading…'
+              ? 'Loading...'
               : `${metafields.length} metafield${metafields.length !== 1 ? 's' : ''}`}
-            {productTitle && <span className="text-[#374151]"> — {productTitle}</span>}
+            {productTitle && (
+              <span style={{ color: 'var(--admin-text-disabled)' }}> \u2014 {productTitle}</span>
+            )}
           </p>
         </div>
 
         <button
           onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-2 bg-[#d4a843] hover:bg-[#e4c06a] text-black px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+          style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
         >
           <span className="material-symbols-outlined text-lg">add</span>
           Add Metafield
@@ -573,54 +672,80 @@ export default function ProductMetafieldsPage() {
       {/* Content */}
       {error ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <span className="material-symbols-outlined text-[#ef4444] text-4xl mb-3">error</span>
-          <p className="text-[#ef4444] text-sm">{error}</p>
+          <span
+            className="material-symbols-outlined text-4xl mb-3"
+            style={{ color: 'var(--admin-error)' }}
+          >
+            error
+          </span>
+          <p className="text-sm" style={{ color: 'var(--admin-error)' }}>
+            {error}
+          </p>
           <button
             onClick={() => fetchMetafields()}
-            className="mt-4 text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
+            className="mt-4 text-sm transition-colors"
+            style={{ color: 'var(--admin-brand)' }}
           >
             Try again
           </button>
         </div>
       ) : loading ? (
-        <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl animate-pulse h-48" />
+        <div
+          className="rounded-2xl animate-pulse h-48"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+          }}
+        />
       ) : metafields.length === 0 ? (
-        <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl flex flex-col items-center justify-center py-16 text-center">
-          <span className="material-symbols-outlined text-[#374151] text-5xl mb-4">
+        <div
+          className="rounded-2xl flex flex-col items-center justify-center py-16 text-center"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
+          <span
+            className="material-symbols-outlined text-5xl mb-4"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             data_object
           </span>
-          <p className="text-white font-semibold mb-2">No metafields yet</p>
-          <p className="text-[#6b7280] text-sm mb-6">
+          <p className="font-semibold mb-2" style={{ color: 'var(--admin-text)' }}>
+            No metafields yet
+          </p>
+          <p className="text-sm mb-6" style={{ color: 'var(--admin-text-muted)' }}>
             Add custom metadata to this product for extended functionality.
           </p>
           <button
             onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-2 bg-[#d4a843] hover:bg-[#e4c06a] text-black px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+            style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
           >
             <span className="material-symbols-outlined text-lg">add</span>
             Add First Metafield
           </button>
         </div>
       ) : (
-        <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#1f2d4e]">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                  Namespace
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                  Key
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                  Value
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6b7280] uppercase tracking-wider">
-                  Updated
-                </th>
+              <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
+                {['Namespace', 'Key', 'Type', 'Value', 'Updated'].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
+                    {h}
+                  </th>
+                ))}
                 <th className="px-4 py-3 w-20" />
               </tr>
             </thead>
@@ -628,18 +753,34 @@ export default function ProductMetafieldsPage() {
               {metafields.map((mf) => (
                 <tr
                   key={mf.id}
-                  className="border-b border-[#1f2d4e] last:border-0 hover:bg-[#0d1526]/50 transition-colors group"
+                  className="transition-colors group"
+                  style={{ borderBottom: '1px solid var(--admin-border)' }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)')
+                  }
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                   <td className="px-4 py-3">
-                    <span className="text-[#9ca3af] text-xs font-mono bg-[#0a0f1e] px-2 py-1 rounded-lg">
+                    <span
+                      className="text-xs font-mono px-2 py-1 rounded-lg"
+                      style={{
+                        color: 'var(--admin-text-secondary)',
+                        backgroundColor: 'var(--admin-bg)',
+                      }}
+                    >
                       {mf.namespace}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-white text-xs font-mono">{mf.key}</span>
+                    <span className="text-xs font-mono" style={{ color: 'var(--admin-text)' }}>
+                      {mf.key}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 text-[#6b7280] text-xs">
+                    <span
+                      className="inline-flex items-center gap-1.5 text-xs"
+                      style={{ color: 'var(--admin-text-muted)' }}
+                    >
                       <span className="material-symbols-outlined text-sm">
                         {TYPE_OPTIONS.find((t) => t.value === mf.type)?.icon ?? 'text_fields'}
                       </span>
@@ -649,7 +790,7 @@ export default function ProductMetafieldsPage() {
                   <td className="px-4 py-3">
                     <ValuePreview type={mf.type} value={mf.value} />
                   </td>
-                  <td className="px-4 py-3 text-[#374151] text-xs">
+                  <td className="px-4 py-3 text-xs" style={{ color: 'var(--admin-text-disabled)' }}>
                     {new Date(mf.updatedAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -660,14 +801,16 @@ export default function ProductMetafieldsPage() {
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => setEditTarget(mf)}
-                        className="text-[#d4a843] hover:text-[#e4c06a] transition-colors p-1 rounded"
+                        className="transition-colors p-1 rounded"
+                        style={{ color: 'var(--admin-brand)' }}
                         title="Edit metafield"
                       >
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </button>
                       <button
                         onClick={() => setDeleteTarget(mf)}
-                        className="text-[#ef4444] hover:text-red-400 transition-colors p-1 rounded"
+                        className="transition-colors p-1 rounded"
+                        style={{ color: 'var(--admin-error)' }}
                         title="Delete metafield"
                       >
                         <span className="material-symbols-outlined text-lg">delete</span>
@@ -682,16 +825,29 @@ export default function ProductMetafieldsPage() {
       )}
 
       {/* Info box */}
-      <div className="bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-4 flex gap-3">
-        <span className="material-symbols-outlined text-[#d4a843] text-xl flex-shrink-0 mt-0.5">
+      <div
+        className="rounded-xl p-4 flex gap-3"
+        style={{
+          backgroundColor: 'var(--admin-bg-elevated)',
+          border: '1px solid var(--admin-border)',
+        }}
+      >
+        <span
+          className="material-symbols-outlined text-xl flex-shrink-0 mt-0.5"
+          style={{ color: 'var(--admin-brand)' }}
+        >
           info
         </span>
         <div>
-          <p className="text-[#9ca3af] text-sm font-medium mb-1">About Metafields</p>
-          <p className="text-[#6b7280] text-xs leading-relaxed">
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--admin-text-secondary)' }}>
+            About Metafields
+          </p>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--admin-text-muted)' }}>
             Metafields let you store additional information about products. They are organized by{' '}
-            <span className="font-mono text-[#9ca3af]">namespace.key</span> and support types like
-            text, numbers, JSON, booleans, dates, and colors.
+            <span className="font-mono" style={{ color: 'var(--admin-text-secondary)' }}>
+              namespace.key
+            </span>{' '}
+            and support types like text, numbers, JSON, booleans, dates, and colors.
           </p>
         </div>
       </div>

@@ -74,8 +74,9 @@ export function UsaMap({
             data-state={code}
             d={pathData.d}
             className={`${fillClass} cursor-pointer transition-all duration-150 hover:brightness-125 ${
-              isSelected ? 'stroke-white stroke-2' : 'stroke-[#1f2d4e] stroke-[0.5]'
+              isSelected ? 'stroke-2' : 'stroke-[0.5]'
             }`}
+            style={{ stroke: isSelected ? 'var(--admin-text)' : 'var(--admin-border)' }}
             role="button"
             tabIndex={0}
             aria-label={`${code} - Score: ${scores[code]?.score ?? 0}`}

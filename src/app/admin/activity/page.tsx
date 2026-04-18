@@ -15,10 +15,10 @@ import type { ActivityEvent } from '@/lib/webhooks/activity-log';
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const SEVERITY_COLORS: Record<string, string> = {
-  info: '#6b8cff',
-  success: '#10b981',
-  warning: '#d4a843',
-  error: '#ef4444',
+  info: 'var(--admin-info)',
+  success: 'var(--admin-success)',
+  warning: 'var(--admin-brand)',
+  error: 'var(--admin-error)',
 };
 
 const FILTER_TABS: { value: string; label: string; icon: string }[] = [
@@ -52,7 +52,7 @@ function formatTopicBadge(topic: string): string {
 
 function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
   const [expanded, setExpanded] = useState(false);
-  const color = SEVERITY_COLORS[event.severity] ?? '#6b7280';
+  const color = SEVERITY_COLORS[event.severity] ?? 'var(--admin-text-muted)';
 
   // Highlight matching text in summary
   function highlightText(text: string) {
@@ -63,7 +63,14 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
       <>
         {parts.map((part, i) =>
           regex.test(part) ? (
-            <mark key={i} className="bg-[#d4a843]/25 text-[#d4a843] rounded px-0.5">
+            <mark
+              key={i}
+              className="rounded px-0.5"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--admin-brand) 25%, transparent)',
+                color: 'var(--admin-brand)',
+              }}
+            >
               {part}
             </mark>
           ) : (
@@ -75,11 +82,11 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
   }
 
   return (
-    <div className="border-b border-[#1f2d4e] last:border-b-0">
+    <div style={{ borderBottom: '1px solid var(--admin-border)' }} className="last:border-b-0">
       {/* Main row */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-start gap-4 px-5 py-4 hover:bg-[#1f2d4e]/20 transition-colors text-left group"
+        className="w-full flex items-start gap-4 px-5 py-4 transition-colors text-left group hover:bg-[color-mix(in_srgb,var(--admin-border)_20%,transparent)]"
       >
         {/* Severity dot */}
         <div className="flex-none mt-1">
@@ -92,7 +99,9 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-[#e5e7eb] text-sm leading-snug">{highlightText(event.summary)}</p>
+          <p className="text-sm leading-snug" style={{ color: 'var(--admin-text-body)' }}>
+            {highlightText(event.summary)}
+          </p>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {/* Topic badge */}
             <span
@@ -106,7 +115,8 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
             </span>
             {/* Timestamp */}
             <span
-              className="text-[#6b7280] text-xs"
+              className="text-xs"
+              style={{ color: 'var(--admin-text-muted)' }}
               title={new Date(event.timestamp).toLocaleString()}
             >
               {relativeDate(event.timestamp)}
@@ -116,9 +126,10 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
 
         {/* Expand toggle */}
         <span
-          className={`material-symbols-outlined text-lg flex-none text-[#374151] group-hover:text-[#6b7280] transition-all ${
+          className={`material-symbols-outlined text-lg flex-none transition-all ${
             expanded ? 'rotate-180' : ''
           }`}
+          style={{ color: 'var(--admin-text-disabled)' }}
         >
           expand_more
         </span>
@@ -127,12 +138,26 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
       {/* Expanded details */}
       {expanded && (
         <div className="px-5 pb-4">
-          <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-4 overflow-x-auto">
-            <pre className="text-[#9ca3af] text-xs font-mono whitespace-pre-wrap break-words leading-relaxed">
+          <div
+            className="rounded-xl p-4 overflow-x-auto"
+            style={{
+              backgroundColor: 'var(--admin-bg)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+            }}
+          >
+            <pre
+              className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed"
+              style={{ color: 'var(--admin-text-secondary)' }}
+            >
               {JSON.stringify(event.details, null, 2)}
             </pre>
           </div>
-          <div className="flex items-center gap-4 mt-2 text-[10px] text-[#374151] font-mono">
+          <div
+            className="flex items-center gap-4 mt-2 text-[10px] font-mono"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             <span>id: {event.id}</span>
             <span>type: {event.type}</span>
             <span>{new Date(event.timestamp).toLocaleString()}</span>
@@ -147,11 +172,23 @@ function EventRow({ event, query }: { event: ActivityEvent; query: string }) {
 
 function SkeletonEvent() {
   return (
-    <div className="flex items-start gap-4 px-5 py-4 border-b border-[#1f2d4e]">
-      <div className="flex-none mt-1 w-2.5 h-2.5 rounded-full bg-[#1f2d4e] animate-pulse" />
+    <div
+      className="flex items-start gap-4 px-5 py-4"
+      style={{ borderBottom: '1px solid var(--admin-border)' }}
+    >
+      <div
+        className="flex-none mt-1 w-2.5 h-2.5 rounded-full animate-pulse"
+        style={{ backgroundColor: 'var(--admin-border)' }}
+      />
       <div className="flex-1 space-y-2">
-        <div className="h-4 bg-[#1f2d4e] rounded animate-pulse w-3/4" />
-        <div className="h-3 bg-[#1f2d4e] rounded animate-pulse w-1/3" />
+        <div
+          className="h-4 rounded animate-pulse w-3/4"
+          style={{ backgroundColor: 'var(--admin-border)' }}
+        />
+        <div
+          className="h-3 rounded animate-pulse w-1/3"
+          style={{ backgroundColor: 'var(--admin-border)' }}
+        />
       </div>
     </div>
   );
@@ -262,31 +299,31 @@ export default function ActivityPage() {
         label: 'Total',
         value: all.length,
         icon: 'all_inbox',
-        color: '#9ca3af',
+        color: 'var(--admin-text-secondary)',
       },
       {
         label: 'Webhooks',
         value: all.filter((e) => e.type === 'webhook').length,
         icon: 'webhook',
-        color: '#6b8cff',
+        color: 'var(--admin-info)',
       },
       {
         label: 'User Actions',
         value: all.filter((e) => e.type === 'user_action').length,
         icon: 'person',
-        color: '#10b981',
+        color: 'var(--admin-success)',
       },
       {
         label: 'Automations',
         value: all.filter((e) => e.type === 'automation').length,
         icon: 'smart_toy',
-        color: '#d4a843',
+        color: 'var(--admin-brand)',
       },
       {
         label: 'Errors',
         value: all.filter((e) => e.severity === 'error').length,
         icon: 'error',
-        color: '#ef4444',
+        color: 'var(--admin-error)',
       },
     ];
   }, [events]);
@@ -302,11 +339,11 @@ export default function ActivityPage() {
         <div>
           <h1
             className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+            style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
           >
             Activity Feed
           </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
+          <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
             {loading
               ? 'Loading…'
               : hasFilters
@@ -320,7 +357,14 @@ export default function ActivityPage() {
           <button
             onClick={() => void fetchEvents()}
             disabled={loading}
-            className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text-secondary)',
+            }}
           >
             <span
               className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}
@@ -335,7 +379,14 @@ export default function ActivityPage() {
             <button
               onClick={() => void handleClear()}
               disabled={clearing}
-              className="flex items-center gap-2 bg-[#111827] border border-[#ef4444]/30 hover:border-[#ef4444]/60 text-[#ef4444]/70 hover:text-[#ef4444] rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                backgroundColor: 'var(--admin-bg-card)',
+                borderWidth: 1,
+                borderStyle: 'solid',
+                borderColor: 'color-mix(in srgb, var(--admin-error) 30%, transparent)',
+                color: 'var(--admin-error)',
+              }}
             >
               <span className="material-symbols-outlined text-base">
                 {clearing ? 'hourglass_empty' : 'delete_sweep'}
@@ -352,14 +403,30 @@ export default function ActivityPage() {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-[#111827] border border-[#1f2d4e] rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+              className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+              style={{
+                backgroundColor: 'var(--admin-bg-card)',
+                borderWidth: 1,
+                borderStyle: 'solid',
+                borderColor: 'var(--admin-border)',
+              }}
             >
               <span className="material-symbols-outlined text-lg" style={{ color: stat.color }}>
                 {stat.icon}
               </span>
               <div>
-                <p className="text-white text-base font-bold leading-none">{stat.value}</p>
-                <p className="text-[#6b7280] text-[10px] font-medium mt-0.5">{stat.label}</p>
+                <p
+                  className="text-base font-bold leading-none"
+                  style={{ color: 'var(--admin-text)' }}
+                >
+                  {stat.value}
+                </p>
+                <p
+                  className="text-[10px] font-medium mt-0.5"
+                  style={{ color: 'var(--admin-text-muted)' }}
+                >
+                  {stat.label}
+                </p>
               </div>
             </div>
           ))}
@@ -372,11 +439,24 @@ export default function ActivityPage() {
           <button
             key={value}
             onClick={() => setActiveType(value)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+            style={
               activeType === value
-                ? 'bg-[#d4a843]/10 text-[#d4a843] border border-[#d4a843]/30'
-                : 'bg-[#111827] border border-[#1f2d4e] text-[#6b7280] hover:text-[#9ca3af] hover:border-[#374151]'
-            }`}
+                ? {
+                    backgroundColor: 'color-mix(in srgb, var(--admin-brand) 10%, transparent)',
+                    color: 'var(--admin-brand)',
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: 'color-mix(in srgb, var(--admin-brand) 30%, transparent)',
+                  }
+                : {
+                    backgroundColor: 'var(--admin-bg-card)',
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: 'var(--admin-border)',
+                    color: 'var(--admin-text-muted)',
+                  }
+            }
           >
             <span className="material-symbols-outlined text-base">{icon}</span>
             {label}
@@ -388,7 +468,10 @@ export default function ActivityPage() {
       <div className="flex flex-col sm:flex-row gap-2">
         {/* Search */}
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-lg pointer-events-none">
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-lg pointer-events-none"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             search
           </span>
           <input
@@ -396,12 +479,20 @@ export default function ActivityPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search events, topics…"
-            className="w-full bg-[#111827] border border-[#1f2d4e] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+            className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text)',
+            }}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#9ca3af] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: 'var(--admin-text-disabled)' }}
             >
               <span className="material-symbols-outlined text-base">close</span>
             </button>
@@ -410,7 +501,10 @@ export default function ActivityPage() {
 
         {/* Date from */}
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-base pointer-events-none">
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base pointer-events-none"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             calendar_today
           </span>
           <input
@@ -418,13 +512,23 @@ export default function ActivityPage() {
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
             title="From date"
-            className="bg-[#111827] border border-[#1f2d4e] rounded-xl pl-9 pr-3 py-2.5 text-sm text-[#9ca3af] focus:outline-none focus:border-[#d4a843]/50 transition-colors w-40 [color-scheme:dark]"
+            className="rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none transition-colors w-40 [color-scheme:dark]"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text-secondary)',
+            }}
           />
         </div>
 
         {/* Date to */}
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-base pointer-events-none">
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base pointer-events-none"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             event
           </span>
           <input
@@ -432,7 +536,14 @@ export default function ActivityPage() {
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
             title="To date"
-            className="bg-[#111827] border border-[#1f2d4e] rounded-xl pl-9 pr-3 py-2.5 text-sm text-[#9ca3af] focus:outline-none focus:border-[#d4a843]/50 transition-colors w-40 [color-scheme:dark]"
+            className="rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none transition-colors w-40 [color-scheme:dark]"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text-secondary)',
+            }}
           />
         </div>
 
@@ -444,7 +555,14 @@ export default function ActivityPage() {
               setDateFrom('');
               setDateTo('');
             }}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] rounded-xl text-sm text-[#6b7280] hover:text-[#9ca3af] transition-all"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm transition-all"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+              color: 'var(--admin-text-muted)',
+            }}
           >
             <span className="material-symbols-outlined text-base">filter_alt_off</span>
             Clear
@@ -453,18 +571,29 @@ export default function ActivityPage() {
       </div>
 
       {/* ── Event list ───────────────────────────────────────────────── */}
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          borderWidth: 1,
+          borderStyle: 'solid',
+          borderColor: 'var(--admin-border)',
+        }}
+      >
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => <SkeletonEvent key={i} />)
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-            <span className="material-symbols-outlined text-[#1f2d4e] text-5xl mb-4">
+            <span
+              className="material-symbols-outlined text-5xl mb-4"
+              style={{ color: 'var(--admin-border)' }}
+            >
               {hasFilters ? 'search_off' : 'notifications_active'}
             </span>
-            <p className="text-[#6b7280] text-sm font-medium">
+            <p className="text-sm font-medium" style={{ color: 'var(--admin-text-muted)' }}>
               {hasFilters ? 'No events match your filters' : 'No activity yet'}
             </p>
-            <p className="text-[#374151] text-xs mt-1 max-w-sm">
+            <p className="text-xs mt-1 max-w-sm" style={{ color: 'var(--admin-text-disabled)' }}>
               {hasFilters
                 ? 'Try adjusting your search or date range.'
                 : 'Events will appear here when webhooks arrive or actions are performed in the admin.'}
@@ -476,7 +605,8 @@ export default function ActivityPage() {
                   setDateFrom('');
                   setDateTo('');
                 }}
-                className="mt-4 text-[#d4a843] text-xs hover:underline"
+                className="mt-4 text-xs hover:underline"
+                style={{ color: 'var(--admin-brand)' }}
               >
                 Clear filters
               </button>
@@ -489,7 +619,9 @@ export default function ActivityPage() {
 
       {/* ── Auto-refresh note ─────────────────────────────────────────── */}
       {!loading && events.length > 0 && (
-        <p className="text-[#374151] text-xs text-center">Auto-refreshes every 30 seconds</p>
+        <p className="text-xs text-center" style={{ color: 'var(--admin-text-disabled)' }}>
+          Auto-refreshes every 30 seconds
+        </p>
       )}
     </div>
   );

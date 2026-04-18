@@ -53,11 +53,14 @@ export function PulseFeed({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-white">Market Pulse</h3>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--admin-text)' }}>
+            Market Pulse
+          </h3>
           {unreadCount > 0 && (
             <span
               data-testid="unread-badge"
-              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#3b82f6] text-[10px] font-bold text-white"
+              className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+              style={{ backgroundColor: 'var(--admin-brand)', color: '#fff' }}
             >
               {unreadCount}
             </span>
@@ -67,7 +70,8 @@ export function PulseFeed({
           <button
             data-testid="mark-all-read-btn"
             onClick={onMarkAllRead}
-            className="text-[10px] text-[#3b82f6] hover:text-[#60a5fa] transition-colors"
+            className="text-[10px] transition-colors"
+            style={{ color: 'var(--admin-brand)' }}
           >
             Mark all read
           </button>
@@ -81,11 +85,12 @@ export function PulseFeed({
             key={tab.value}
             data-testid={`tab-${tab.value}`}
             onClick={() => setActiveTab(tab.value)}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+            className="px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all"
+            style={
               activeTab === tab.value
-                ? 'bg-[#1b2a5e] text-white'
-                : 'text-[#4b5563] hover:text-[#9ca3af] hover:bg-[#1f2d4e]/30'
-            }`}
+                ? { backgroundColor: 'var(--admin-bg-elevated)', color: 'var(--admin-text)' }
+                : { color: 'var(--admin-text-muted)' }
+            }
           >
             {tab.label}
           </button>
@@ -99,7 +104,11 @@ export function PulseFeed({
         style={{ maxHeight }}
       >
         {filtered.length === 0 ? (
-          <p data-testid="empty-state" className="text-xs text-[#4b5563] text-center py-8">
+          <p
+            data-testid="empty-state"
+            className="text-xs text-center py-8"
+            style={{ color: 'var(--admin-text-muted)' }}
+          >
             No pulse events
           </p>
         ) : (

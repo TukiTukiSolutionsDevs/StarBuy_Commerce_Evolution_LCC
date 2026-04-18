@@ -1,17 +1,25 @@
 'use client';
 
 /**
- * Admin Orders Page
+ * Admin Orders Page — Phase 3
  *
  * Full orders management: filter, search, sort, paginate, view detail.
- * Matches Shopify Admin: payment/fulfillment badges, tags, notes indicator,
- * risk level, item count, sort controls.
+ * Migrated to admin design tokens. Zero hardcoded hex colors.
  */
 
 import { useEffect, useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/useToast';
 import type { AdminOrder } from '@/lib/shopify/admin/tools/orders';
+import {
+  AdminPageHeader,
+  AdminCard,
+  AdminBadge,
+  AdminSkeleton,
+  AdminEmptyState,
+  AdminErrorState,
+  AdminSearchInput,
+} from '@/components/admin/ui';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -40,80 +48,54 @@ const SORT_OPTIONS = [
 ] as const;
 
 type SortOption = (typeof SORT_OPTIONS)[number]['value'];
+type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'brand';
 
 const PAGE_SIZE = 25;
 
 // ─── Badge helpers ──────────────────────────────────────────────────────────────
 
-const PAYMENT_COLORS: Record<string, string> = {
-  PAID: '#10b981',
-  PENDING: '#d4a843',
-  PARTIALLY_PAID: '#f59e0b',
-  REFUNDED: '#ef4444',
-  PARTIALLY_REFUNDED: '#f97316',
-  VOIDED: '#6b7280',
+const PAYMENT_VARIANT: Record<string, BadgeVariant> = {
+  PAID: 'success',
+  PENDING: 'brand',
+  PARTIALLY_PAID: 'warning',
+  REFUNDED: 'error',
+  PARTIALLY_REFUNDED: 'error',
+  VOIDED: 'neutral',
 };
 
-const FULFILLMENT_COLORS: Record<string, string> = {
-  FULFILLED: '#10b981',
-  UNFULFILLED: '#f59e0b',
-  PARTIALLY_FULFILLED: '#eab308',
-  SCHEDULED: '#6366f1',
-  ON_HOLD: '#8b5cf6',
+const FULFILLMENT_VARIANT: Record<string, BadgeVariant> = {
+  FULFILLED: 'success',
+  UNFULFILLED: 'warning',
+  PARTIALLY_FULFILLED: 'warning',
+  SCHEDULED: 'info',
+  ON_HOLD: 'info',
 };
 
-const RISK_COLORS: Record<string, string> = {
-  HIGH: '#ef4444',
-  MEDIUM: '#f59e0b',
-  LOW: '#10b981',
-};
-
-function PaymentBadge({ status }: { status: string }) {
-  const color = PAYMENT_COLORS[status] ?? '#6b7280';
+function badgeLabel(status: string | null): string {
+  if (!status) return 'No status';
   const label = status.replace(/_/g, ' ');
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ backgroundColor: `${color}15`, color }}
-    >
-      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: color }} />
-      {label.charAt(0) + label.slice(1).toLowerCase()}
-    </span>
-  );
-}
-
-function FulfillmentBadge({ status }: { status: string | null }) {
-  const key = status ?? '';
-  const color = FULFILLMENT_COLORS[key] ?? '#6b7280';
-  const label = key ? key.replace(/_/g, ' ') : 'No status';
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ backgroundColor: `${color}15`, color }}
-    >
-      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: color }} />
-      {label.charAt(0) + label.slice(1).toLowerCase()}
-    </span>
-  );
+  return label.charAt(0) + label.slice(1).toLowerCase();
 }
 
 function RiskBadge({ level }: { level: string }) {
   if (!level || level === 'LOW') return null;
-  const color = RISK_COLORS[level] ?? '#f59e0b';
-  const icon = level === 'HIGH' ? 'gpp_bad' : 'gpp_maybe';
+  const isHigh = level === 'HIGH';
   return (
     <span
       title={`Fraud risk: ${level.toLowerCase()}`}
       className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold"
-      style={{ backgroundColor: `${color}20`, color }}
+      style={{
+        backgroundColor: isHigh ? 'var(--admin-error-bg)' : 'var(--admin-warning-bg)',
+        color: isHigh ? 'var(--admin-error)' : 'var(--admin-warning)',
+      }}
     >
-      <span className="material-symbols-outlined text-xs">{icon}</span>
-      {level === 'HIGH' ? 'High risk' : 'Medium risk'}
+      <span className="material-symbols-outlined text-xs">{isHigh ? 'gpp_bad' : 'gpp_maybe'}</span>
+      {isHigh ? 'High risk' : 'Medium risk'}
     </span>
   );
 }
 
-// ─── Relative date ──────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function relativeDate(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -133,20 +115,6 @@ function formatCurrency(amount: string, currency: string): string {
     currency,
     minimumFractionDigits: 2,
   }).format(parseFloat(amount));
-}
-
-// ─── Skeleton row ───────────────────────────────────────────────────────────────
-
-function SkeletonRow() {
-  return (
-    <tr className="border-b border-[#1f2d4e]">
-      {[120, 160, 80, 90, 80, 100, 110, 60].map((w, i) => (
-        <td key={i} className="px-4 py-4">
-          <div className="h-4 bg-[#1f2d4e] rounded animate-pulse" style={{ width: `${w}px` }} />
-        </td>
-      ))}
-    </tr>
-  );
 }
 
 // ─── Sort helper ────────────────────────────────────────────────────────────────
@@ -208,6 +176,14 @@ function exportCsv(orders: AdminOrder[]) {
   URL.revokeObjectURL(url);
 }
 
+// ─── Select styles ──────────────────────────────────────────────────────────────
+
+const selectStyle: React.CSSProperties = {
+  backgroundColor: 'var(--admin-bg-card)',
+  border: '1px solid var(--admin-border)',
+  color: 'var(--admin-text-secondary)',
+};
+
 // ─── Page ───────────────────────────────────────────────────────────────────────
 
 export default function OrdersPage() {
@@ -251,7 +227,6 @@ export default function OrdersPage() {
     [activeStatus, activeDays, page, toast],
   );
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(1);
     setOrders([]);
@@ -285,47 +260,60 @@ export default function OrdersPage() {
     setPage((p) => p + 1);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ── Action buttons helper ─────────────────────────────────────────────────
+
+  const actionBtnStyle: React.CSSProperties = {
+    backgroundColor: 'var(--admin-bg-card)',
+    border: '1px solid var(--admin-border)',
+    color: 'var(--admin-text-secondary)',
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-5">
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-          >
-            Orders
-          </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
-            {loading ? 'Loading…' : `${displayCount} order${displayCount !== 1 ? 's' : ''}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {!loading && sorted.length > 0 && (
+      <AdminPageHeader
+        title="Orders"
+        subtitle={loading ? 'Loading…' : `${displayCount} order${displayCount !== 1 ? 's' : ''}`}
+        actions={
+          <div className="flex items-center gap-2">
+            {!loading && sorted.length > 0 && (
+              <button
+                onClick={() => exportCsv(sorted)}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+                style={actionBtnStyle}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text-secondary)';
+                }}
+              >
+                <span className="material-symbols-outlined text-base">download</span>
+                Export CSV
+              </button>
+            )}
             <button
-              onClick={() => exportCsv(sorted)}
-              className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              onClick={() => fetchOrders(true)}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+              style={actionBtnStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--admin-text)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--admin-text-secondary)';
+              }}
             >
-              <span className="material-symbols-outlined text-base">download</span>
-              Export CSV
+              <span
+                className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}
+              >
+                refresh
+              </span>
+              Refresh
             </button>
-          )}
-          <button
-            onClick={() => fetchOrders(true)}
-            disabled={loading}
-            className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
-          >
-            <span
-              className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}
-            >
-              refresh
-            </span>
-            Refresh
-          </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* ── Status tabs ────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -333,11 +321,20 @@ export default function OrdersPage() {
           <button
             key={value}
             onClick={() => setActiveStatus(value)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+            style={
               activeStatus === value
-                ? 'bg-[#d4a843]/10 text-[#d4a843] border border-[#d4a843]/30'
-                : 'bg-[#111827] border border-[#1f2d4e] text-[#6b7280] hover:text-[#9ca3af] hover:border-[#374151]'
-            }`}
+                ? {
+                    backgroundColor: 'var(--admin-brand-bg)',
+                    color: 'var(--admin-brand)',
+                    border: '1px solid var(--admin-brand-border)',
+                  }
+                : {
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: 'var(--admin-text-muted)',
+                    border: '1px solid var(--admin-border)',
+                  }
+            }
           >
             {label}
           </button>
@@ -346,11 +343,17 @@ export default function OrdersPage() {
 
       {/* ── Filter row ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Date range */}
         <select
           value={activeDays}
           onChange={(e) => setActiveDays(Number(e.target.value))}
-          className="bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-[#9ca3af] focus:text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+          className="rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+          style={selectStyle}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-brand)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-border)';
+          }}
         >
           {DATE_RANGES.map(({ value, label }) => (
             <option key={value} value={value}>
@@ -359,11 +362,17 @@ export default function OrdersPage() {
           ))}
         </select>
 
-        {/* Sort */}
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortOption)}
-          className="bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-[#9ca3af] focus:text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+          className="rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+          style={selectStyle}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-brand)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-border)';
+          }}
         >
           {SORT_OPTIONS.map(({ value, label }) => (
             <option key={value} value={value}>
@@ -372,88 +381,69 @@ export default function OrdersPage() {
           ))}
         </select>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-xl pointer-events-none">
-            search
-          </span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by order #, customer, email or tag…"
-            className="w-full bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl pl-12 pr-10 py-2.5 text-sm outline-none transition-colors"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-white transition-colors"
-            >
-              <span className="material-symbols-outlined text-xl">close</span>
-            </button>
-          )}
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by order #, customer, email or tag…"
+          className="flex-1 min-w-[200px]"
+        />
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────── */}
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+      <AdminCard padding="none">
         {error ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="material-symbols-outlined text-[#ef4444] text-4xl mb-3">error</span>
-            <p className="text-[#ef4444] text-sm">{error}</p>
-            <button
-              onClick={() => fetchOrders(true)}
-              className="mt-4 text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
-            >
-              Try again
-            </button>
-          </div>
+          <AdminErrorState message={error} onRetry={() => fetchOrders(true)} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#1f2d4e]">
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Order
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Customer
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Date
-                  </th>
-                  <th className="text-center text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Items
-                  </th>
-                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Total
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Payment
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Fulfillment
-                  </th>
-                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Actions
-                  </th>
+                <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
+                  {[
+                    'Order',
+                    'Customer',
+                    'Date',
+                    'Items',
+                    'Total',
+                    'Payment',
+                    'Fulfillment',
+                    'Actions',
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className={`text-xs font-medium uppercase tracking-wider px-4 py-3 ${
+                        h === 'Items'
+                          ? 'text-center'
+                          : h === 'Total' || h === 'Actions'
+                            ? 'text-right'
+                            : 'text-left'
+                      }`}
+                      style={{ color: 'var(--admin-text-muted)' }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1f2d4e]">
+              <tbody>
                 {loading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--admin-border)' }}>
+                      {[120, 160, 80, 40, 80, 100, 110, 60].map((w, j) => (
+                        <td key={j} className="px-4 py-4">
+                          <AdminSkeleton variant="text" className={`w-[${w}px]`} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
                 ) : sorted.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-16">
-                      <div className="flex flex-col items-center gap-3">
-                        <span className="material-symbols-outlined text-[#374151] text-4xl">
-                          receipt_long
-                        </span>
-                        <p className="text-[#6b7280] text-sm">
-                          {search
-                            ? 'No orders match your search'
-                            : 'No orders found for this period'}
-                        </p>
-                      </div>
+                    <td colSpan={8}>
+                      <AdminEmptyState
+                        icon="receipt_long"
+                        title={
+                          search ? 'No orders match your search' : 'No orders found for this period'
+                        }
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -473,20 +463,32 @@ export default function OrdersPage() {
                     const riskLevel = order.riskLevel ?? '';
 
                     return (
-                      <tr key={order.id} className="hover:bg-[#1f2d4e]/20 transition-colors">
+                      <tr
+                        key={order.id}
+                        className="transition-colors"
+                        style={{ borderBottom: '1px solid var(--admin-border)' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
                         {/* Order */}
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2 flex-wrap">
                             <Link
                               href={`/admin/orders/${numericId}`}
-                              className="text-[#d4a843] hover:text-[#e4c06a] font-semibold text-sm transition-colors"
+                              className="font-semibold text-sm transition-colors"
+                              style={{ color: 'var(--admin-brand)' }}
                             >
                               {order.name}
                             </Link>
                             {hasNote && (
                               <span
                                 title="Has internal note"
-                                className="material-symbols-outlined text-sm text-[#6366f1]"
+                                className="material-symbols-outlined text-sm"
+                                style={{ color: 'var(--admin-accent)' }}
                               >
                                 sticky_note_2
                               </span>
@@ -494,31 +496,40 @@ export default function OrdersPage() {
                             {order.hasTimelineComment && (
                               <span
                                 title="Has timeline comment"
-                                className="material-symbols-outlined text-sm text-[#6b7280]"
+                                className="material-symbols-outlined text-sm"
+                                style={{ color: 'var(--admin-text-muted)' }}
                               >
                                 comment
                               </span>
                             )}
                           </div>
-                          {/* Risk badge */}
                           {riskLevel && riskLevel !== 'LOW' && (
                             <div className="mt-1">
                               <RiskBadge level={riskLevel} />
                             </div>
                           )}
-                          {/* Tags */}
                           {order.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {order.tags.slice(0, 3).map((tag) => (
                                 <span
                                   key={tag}
-                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1f2d4e] text-[#6b7280]"
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                                  style={{
+                                    backgroundColor: 'var(--admin-bg-hover)',
+                                    color: 'var(--admin-text-muted)',
+                                  }}
                                 >
                                   {tag}
                                 </span>
                               ))}
                               {order.tags.length > 3 && (
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#1f2d4e] text-[#4b5563]">
+                                <span
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                                  style={{
+                                    backgroundColor: 'var(--admin-bg-hover)',
+                                    color: 'var(--admin-text-disabled)',
+                                  }}
+                                >
                                   +{order.tags.length - 3}
                                 </span>
                               )}
@@ -528,9 +539,14 @@ export default function OrdersPage() {
 
                         {/* Customer */}
                         <td className="px-4 py-4">
-                          <p className="text-[#e5e7eb] text-sm">{customerDisplay}</p>
+                          <p className="text-sm" style={{ color: 'var(--admin-text-body)' }}>
+                            {customerDisplay}
+                          </p>
                           {order.customer?.email && customerName && (
-                            <p className="text-[#4b5563] text-xs mt-0.5 truncate max-w-[160px]">
+                            <p
+                              className="text-xs mt-0.5 truncate max-w-[160px]"
+                              style={{ color: 'var(--admin-text-disabled)' }}
+                            >
                               {order.customer.email}
                             </p>
                           )}
@@ -539,7 +555,8 @@ export default function OrdersPage() {
                         {/* Date */}
                         <td className="px-4 py-4">
                           <span
-                            className="text-[#9ca3af] text-sm cursor-default"
+                            className="text-sm cursor-default"
+                            style={{ color: 'var(--admin-text-secondary)' }}
                             title={new Date(order.createdAt).toLocaleString()}
                           >
                             {relativeDate(order.createdAt)}
@@ -548,24 +565,42 @@ export default function OrdersPage() {
 
                         {/* Items */}
                         <td className="px-4 py-4 text-center">
-                          <span className="text-[#9ca3af] text-sm">{itemCount}</span>
+                          <span
+                            className="text-sm"
+                            style={{ color: 'var(--admin-text-secondary)' }}
+                          >
+                            {itemCount}
+                          </span>
                         </td>
 
                         {/* Total */}
                         <td className="px-4 py-4 text-right">
-                          <span className="text-[#e5e7eb] text-sm font-medium">
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: 'var(--admin-text-body)' }}
+                          >
                             {formatCurrency(money.amount, money.currencyCode)}
                           </span>
                         </td>
 
                         {/* Payment */}
                         <td className="px-4 py-4">
-                          <PaymentBadge status={order.displayFinancialStatus} />
+                          <AdminBadge
+                            variant={PAYMENT_VARIANT[order.displayFinancialStatus] ?? 'neutral'}
+                          >
+                            {badgeLabel(order.displayFinancialStatus)}
+                          </AdminBadge>
                         </td>
 
                         {/* Fulfillment */}
                         <td className="px-4 py-4">
-                          <FulfillmentBadge status={order.displayFulfillmentStatus} />
+                          <AdminBadge
+                            variant={
+                              FULFILLMENT_VARIANT[order.displayFulfillmentStatus ?? ''] ?? 'neutral'
+                            }
+                          >
+                            {badgeLabel(order.displayFulfillmentStatus)}
+                          </AdminBadge>
                         </td>
 
                         {/* Actions */}
@@ -573,7 +608,17 @@ export default function OrdersPage() {
                           <div className="flex items-center justify-end">
                             <Link
                               href={`/admin/orders/${numericId}`}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                backgroundColor: 'var(--admin-bg-hover)',
+                                color: 'var(--admin-text-secondary)',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.color = 'var(--admin-text)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.color = 'var(--admin-text-secondary)';
+                              }}
                             >
                               <span className="material-symbols-outlined text-sm">open_in_new</span>
                               View
@@ -591,17 +636,30 @@ export default function OrdersPage() {
 
         {/* Load more */}
         {!loading && !error && hasMore && sorted.length > 0 && (
-          <div className="border-t border-[#1f2d4e] p-4 flex justify-center">
+          <div
+            className="p-4 flex justify-center"
+            style={{ borderTop: '1px solid var(--admin-border)' }}
+          >
             <button
               onClick={loadMore}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-sm font-medium transition-all"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{
+                backgroundColor: 'var(--admin-bg-hover)',
+                color: 'var(--admin-text-secondary)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--admin-text)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--admin-text-secondary)';
+              }}
             >
               <span className="material-symbols-outlined text-base">expand_more</span>
               Load more orders
             </button>
           </div>
         )}
-      </div>
+      </AdminCard>
     </div>
   );
 }

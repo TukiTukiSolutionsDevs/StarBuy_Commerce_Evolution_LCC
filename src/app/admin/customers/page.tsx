@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Admin Customers Page
+ * Admin Customers Page — Phase 3
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Full customer management: search, filters, stats, sortable table, create modal.
  */
 
@@ -19,6 +20,7 @@ type FilterType = 'all' | 'new' | 'returning' | 'has_orders' | 'no_orders' | 'su
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────────
 
+// Intentional: fixed avatar palette for visual differentiation — not admin theme colors
 const AVATAR_COLORS = ['#d4a843', '#10b981', '#6b8cff', '#ef4444', '#8b5cf6', '#f59e0b'];
 
 function getInitials(first: string | null, last: string | null): string {
@@ -49,11 +51,11 @@ function extractNumericId(gid: string): string {
 
 // ─── Status Badge ────────────────────────────────────────────────────────────────
 
-const STATE_STYLE: Record<string, { color: string; label: string }> = {
-  ENABLED: { color: '#10b981', label: 'Enabled' },
-  DISABLED: { color: '#ef4444', label: 'Disabled' },
-  INVITED: { color: '#d4a843', label: 'Invited' },
-  DECLINED: { color: '#6b7280', label: 'Declined' },
+const STATE_STYLE: Record<string, { token: string; label: string }> = {
+  ENABLED: { token: 'var(--admin-success)', label: 'Enabled' },
+  DISABLED: { token: 'var(--admin-error)', label: 'Disabled' },
+  INVITED: { token: 'var(--admin-brand)', label: 'Invited' },
+  DECLINED: { token: 'var(--admin-text-muted)', label: 'Declined' },
 };
 
 function StateBadge({ state }: { state: string }) {
@@ -61,9 +63,9 @@ function StateBadge({ state }: { state: string }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ backgroundColor: `${s.color}18`, color: s.color }}
+      style={{ backgroundColor: `color-mix(in srgb, ${s.token} 10%, transparent)`, color: s.token }}
     >
-      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: s.color }} />
+      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: s.token }} />
       {s.label}
     </span>
   );
@@ -72,7 +74,12 @@ function StateBadge({ state }: { state: string }) {
 // ─── Tags Cell ────────────────────────────────────────────────────────────────────
 
 function TagsCell({ tags }: { tags: string[] }) {
-  if (tags.length === 0) return <span className="text-[#374151] text-xs">—</span>;
+  if (tags.length === 0)
+    return (
+      <span className="text-xs" style={{ color: 'var(--admin-text-disabled)' }}>
+        —
+      </span>
+    );
   const visible = tags.slice(0, 2);
   const extra = tags.length - 2;
   return (
@@ -80,13 +87,17 @@ function TagsCell({ tags }: { tags: string[] }) {
       {visible.map((t) => (
         <span
           key={t}
-          className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#1f2d4e] text-[#9ca3af]"
+          className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium"
+          style={{ backgroundColor: 'var(--admin-border)', color: 'var(--admin-text-secondary)' }}
         >
           {t}
         </span>
       ))}
       {extra > 0 && (
-        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#1f2d4e] text-[#6b7280]">
+        <span
+          className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium"
+          style={{ backgroundColor: 'var(--admin-border)', color: 'var(--admin-text-muted)' }}
+        >
           +{extra}
         </span>
       )}
@@ -118,9 +129,10 @@ function SortTh({
       onClick={() => onSort(field)}
     >
       <span
-        className={`inline-flex items-center gap-1 transition-colors ${
-          isActive ? 'text-[#d4a843]' : 'text-[#6b7280] group-hover:text-[#9ca3af]'
-        }`}
+        className="inline-flex items-center gap-1 transition-colors"
+        style={{
+          color: isActive ? 'var(--admin-brand)' : 'var(--admin-text-muted)',
+        }}
       >
         {label}
         {isActive ? (
@@ -141,10 +153,13 @@ function SortTh({
 
 function SkeletonRow() {
   return (
-    <tr className="border-b border-[#1f2d4e]">
+    <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
       {[48, 160, 100, 80, 80, 100, 80, 60].map((w, i) => (
         <td key={i} className="px-4 py-4">
-          <div className="h-3.5 bg-[#1f2d4e] rounded animate-pulse" style={{ width: `${w}px` }} />
+          <div
+            className="h-3.5 rounded animate-pulse"
+            style={{ width: `${w}px`, backgroundColor: 'var(--admin-border)' }}
+          />
         </td>
       ))}
     </tr>
@@ -157,26 +172,34 @@ function StatCard({
   icon,
   label,
   value,
-  color = '#6b8cff',
+  colorToken = 'var(--admin-info)',
 }: {
   icon: string;
   label: string;
   value: string | number;
-  color?: string;
+  colorToken?: string;
 }) {
   return (
-    <div className="bg-[#111827] border border-[#1f2d4e] rounded-xl p-4 flex items-center gap-3">
+    <div
+      className="rounded-xl p-4 flex items-center gap-3"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
+    >
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center flex-none"
-        style={{ backgroundColor: `${color}18` }}
+        style={{ backgroundColor: `color-mix(in srgb, ${colorToken} 10%, transparent)` }}
       >
-        <span className="material-symbols-outlined text-base" style={{ color }}>
+        <span className="material-symbols-outlined text-base" style={{ color: colorToken }}>
           {icon}
         </span>
       </div>
       <div>
-        <p className="text-[#6b7280] text-xs">{label}</p>
-        <p className="font-semibold text-sm mt-0.5" style={{ color: '#ffffff' }}>
+        <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {label}
+        </p>
+        <p className="font-semibold text-sm mt-0.5" style={{ color: 'var(--admin-text)' }}>
           {value}
         </p>
       </div>
@@ -207,22 +230,42 @@ function DeleteModal({
 
   const name = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.email;
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-sm p-6 shadow-2xl shadow-black/60">
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--admin-overlay)' }}
+    >
+      <div
+        className="rounded-2xl w-full max-w-sm p-6"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
+      >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-[#ef4444]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#ef4444] text-xl">person_remove</span>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: 'var(--admin-error-bg)' }}
+          >
+            <span
+              className="material-symbols-outlined text-xl"
+              style={{ color: 'var(--admin-error)' }}
+            >
+              person_remove
+            </span>
           </div>
           <div>
-            <p style={{ color: '#ffffff' }} className="font-semibold">
+            <p className="font-semibold" style={{ color: 'var(--admin-text)' }}>
               Delete Customer
             </p>
-            <p className="text-[#6b7280] text-xs">This action cannot be undone</p>
+            <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+              This action cannot be undone
+            </p>
           </div>
         </div>
-        <p className="text-[#9ca3af] text-sm mb-6">
+        <p className="text-sm mb-6" style={{ color: 'var(--admin-text-secondary)' }}>
           Are you sure you want to delete{' '}
-          <span style={{ color: '#ffffff' }} className="font-medium">
+          <span className="font-medium" style={{ color: 'var(--admin-text)' }}>
             &ldquo;{name}&rdquo;
           </span>
           ?
@@ -231,14 +274,22 @@ function DeleteModal({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: 'var(--admin-border)',
+              color: 'var(--admin-text)',
+            }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 bg-[#ef4444] hover:bg-[#dc2626] disabled:bg-[#374151] text-white rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            style={{
+              backgroundColor: loading ? 'var(--admin-text-disabled)' : 'var(--admin-error)',
+              color: 'white',
+            }}
           >
             {loading ? (
               <>
@@ -331,27 +382,49 @@ function CreateCustomerModal({
     }
   }
 
-  const labelClass = 'block text-[#9ca3af] text-xs font-medium mb-1.5';
-  const inputClass =
-    'w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-3 py-2.5 text-sm outline-none transition-colors';
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border)',
+    color: 'var(--admin-text)',
+  };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg shadow-2xl shadow-black/60 max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--admin-overlay)' }}
+    >
+      <div
+        className="rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: '1px solid var(--admin-border)' }}
+        >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#d4a843]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#d4a843] text-base">person_add</span>
-            </div>
-            <h2
-              className="font-semibold text-base"
-              style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: 'var(--admin-brand-bg)' }}
             >
-              Add Customer
-            </h2>
+              <span
+                className="material-symbols-outlined text-base"
+                style={{ color: 'var(--admin-brand)' }}
+              >
+                person_add
+              </span>
+            </div>
+            <h2 className="admin-h2">Add Customer</h2>
           </div>
-          <button onClick={onClose} className="text-[#6b7280] hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="transition-colors"
+            style={{ color: 'var(--admin-text-muted)' }}
+          >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
@@ -361,29 +434,31 @@ function CreateCustomerModal({
           {/* Name row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>First name</label>
+              <label className="admin-label block mb-1.5">First name</label>
               <input
                 value={form.firstName}
                 onChange={(e) => handleChange('firstName', e.target.value)}
                 placeholder="Jane"
-                className={inputClass}
+                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors"
+                style={inputStyle}
               />
             </div>
             <div>
-              <label className={labelClass}>Last name</label>
+              <label className="admin-label block mb-1.5">Last name</label>
               <input
                 value={form.lastName}
                 onChange={(e) => handleChange('lastName', e.target.value)}
                 placeholder="Doe"
-                className={inputClass}
+                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors"
+                style={inputStyle}
               />
             </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className={labelClass}>
-              Email <span className="text-[#ef4444]">*</span>
+            <label className="admin-label block mb-1.5">
+              Email <span style={{ color: 'var(--admin-error)' }}>*</span>
             </label>
             <input
               type="email"
@@ -391,42 +466,46 @@ function CreateCustomerModal({
               value={form.email}
               onChange={(e) => handleChange('email', e.target.value)}
               placeholder="jane@example.com"
-              className={inputClass}
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors"
+              style={inputStyle}
             />
           </div>
 
           {/* Phone */}
           <div>
-            <label className={labelClass}>Phone</label>
+            <label className="admin-label block mb-1.5">Phone</label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => handleChange('phone', e.target.value)}
               placeholder="+1 555 000 0000"
-              className={inputClass}
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors"
+              style={inputStyle}
             />
           </div>
 
           {/* Tags */}
           <div>
-            <label className={labelClass}>Tags (comma-separated)</label>
+            <label className="admin-label block mb-1.5">Tags (comma-separated)</label>
             <input
               value={form.tags}
               onChange={(e) => handleChange('tags', e.target.value)}
               placeholder="vip, wholesale, influencer"
-              className={inputClass}
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors"
+              style={inputStyle}
             />
           </div>
 
           {/* Note */}
           <div>
-            <label className={labelClass}>Note</label>
+            <label className="admin-label block mb-1.5">Note</label>
             <textarea
               value={form.note}
               onChange={(e) => handleChange('note', e.target.value)}
               placeholder="Internal note about this customer…"
               rows={3}
-              className={`${inputClass} resize-none`}
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors resize-none"
+              style={inputStyle}
             />
           </div>
 
@@ -437,9 +516,12 @@ function CreateCustomerModal({
               role="switch"
               aria-checked={form.acceptsMarketing}
               onClick={() => handleChange('acceptsMarketing', !form.acceptsMarketing)}
-              className={`relative w-10 h-5 rounded-full transition-colors flex-none ${
-                form.acceptsMarketing ? 'bg-[#10b981]' : 'bg-[#1f2d4e]'
-              }`}
+              className="relative w-10 h-5 rounded-full transition-colors flex-none"
+              style={{
+                backgroundColor: form.acceptsMarketing
+                  ? 'var(--admin-success)'
+                  : 'var(--admin-border)',
+              }}
             >
               <span
                 className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
@@ -447,7 +529,9 @@ function CreateCustomerModal({
                 }`}
               />
             </button>
-            <span className="text-[#9ca3af] text-sm">Customer accepts email marketing</span>
+            <span className="text-sm" style={{ color: 'var(--admin-text-secondary)' }}>
+              Customer accepts email marketing
+            </span>
           </label>
 
           {/* Actions */}
@@ -456,14 +540,22 @@ function CreateCustomerModal({
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'var(--admin-border)',
+                color: 'var(--admin-text)',
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || !form.email.trim()}
-              className="flex-1 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:text-[#6b7280] text-[#0a0f1e] font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+              className="flex-1 font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{
+                backgroundColor: 'var(--admin-brand)',
+                color: 'var(--admin-bg)',
+              }}
             >
               {saving ? (
                 <>
@@ -502,18 +594,22 @@ function FilterPill({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-        active
-          ? 'bg-[#d4a843] text-[#0a0f1e]'
-          : 'bg-[#1f2d4e] text-[#9ca3af] hover:text-white hover:bg-[#263d6e]'
-      }`}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      style={{
+        backgroundColor: active ? 'var(--admin-brand)' : 'var(--admin-border)',
+        color: active ? 'var(--admin-bg)' : 'var(--admin-text-secondary)',
+      }}
     >
       {label}
       {count !== undefined && (
         <span
-          className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-            active ? 'bg-[#0a0f1e]/20 text-[#0a0f1e]' : 'bg-[#0a0f1e]/40 text-[#6b7280]'
-          }`}
+          className="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+          style={{
+            backgroundColor: active
+              ? 'color-mix(in srgb, var(--admin-bg) 20%, transparent)'
+              : 'color-mix(in srgb, var(--admin-bg) 40%, transparent)',
+            color: active ? 'var(--admin-bg)' : 'var(--admin-text-muted)',
+          }}
         >
           {count}
         </span>
@@ -677,13 +773,8 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-          >
-            Customers
-          </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
+          <h1 className="admin-h1 text-2xl">Customers</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
             {loading
               ? 'Loading…'
               : `${customers.length} customer${customers.length !== 1 ? 's' : ''}`}
@@ -691,7 +782,11 @@ export default function CustomersPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#d4a843] hover:bg-[#e4c06a] text-[#0a0f1e] font-semibold text-sm transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+          style={{
+            backgroundColor: 'var(--admin-brand)',
+            color: 'var(--admin-bg)',
+          }}
         >
           <span className="material-symbols-outlined text-base">person_add</span>
           Add Customer
@@ -700,37 +795,64 @@ export default function CustomersPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon="people" label="Total customers" value={totalCustomers} color="#6b8cff" />
+        <StatCard
+          icon="people"
+          label="Total customers"
+          value={totalCustomers}
+          colorToken="var(--admin-info)"
+        />
         <StatCard
           icon="payments"
           label="Avg. spent"
           value={loading ? '—' : avgSpentFormatted}
-          color="#d4a843"
+          colorToken="var(--admin-brand)"
         />
-        <StatCard icon="person_add" label="New this month" value={thisMonth} color="#10b981" />
+        <StatCard
+          icon="person_add"
+          label="New this month"
+          value={thisMonth}
+          colorToken="var(--admin-success)"
+        />
         <StatCard
           icon="mark_email_read"
           label="Email subscribers"
           value={subscribed}
-          color="#8b5cf6"
+          colorToken="var(--admin-accent)"
         />
       </div>
 
       {/* Search */}
       <div className="relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-xl">
+        <span
+          className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-xl"
+          style={{ color: 'var(--admin-text-disabled)' }}
+        >
           search
         </span>
         <input
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search by name, email or phone…"
-          className="w-full bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl pl-12 pr-4 py-3 text-sm outline-none transition-colors"
+          className="w-full rounded-xl pl-12 pr-4 py-3 text-sm outline-none transition-colors"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+            color: 'var(--admin-text)',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-brand)';
+            e.currentTarget.style.boxShadow = '0 0 0 1px var(--admin-brand)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--admin-border)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
         />
         {search && (
           <button
             onClick={() => handleSearchChange('')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#374151] hover:text-white transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+            style={{ color: 'var(--admin-text-disabled)' }}
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
@@ -762,14 +884,28 @@ export default function CustomersPage() {
       )}
 
       {/* Table */}
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+        }}
+      >
         {error ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="material-symbols-outlined text-[#ef4444] text-4xl mb-3">error</span>
-            <p className="text-[#ef4444] text-sm">{error}</p>
+            <span
+              className="material-symbols-outlined text-4xl mb-3"
+              style={{ color: 'var(--admin-error)' }}
+            >
+              error
+            </span>
+            <p className="text-sm" style={{ color: 'var(--admin-error)' }}>
+              {error}
+            </p>
             <button
               onClick={() => fetchCustomers(search)}
-              className="mt-4 text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
+              className="mt-4 text-sm transition-colors"
+              style={{ color: 'var(--admin-brand)' }}
             >
               Try again
             </button>
@@ -778,7 +914,7 @@ export default function CustomersPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#1f2d4e]">
+                <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
                   <SortTh
                     field="name"
                     label="Customer"
@@ -787,7 +923,10 @@ export default function CustomersPage() {
                     onSort={toggleSort}
                     className="pl-6"
                   />
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
+                  <th
+                    className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
                     Email
                   </th>
                   <SortTh
@@ -804,31 +943,46 @@ export default function CustomersPage() {
                     dir={sortDir}
                     onSort={toggleSort}
                   />
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
+                  <th
+                    className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
                     Status
                   </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
+                  <th
+                    className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
                     Marketing
                   </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
+                  <th
+                    className="text-left text-xs font-medium uppercase tracking-wider px-4 py-3"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
                     Tags
                   </th>
-                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3 pr-6">
+                  <th
+                    className="text-right text-xs font-medium uppercase tracking-wider px-4 py-3 pr-6"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1f2d4e]">
+              <tbody>
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
                 ) : sorted.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-16">
                       <div className="flex flex-col items-center gap-3">
-                        <span className="material-symbols-outlined text-[#374151] text-4xl">
+                        <span
+                          className="material-symbols-outlined text-4xl"
+                          style={{ color: 'var(--admin-text-disabled)' }}
+                        >
                           people
                         </span>
-                        <p className="text-[#6b7280] text-sm">
+                        <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
                           {search
                             ? 'No customers match your search'
                             : activeFilter !== 'all'
@@ -838,7 +992,8 @@ export default function CustomersPage() {
                         {activeFilter !== 'all' && (
                           <button
                             onClick={() => setActiveFilter('all')}
-                            className="text-[#d4a843] text-xs hover:text-[#e4c06a] transition-colors"
+                            className="text-xs transition-colors"
+                            style={{ color: 'var(--admin-brand)' }}
                           >
                             Clear filter
                           </button>
@@ -857,22 +1012,38 @@ export default function CustomersPage() {
                     const numId = extractNumericId(customer.id);
 
                     return (
-                      <tr key={customer.id} className="hover:bg-[#1f2d4e]/20 transition-colors">
+                      <tr
+                        key={customer.id}
+                        className="transition-colors"
+                        style={{ borderBottom: '1px solid var(--admin-border)' }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)')
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = 'transparent')
+                        }
+                      >
                         {/* Customer */}
                         <td className="px-4 py-4 pl-6">
                           <div className="flex items-center gap-3">
                             <div
-                              className="w-9 h-9 rounded-full flex items-center justify-center flex-none text-xs font-bold text-[#0a0f1e]"
-                              style={{ backgroundColor: avatarBg }}
+                              className="w-9 h-9 rounded-full flex items-center justify-center flex-none text-xs font-bold"
+                              style={{ backgroundColor: avatarBg, color: 'var(--admin-bg)' }}
                             >
                               {initials}
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <p className="text-white text-sm font-medium">{fullName}</p>
+                                <p
+                                  className="text-sm font-medium"
+                                  style={{ color: 'var(--admin-text)' }}
+                                >
+                                  {fullName}
+                                </p>
                                 {customer.note && (
                                   <span
-                                    className="material-symbols-outlined text-[#6b7280] text-sm"
+                                    className="material-symbols-outlined text-sm"
+                                    style={{ color: 'var(--admin-text-muted)' }}
                                     title="Has note"
                                   >
                                     sticky_note_2
@@ -880,7 +1051,9 @@ export default function CustomersPage() {
                                 )}
                               </div>
                               {customer.phone && (
-                                <p className="text-[#6b7280] text-xs">{customer.phone}</p>
+                                <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+                                  {customer.phone}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -888,19 +1061,30 @@ export default function CustomersPage() {
 
                         {/* Email */}
                         <td className="px-4 py-4">
-                          <span className="text-[#9ca3af] text-sm">{customer.email}</span>
+                          <span
+                            className="text-sm"
+                            style={{ color: 'var(--admin-text-secondary)' }}
+                          >
+                            {customer.email}
+                          </span>
                         </td>
 
                         {/* Orders */}
                         <td className="px-4 py-4">
-                          <span className="text-[#e5e7eb] text-sm font-medium">
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: 'var(--admin-text-body)' }}
+                          >
                             {customer.ordersCount}
                           </span>
                         </td>
 
                         {/* Total Spent */}
                         <td className="px-4 py-4">
-                          <span className="text-[#e5e7eb] text-sm font-medium">
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: 'var(--admin-text-body)' }}
+                          >
                             {formatMoney(
                               customer.totalSpentV2.amount,
                               customer.totalSpentV2.currencyCode,
@@ -918,7 +1102,10 @@ export default function CustomersPage() {
                           {customer.acceptsMarketing ? (
                             <span
                               className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: '#10b98118', color: '#10b981' }}
+                              style={{
+                                backgroundColor: 'var(--admin-success-bg)',
+                                color: 'var(--admin-success)',
+                              }}
                             >
                               <span className="material-symbols-outlined text-xs">
                                 mark_email_read
@@ -926,7 +1113,12 @@ export default function CustomersPage() {
                               Subscribed
                             </span>
                           ) : (
-                            <span className="text-[#374151] text-xs">—</span>
+                            <span
+                              className="text-xs"
+                              style={{ color: 'var(--admin-text-disabled)' }}
+                            >
+                              —
+                            </span>
                           )}
                         </td>
 
@@ -940,14 +1132,22 @@ export default function CustomersPage() {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               href={`/admin/customers/${numId}`}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                backgroundColor: 'var(--admin-border)',
+                                color: 'var(--admin-text-secondary)',
+                              }}
                             >
                               <span className="material-symbols-outlined text-sm">person</span>
                               Profile
                             </Link>
                             <button
                               onClick={() => setDeleteTarget(customer)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] text-xs font-medium transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                backgroundColor: 'var(--admin-error-bg)',
+                                color: 'var(--admin-error)',
+                              }}
                             >
                               <span className="material-symbols-outlined text-sm">delete</span>
                               Delete

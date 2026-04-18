@@ -19,9 +19,9 @@ import type {
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const TRIGGER_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  webhook: { label: 'Webhook', icon: 'webhook', color: '#6b8cff' },
-  schedule: { label: 'Schedule', icon: 'schedule', color: '#d4a843' },
-  threshold: { label: 'Threshold', icon: 'monitoring', color: '#10b981' },
+  webhook: { label: 'Webhook', icon: 'webhook', color: 'var(--admin-info)' },
+  schedule: { label: 'Schedule', icon: 'schedule', color: 'var(--admin-brand)' },
+  threshold: { label: 'Threshold', icon: 'monitoring', color: 'var(--admin-success)' },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -84,11 +84,16 @@ function RuleCard({
 
   return (
     <div
-      className={`border rounded-2xl transition-all ${
+      className="border rounded-2xl transition-all"
+      style={
         rule.enabled
-          ? 'bg-[#111827] border-[#1f2d4e] hover:border-[#374151]'
-          : 'bg-[#0d1526]/50 border-[#1f2d4e]/50 opacity-60'
-      }`}
+          ? { backgroundColor: 'var(--admin-bg-card)', borderColor: 'var(--admin-border)' }
+          : {
+              backgroundColor: 'color-mix(in srgb, var(--admin-bg-elevated) 50%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--admin-border) 50%, transparent)',
+              opacity: 0.6,
+            }
+      }
     >
       <div className="flex items-start gap-4 p-5">
         {/* Toggle */}
@@ -98,9 +103,10 @@ function RuleCard({
           className="flex-none mt-0.5"
         >
           <div
-            className={`relative w-10 h-5 rounded-full transition-colors ${
-              rule.enabled ? 'bg-[#10b981]' : 'bg-[#374151]'
-            }`}
+            className="relative w-10 h-5 rounded-full transition-colors"
+            style={{
+              backgroundColor: rule.enabled ? 'var(--admin-success)' : 'var(--admin-border-hover)',
+            }}
           >
             <div
               className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
@@ -112,9 +118,19 @@ function RuleCard({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-[#e5e7eb] text-sm font-semibold leading-snug">{rule.name}</h3>
+          <h3
+            className="text-sm font-semibold leading-snug"
+            style={{ color: 'var(--admin-text-body)' }}
+          >
+            {rule.name}
+          </h3>
           {rule.description && (
-            <p className="text-[#6b7280] text-xs mt-1 leading-relaxed">{rule.description}</p>
+            <p
+              className="text-xs mt-1 leading-relaxed"
+              style={{ color: 'var(--admin-text-muted)' }}
+            >
+              {rule.description}
+            </p>
           )}
 
           {/* Badges */}
@@ -133,21 +149,36 @@ function RuleCard({
 
             {/* Conditions count */}
             {rule.conditions.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#1f2d4e]/50 text-[#9ca3af] text-[11px] font-medium">
+              <span
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--admin-border) 50%, transparent)',
+                  color: 'var(--admin-text-secondary)',
+                }}
+              >
                 <span className="material-symbols-outlined text-sm">filter_alt</span>
                 {rule.conditions.length} condition{rule.conditions.length !== 1 ? 's' : ''}
               </span>
             )}
 
             {/* Actions count */}
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#1f2d4e]/50 text-[#9ca3af] text-[11px] font-medium">
+            <span
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--admin-border) 50%, transparent)',
+                color: 'var(--admin-text-secondary)',
+              }}
+            >
               <span className="material-symbols-outlined text-sm">bolt</span>
               {rule.actions.length} action{rule.actions.length !== 1 ? 's' : ''}
             </span>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 mt-3 text-[#374151] text-[10px] font-mono">
+          <div
+            className="flex items-center gap-4 mt-3 text-[10px] font-mono"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             <span>Runs: {rule.runCount}</span>
             <span>Last: {relativeDate(rule.lastRunAt)}</span>
           </div>
@@ -158,7 +189,8 @@ function RuleCard({
           <button
             onClick={() => onEdit(rule)}
             title="Edit"
-            className="p-2 rounded-lg text-[#6b7280] hover:text-[#d4a843] hover:bg-[#d4a843]/10 transition-all"
+            className="p-2 rounded-lg transition-all"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined text-lg">edit</span>
           </button>
@@ -170,7 +202,8 @@ function RuleCard({
             }}
             disabled={deleting}
             title="Delete"
-            className="p-2 rounded-lg text-[#6b7280] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-all disabled:opacity-50"
+            className="p-2 rounded-lg transition-all disabled:opacity-50"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined text-lg">
               {deleting ? 'hourglass_empty' : 'delete'}
@@ -186,15 +219,38 @@ function RuleCard({
 
 function SkeletonRule() {
   return (
-    <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-5 space-y-3">
+    <div
+      className="rounded-2xl p-5 space-y-3"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: 'var(--admin-border)',
+      }}
+    >
       <div className="flex items-start gap-4">
-        <div className="w-10 h-5 rounded-full bg-[#1f2d4e] animate-pulse" />
+        <div
+          className="w-10 h-5 rounded-full animate-pulse"
+          style={{ backgroundColor: 'var(--admin-border)' }}
+        />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-[#1f2d4e] rounded animate-pulse w-1/3" />
-          <div className="h-3 bg-[#1f2d4e] rounded animate-pulse w-2/3" />
+          <div
+            className="h-4 rounded animate-pulse w-1/3"
+            style={{ backgroundColor: 'var(--admin-border)' }}
+          />
+          <div
+            className="h-3 rounded animate-pulse w-2/3"
+            style={{ backgroundColor: 'var(--admin-border)' }}
+          />
           <div className="flex gap-2 mt-2">
-            <div className="h-6 bg-[#1f2d4e] rounded-lg animate-pulse w-24" />
-            <div className="h-6 bg-[#1f2d4e] rounded-lg animate-pulse w-20" />
+            <div
+              className="h-6 rounded-lg animate-pulse w-24"
+              style={{ backgroundColor: 'var(--admin-border)' }}
+            />
+            <div
+              className="h-6 rounded-lg animate-pulse w-20"
+              style={{ backgroundColor: 'var(--admin-border)' }}
+            />
           </div>
         </div>
       </div>
@@ -324,18 +380,18 @@ function RuleModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--admin-border)]">
           <h2
             className="text-lg font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+            style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
           >
             {isEdit ? 'Edit Automation' : 'New Automation'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#6b7280] hover:text-white hover:bg-[#1f2d4e] transition-all"
+            className="p-1.5 rounded-lg text-[var(--admin-text-muted)] hover:text-white hover:bg-[var(--admin-border)] transition-all"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
@@ -346,30 +402,36 @@ function RuleModal({
           {/* Name + Description */}
           <div className="space-y-3">
             <div>
-              <label className="block text-[#9ca3af] text-xs font-medium mb-1.5">Name *</label>
+              <label className="block text-[var(--admin-text-secondary)] text-xs font-medium mb-1.5">
+                Name *
+              </label>
               <input
                 type="text"
                 value={form.name ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. Auto-tag low stock products"
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+                className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[#9ca3af] text-xs font-medium mb-1.5">Description</label>
+              <label className="block text-[var(--admin-text-secondary)] text-xs font-medium mb-1.5">
+                Description
+              </label>
               <input
                 type="text"
                 value={form.description ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description of what this rule does"
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+                className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors"
               />
             </div>
           </div>
 
           {/* Trigger */}
           <div>
-            <label className="block text-[#9ca3af] text-xs font-medium mb-2">Trigger</label>
+            <label className="block text-[var(--admin-text-secondary)] text-xs font-medium mb-2">
+              Trigger
+            </label>
             <div className="flex gap-2 mb-3">
               {(['webhook', 'schedule', 'threshold'] as const).map((type) => {
                 const t = TRIGGER_LABELS[type];
@@ -388,7 +450,7 @@ function RuleModal({
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                       isActive
                         ? 'border text-white'
-                        : 'bg-[#0a0f1e] border border-[#1f2d4e] text-[#6b7280] hover:text-[#9ca3af]'
+                        : 'bg-[var(--admin-bg)] border border-[var(--admin-border)] text-[var(--admin-text-muted)] hover:text-[var(--admin-text-secondary)]'
                     }`}
                     style={
                       isActive
@@ -412,7 +474,7 @@ function RuleModal({
               <select
                 value={(form.trigger as { type: 'webhook'; topic: string }).topic}
                 onChange={(e) => updateTrigger({ topic: e.target.value } as Partial<RuleTrigger>)}
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+                className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors"
               >
                 {WEBHOOK_TOPICS.map((t) => (
                   <option key={t} value={t}>
@@ -427,7 +489,7 @@ function RuleModal({
                 value={(form.trigger as { type: 'schedule'; cron: string }).cron}
                 onChange={(e) => updateTrigger({ cron: e.target.value } as Partial<RuleTrigger>)}
                 placeholder="0 0 * * * (every midnight)"
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors font-mono"
+                className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors font-mono"
               />
             )}
             {form.trigger?.type === 'threshold' && (
@@ -439,14 +501,14 @@ function RuleModal({
                     updateTrigger({ metric: e.target.value } as Partial<RuleTrigger>)
                   }
                   placeholder="Metric name"
-                  className="flex-1 bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+                  className="flex-1 bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors"
                 />
                 <select
                   value={(form.trigger as { type: 'threshold'; operator: string }).operator}
                   onChange={(e) =>
                     updateTrigger({ operator: e.target.value } as Partial<RuleTrigger>)
                   }
-                  className="w-20 bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#d4a843]/50 transition-colors font-mono"
+                  className="w-20 bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-3 py-2.5 text-sm text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors font-mono"
                 >
                   <option value="<">&lt;</option>
                   <option value=">">&gt;</option>
@@ -459,7 +521,7 @@ function RuleModal({
                   onChange={(e) =>
                     updateTrigger({ value: Number(e.target.value) } as Partial<RuleTrigger>)
                   }
-                  className="w-24 bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#d4a843]/50 transition-colors font-mono"
+                  className="w-24 bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-2.5 text-sm text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors font-mono"
                 />
               </div>
             )}
@@ -468,15 +530,18 @@ function RuleModal({
           {/* Conditions */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[#9ca3af] text-xs font-medium">
+              <label className="text-[var(--admin-text-secondary)] text-xs font-medium">
                 Conditions (all must match)
               </label>
-              <button onClick={addCondition} className="text-[#d4a843] text-xs hover:underline">
+              <button
+                onClick={addCondition}
+                className="text-[var(--admin-brand)] text-xs hover:underline"
+              >
                 + Add condition
               </button>
             </div>
             {(form.conditions ?? []).length === 0 ? (
-              <p className="text-[#374151] text-xs italic">
+              <p className="text-[var(--admin-text-disabled)] text-xs italic">
                 No conditions — rule will always fire when triggered
               </p>
             ) : (
@@ -488,7 +553,7 @@ function RuleModal({
                       value={cond.field}
                       onChange={(e) => updateCondition(idx, { field: e.target.value })}
                       placeholder="field"
-                      className="flex-1 bg-[#0a0f1e] border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                      className="flex-1 bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                     />
                     <select
                       value={cond.operator}
@@ -497,7 +562,7 @@ function RuleModal({
                           operator: e.target.value as RuleCondition['operator'],
                         })
                       }
-                      className="w-20 bg-[#0a0f1e] border border-[#1f2d4e] rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                      className="w-20 bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-2 py-2 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                     >
                       <option value="==">=</option>
                       <option value="!=">!=</option>
@@ -519,11 +584,11 @@ function RuleModal({
                         })
                       }
                       placeholder="value"
-                      className="w-32 bg-[#0a0f1e] border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                      className="w-32 bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                     />
                     <button
                       onClick={() => removeCondition(idx)}
-                      className="p-1 rounded text-[#6b7280] hover:text-[#ef4444] transition-colors"
+                      className="p-1 rounded text-[var(--admin-text-muted)] hover:text-[var(--admin-error)] transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">close</span>
                     </button>
@@ -536,8 +601,13 @@ function RuleModal({
           {/* Actions */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[#9ca3af] text-xs font-medium">Actions *</label>
-              <button onClick={addAction} className="text-[#d4a843] text-xs hover:underline">
+              <label className="text-[var(--admin-text-secondary)] text-xs font-medium">
+                Actions *
+              </label>
+              <button
+                onClick={addAction}
+                className="text-[var(--admin-brand)] text-xs hover:underline"
+              >
                 + Add action
               </button>
             </div>
@@ -545,13 +615,13 @@ function RuleModal({
               {(form.actions ?? []).map((action, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl p-3 space-y-2"
+                  className="bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl p-3 space-y-2"
                 >
                   <div className="flex items-center gap-2">
                     <select
                       value={action.type}
                       onChange={(e) => changeActionType(idx, e.target.value as RuleAction['type'])}
-                      className="flex-1 bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#d4a843]/50"
+                      className="flex-1 bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)]"
                     >
                       {ACTION_TYPES.map((at) => (
                         <option key={at.type} value={at.type}>
@@ -562,7 +632,7 @@ function RuleModal({
                     {(form.actions ?? []).length > 1 && (
                       <button
                         onClick={() => removeAction(idx)}
-                        className="p-1 rounded text-[#6b7280] hover:text-[#ef4444] transition-colors"
+                        className="p-1 rounded text-[var(--admin-text-muted)] hover:text-[var(--admin-error)] transition-colors"
                       >
                         <span className="material-symbols-outlined text-sm">close</span>
                       </button>
@@ -576,7 +646,7 @@ function RuleModal({
                       value={(action as { message: string }).message}
                       onChange={(e) => updateAction(idx, { message: e.target.value })}
                       placeholder="Message (use {{field}} for interpolation)"
-                      className="w-full bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                      className="w-full bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                     />
                   )}
                   {action.type === 'tag_product' && (
@@ -585,14 +655,14 @@ function RuleModal({
                       value={(action as { tag: string }).tag}
                       onChange={(e) => updateAction(idx, { tag: e.target.value })}
                       placeholder="Tag name"
-                      className="w-full bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50"
+                      className="w-full bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)]"
                     />
                   )}
                   {action.type === 'update_status' && (
                     <select
                       value={(action as { status: string }).status}
                       onChange={(e) => updateAction(idx, { status: e.target.value })}
-                      className="w-full bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#d4a843]/50"
+                      className="w-full bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)]"
                     >
                       <option value="ACTIVE">Active</option>
                       <option value="DRAFT">Draft</option>
@@ -606,14 +676,14 @@ function RuleModal({
                         value={(action as { code: string }).code}
                         onChange={(e) => updateAction(idx, { code: e.target.value })}
                         placeholder="Code"
-                        className="flex-1 bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50"
+                        className="flex-1 bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)]"
                       />
                       <input
                         type="number"
                         value={(action as { percentage: number }).percentage}
                         onChange={(e) => updateAction(idx, { percentage: Number(e.target.value) })}
                         placeholder="%"
-                        className="w-20 bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                        className="w-20 bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                       />
                       <input
                         type="number"
@@ -622,7 +692,7 @@ function RuleModal({
                           updateAction(idx, { duration_hours: Number(e.target.value) })
                         }
                         placeholder="Hours"
-                        className="w-20 bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                        className="w-20 bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                       />
                     </div>
                   )}
@@ -632,7 +702,7 @@ function RuleModal({
                       value={(action as { percentage: number }).percentage}
                       onChange={(e) => updateAction(idx, { percentage: Number(e.target.value) })}
                       placeholder="% (positive = increase, negative = decrease)"
-                      className="w-full bg-transparent border border-[#1f2d4e] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 font-mono"
+                      className="w-full bg-transparent border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] font-mono"
                     />
                   )}
                 </div>
@@ -642,17 +712,17 @@ function RuleModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#1f2d4e]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--admin-border)]">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-[#9ca3af] hover:text-white hover:bg-[#1f2d4e] transition-all"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-[var(--admin-text-secondary)] hover:text-white hover:bg-[var(--admin-border)] transition-all"
           >
             Cancel
           </button>
           <button
             onClick={() => onSave(form)}
             disabled={saving || !form.name?.trim() || !(form.actions ?? []).length}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#d4a843] hover:bg-[#b8922e] disabled:bg-[#d4a843]/40 text-[#0a0f1e] font-semibold text-sm rounded-xl transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--admin-brand)] hover:bg-[var(--admin-brand-hover)] disabled:opacity-40 text-[var(--admin-bg)] font-semibold text-sm rounded-xl transition-all disabled:opacity-50"
           >
             {saving && (
               <span className="material-symbols-outlined text-base animate-spin">
@@ -792,11 +862,11 @@ export default function AutomationsPage() {
         <div>
           <h1
             className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+            style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
           >
             Automations
           </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
+          <p className="text-[var(--admin-text-muted)] text-sm mt-1">
             {loading
               ? 'Loading...'
               : `${rules.length} rule${rules.length !== 1 ? 's' : ''} \u00b7 ${enabledCount} active`}
@@ -805,7 +875,7 @@ export default function AutomationsPage() {
 
         <button
           onClick={() => setModalRule(emptyRule())}
-          className="flex items-center gap-2 bg-[#d4a843] hover:bg-[#b8922e] text-[#0a0f1e] font-semibold rounded-xl px-5 py-2.5 text-sm transition-all"
+          className="flex items-center gap-2 bg-[var(--admin-brand)] hover:bg-[var(--admin-brand-hover)] text-[var(--admin-bg)] font-semibold rounded-xl px-5 py-2.5 text-sm transition-all"
         >
           <span className="material-symbols-outlined text-lg">add</span>
           New Rule
@@ -814,7 +884,7 @@ export default function AutomationsPage() {
 
       {/* ── Search ───────────────────────────────────────────────────── */}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-lg pointer-events-none">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[var(--admin-text-disabled)] text-lg pointer-events-none">
           search
         </span>
         <input
@@ -822,12 +892,12 @@ export default function AutomationsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search rules by name, description, or trigger…"
-          className="w-full bg-[#111827] border border-[#1f2d4e] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-[#374151] focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+          className="w-full bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-xl pl-10 pr-10 py-2.5 text-sm text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand-border)] transition-colors"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-[#9ca3af] transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-disabled)] hover:text-[var(--admin-text-secondary)] transition-colors"
           >
             <span className="material-symbols-outlined text-base">close</span>
           </button>
@@ -838,31 +908,43 @@ export default function AutomationsPage() {
       {!loading && rules.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Total Rules', value: rules.length, icon: 'electric_bolt', color: '#6b8cff' },
-            { label: 'Active', value: enabledCount, icon: 'check_circle', color: '#10b981' },
+            {
+              label: 'Total Rules',
+              value: rules.length,
+              icon: 'electric_bolt',
+              color: 'var(--admin-info)',
+            },
+            {
+              label: 'Active',
+              value: enabledCount,
+              icon: 'check_circle',
+              color: 'var(--admin-success)',
+            },
             {
               label: 'Disabled',
               value: rules.length - enabledCount,
               icon: 'pause_circle',
-              color: '#6b7280',
+              color: 'var(--admin-text-muted)',
             },
             {
               label: 'Total Runs',
               value: rules.reduce((s, r) => s + r.runCount, 0),
               icon: 'replay',
-              color: '#d4a843',
+              color: 'var(--admin-brand)',
             },
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-[#111827] border border-[#1f2d4e] rounded-xl px-4 py-3 flex items-center gap-3"
+              className="bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-xl px-4 py-3 flex items-center gap-3"
             >
               <span className="material-symbols-outlined text-xl" style={{ color: stat.color }}>
                 {stat.icon}
               </span>
               <div>
                 <p className="text-white text-lg font-bold leading-none">{stat.value}</p>
-                <p className="text-[#6b7280] text-[10px] font-medium mt-0.5">{stat.label}</p>
+                <p className="text-[var(--admin-text-muted)] text-[10px] font-medium mt-0.5">
+                  {stat.label}
+                </p>
               </div>
             </div>
           ))}
@@ -874,32 +956,34 @@ export default function AutomationsPage() {
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonRule key={i} />)
         ) : rules.length === 0 ? (
-          <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl flex flex-col items-center justify-center py-20 text-center px-6">
-            <span className="material-symbols-outlined text-[#1f2d4e] text-5xl mb-4">
+          <div className="bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-2xl flex flex-col items-center justify-center py-20 text-center px-6">
+            <span className="material-symbols-outlined text-[var(--admin-border)] text-5xl mb-4">
               electric_bolt
             </span>
-            <p className="text-[#6b7280] text-sm font-medium">No automations yet</p>
-            <p className="text-[#374151] text-xs mt-1 max-w-sm">
+            <p className="text-[var(--admin-text-muted)] text-sm font-medium">No automations yet</p>
+            <p className="text-[var(--admin-text-disabled)] text-xs mt-1 max-w-sm">
               Create your first automation rule to automate product tagging, notifications, pricing,
               and more.
             </p>
             <button
               onClick={() => setModalRule(emptyRule())}
-              className="mt-4 flex items-center gap-2 bg-[#d4a843] hover:bg-[#b8922e] text-[#0a0f1e] font-semibold rounded-xl px-5 py-2.5 text-sm transition-all"
+              className="mt-4 flex items-center gap-2 bg-[var(--admin-brand)] hover:bg-[var(--admin-brand-hover)] text-[var(--admin-bg)] font-semibold rounded-xl px-5 py-2.5 text-sm transition-all"
             >
               <span className="material-symbols-outlined text-lg">add</span>
               Create First Rule
             </button>
           </div>
         ) : filteredRules.length === 0 ? (
-          <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl flex flex-col items-center justify-center py-16 text-center px-6">
-            <span className="material-symbols-outlined text-[#1f2d4e] text-5xl mb-4">
+          <div className="bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-2xl flex flex-col items-center justify-center py-16 text-center px-6">
+            <span className="material-symbols-outlined text-[var(--admin-border)] text-5xl mb-4">
               search_off
             </span>
-            <p className="text-[#6b7280] text-sm font-medium">No rules match your search</p>
+            <p className="text-[var(--admin-text-muted)] text-sm font-medium">
+              No rules match your search
+            </p>
             <button
               onClick={() => setSearch('')}
-              className="mt-3 text-[#d4a843] text-xs hover:underline"
+              className="mt-3 text-[var(--admin-brand)] text-xs hover:underline"
             >
               Clear search
             </button>

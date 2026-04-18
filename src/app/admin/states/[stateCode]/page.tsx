@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * /admin/states/[stateCode] — State Profile Page
+ * /admin/states/[stateCode] — State Profile Page — Phase 4
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Detailed view of a single state with demographics, trends,
  * opportunity score breakdown, and state comparison widget.
  */
@@ -16,8 +17,6 @@ import { PulseFeed } from '@/components/admin/states/PulseFeed';
 import { getOpportunityLabel } from '@/lib/states/scorer';
 import { scoreToQuintile, QUINTILE_BG_COLORS } from '@/lib/states/types';
 import type { StateDetailResponse, StateWithScore, MarketPulseEvent } from '@/lib/states/types';
-
-// ─── Data Fetching ────────────────────────────────────────────────────────────
 
 async function fetchStateDetail(code: string): Promise<StateDetailResponse> {
   const res = await fetch(`/api/admin/states/${code}`);
@@ -37,15 +36,11 @@ async function fetchStatePulse(code: string): Promise<{ events: MarketPulseEvent
   return res.json();
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
 }
-
-// ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function StateProfilePage({ params }: { params: Promise<{ stateCode: string }> }) {
   const { stateCode } = use(params);
@@ -57,7 +52,6 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
   const [pulseEvents, setPulseEvents] = useState<MarketPulseEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Compare codes from URL: ?compare=TX,NY
   const compareCodes =
     searchParams
       .get('compare')
@@ -74,8 +68,6 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
         ]);
         setDetail(detailData);
         setPulseEvents(pulseData.events);
-
-        // Fetch comparison if codes provided
         if (compareCodes.length > 0) {
           const allCodes = [code, ...compareCodes].slice(0, 3);
           const compData = await fetchCompare(allCodes);
@@ -93,7 +85,9 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-[#4b5563] text-sm">Loading state profile...</span>
+        <span className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+          Loading state profile...
+        </span>
       </div>
     );
   }
@@ -101,8 +95,12 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
   if (!detail) {
     return (
       <div className="p-6">
-        <p className="text-red-400">State not found: {code}</p>
-        <Link href="/admin/states" className="text-[#3b82f6] text-sm mt-2 inline-block">
+        <p style={{ color: 'var(--admin-error)' }}>State not found: {code}</p>
+        <Link
+          href="/admin/states"
+          className="text-sm mt-2 inline-block"
+          style={{ color: 'var(--admin-info)' }}
+        >
           ← Back to map
         </Link>
       </div>
@@ -117,19 +115,24 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
     <div data-testid="state-profile-page" className="p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin/states" className="text-[#4b5563] hover:text-white transition-colors">
+        <Link
+          href="/admin/states"
+          className="transition-colors"
+          style={{ color: 'var(--admin-text-muted)' }}
+        >
           <span className="material-symbols-outlined text-xl">arrow_back</span>
         </Link>
         <div className="flex items-center gap-3">
           <span
             data-testid="profile-score-badge"
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white ${QUINTILE_BG_COLORS[quintile]}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${QUINTILE_BG_COLORS[quintile]}`}
+            style={{ color: '#fff' }}
           >
             {score.score}
           </span>
           <div>
-            <h1 className="text-xl font-bold text-white">{profile.name}</h1>
-            <p className="text-xs text-[#6b7280]">
+            <h1 className="admin-h1 text-xl">{profile.name}</h1>
+            <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
               {profile.code} · {profile.region} · {label}
             </p>
           </div>
@@ -148,8 +151,16 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
       </div>
 
       {/* Score Breakdown */}
-      <div className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4 mb-6">
-        <h2 className="text-sm font-semibold text-white mb-3">Score Breakdown</h2>
+      <div
+        className="rounded-xl p-4 mb-6"
+        style={{
+          backgroundColor: 'var(--admin-bg-elevated)',
+          border: '1px solid var(--admin-border)',
+        }}
+      >
+        <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--admin-text)' }}>
+          Score Breakdown
+        </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StateStatCard
             label="Demographics"
@@ -175,8 +186,16 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
       </div>
 
       {/* Age Distribution */}
-      <div className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4 mb-6">
-        <h2 className="text-sm font-semibold text-white mb-3">Age Distribution</h2>
+      <div
+        className="rounded-xl p-4 mb-6"
+        style={{
+          backgroundColor: 'var(--admin-bg-elevated)',
+          border: '1px solid var(--admin-border)',
+        }}
+      >
+        <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--admin-text)' }}>
+          Age Distribution
+        </h2>
         <div className="grid grid-cols-4 gap-4">
           <StateStatCard label="Under 18" value={`${profile.ageDistribution.under18}%`} />
           <StateStatCard label="18-34" value={`${profile.ageDistribution.age18to34}%`} />
@@ -187,23 +206,45 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
 
       {/* State Pulse Events */}
       {pulseEvents.length > 0 && (
-        <div className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4 mb-6">
+        <div
+          className="rounded-xl p-4 mb-6"
+          style={{
+            backgroundColor: 'var(--admin-bg-elevated)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           <PulseFeed events={pulseEvents} maxHeight="300px" />
         </div>
       )}
 
       {/* State Comparison */}
       {compareStates.length >= 2 && (
-        <div className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4 mb-6">
-          <h2 className="text-sm font-semibold text-white mb-3">State Comparison</h2>
+        <div
+          className="rounded-xl p-4 mb-6"
+          style={{
+            backgroundColor: 'var(--admin-bg-elevated)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
+          <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--admin-text)' }}>
+            State Comparison
+          </h2>
           <StatCompare states={compareStates} />
         </div>
       )}
 
       {/* Quick Compare Links */}
       {compareStates.length < 2 && (
-        <div className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4">
-          <h2 className="text-sm font-semibold text-white mb-2">Compare with...</h2>
+        <div
+          className="rounded-xl p-4"
+          style={{
+            backgroundColor: 'var(--admin-bg-elevated)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
+          <h2 className="text-sm font-semibold mb-2" style={{ color: 'var(--admin-text)' }}>
+            Compare with...
+          </h2>
           <div className="flex gap-2 flex-wrap">
             {['CA', 'TX', 'NY', 'FL', 'IL']
               .filter((c) => c !== code)
@@ -212,7 +253,11 @@ export default function StateProfilePage({ params }: { params: Promise<{ stateCo
                 <Link
                   key={c}
                   href={`/admin/states/${code}?compare=${c}`}
-                  className="px-3 py-1.5 rounded-lg border border-[#1f2d4e] text-xs text-[#9ca3af] hover:text-white hover:border-[#3b82f6] transition-all"
+                  className="px-3 py-1.5 rounded-lg text-xs transition-all"
+                  style={{
+                    border: '1px solid var(--admin-border)',
+                    color: 'var(--admin-text-secondary)',
+                  }}
                 >
                   vs {c}
                 </Link>

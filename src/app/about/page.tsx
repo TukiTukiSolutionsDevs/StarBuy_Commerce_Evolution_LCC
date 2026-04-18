@@ -51,7 +51,7 @@ export default function AboutPage() {
   return (
     <main className="bg-[#faf9f6]">
       {/* Hero */}
-      <section className="relative px-6 pt-20 pb-24 md:pt-28 md:pb-32 overflow-hidden">
+      <section className="relative px-4 md:px-6 pt-12 pb-16 md:pt-28 md:pb-32 overflow-hidden">
         {/* Decorative blobs */}
         <div className="absolute -top-10 -left-20 w-64 h-64 bg-[#bcd6ff]/30 blur-[100px] rounded-full -z-10" />
         <div className="absolute top-40 -right-20 w-80 h-80 bg-[#f8cc69]/20 blur-[120px] rounded-full -z-10" />
@@ -60,7 +60,7 @@ export default function AboutPage() {
           <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-6">
             Our Story
           </p>
-          <h1 className="font-headline text-5xl md:text-7xl text-[#303330] leading-tight tracking-tight mb-6">
+          <h1 className="font-headline text-3xl md:text-5xl lg:text-7xl text-[#303330] leading-tight tracking-tight mb-6">
             About StarBuyBaby
           </h1>
           <p className="font-body text-[#5d605c] max-w-xl mx-auto leading-relaxed text-lg">
@@ -71,7 +71,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story */}
-      <section className="px-6 mb-20">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
         <Container narrow>
           <div className="bg-[#ffffff] rounded-2xl p-8 md:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
             <h2 className="font-headline text-3xl text-[#303330] mb-8">How It Started</h2>
@@ -101,7 +101,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="bg-[#f4f4f0] py-20 px-6 mb-20">
+      <section className="bg-[#f4f4f0] py-12 md:py-20 px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-3">
@@ -134,9 +134,9 @@ export default function AboutPage() {
       </section>
 
       {/* Promises */}
-      <section className="px-6 mb-20">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-headline text-3xl text-[#303330] text-center mb-10">
+          <h2 className="font-headline text-2xl md:text-3xl text-[#303330] text-center mb-8 md:mb-10">
             Our Promise to You
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -162,9 +162,9 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="px-6 mb-20">
-        <div className="max-w-4xl mx-auto rounded-2xl bg-[#f4f4f0] p-10 md:p-16 text-center">
-          <h2 className="font-headline text-3xl md:text-4xl text-[#303330] mb-4">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
+        <div className="max-w-4xl mx-auto rounded-2xl bg-[#f4f4f0] p-6 md:p-16 text-center">
+          <h2 className="font-headline text-2xl md:text-4xl text-[#303330] mb-4">
             Ready to Discover Something Special?
           </h2>
           <p className="text-[#5d605c] max-w-lg mx-auto mb-8 leading-relaxed">

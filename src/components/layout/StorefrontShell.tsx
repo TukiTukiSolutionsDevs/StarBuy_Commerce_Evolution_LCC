@@ -20,7 +20,7 @@ export function StorefrontShell({ children }: { children: ReactNode }) {
       <Suspense fallback={<div className="h-[100px]" />}>
         <Header />
       </Suspense>
-      <main className="flex-1 bg-[#faf5f0] pt-[100px]">{children}</main>
+      <main className="flex-1 bg-[#faf5f0] pt-[92px] md:pt-[100px]">{children}</main>
       <Footer />
       <BackToTop />
     </>

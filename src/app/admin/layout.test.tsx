@@ -112,37 +112,37 @@ describe('AdminLayout — Market Explorer active state', () => {
   it('is active on /admin/explorer (exact match)', () => {
     renderLayout('/admin/explorer');
     const link = screen.getByRole('link', { name: /market explorer/i });
-    expect(link.className).toContain('bg-[#d4a843]/10');
+    expect(link.style.backgroundColor).toBe('var(--admin-brand-bg)');
   });
 
   it('is active on /admin/explorer/electronics (startsWith)', () => {
     renderLayout('/admin/explorer/electronics');
     const link = screen.getByRole('link', { name: /market explorer/i });
-    expect(link.className).toContain('bg-[#d4a843]/10');
+    expect(link.style.backgroundColor).toBe('var(--admin-brand-bg)');
   });
 
   it('is active on /admin/explorer/health (startsWith)', () => {
     renderLayout('/admin/explorer/health');
     const link = screen.getByRole('link', { name: /market explorer/i });
-    expect(link.className).toContain('bg-[#d4a843]/10');
+    expect(link.style.backgroundColor).toBe('var(--admin-brand-bg)');
   });
 
   it('is NOT active on /admin/trends', () => {
     renderLayout('/admin/trends');
     const link = screen.getByRole('link', { name: /market explorer/i });
-    expect(link.className).not.toContain('bg-[#d4a843]/10');
+    expect(link.style.backgroundColor).not.toBe('var(--admin-brand-bg)');
   });
 
   it('is NOT active on /admin (dashboard)', () => {
     renderLayout('/admin');
     const link = screen.getByRole('link', { name: /market explorer/i });
-    expect(link.className).not.toContain('bg-[#d4a843]/10');
+    expect(link.style.backgroundColor).not.toBe('var(--admin-brand-bg)');
   });
 
   it('Trend Engine is NOT active when on /admin/explorer', () => {
     renderLayout('/admin/explorer');
     const link = screen.getByRole('link', { name: /trend engine/i });
-    expect(link.className).not.toContain('bg-[#d4a843]/10');
+    expect(link.style.backgroundColor).not.toBe('var(--admin-brand-bg)');
   });
 });
 

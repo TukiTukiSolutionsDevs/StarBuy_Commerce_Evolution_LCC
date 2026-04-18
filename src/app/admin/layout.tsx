@@ -111,23 +111,46 @@ function NavItem({
       href={href}
       onClick={onClick}
       title={collapsed ? label : undefined}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group relative ${
+      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group relative"
+      style={
         active
-          ? 'bg-[#d4a843]/10 text-[#d4a843] border border-[#d4a843]/20'
-          : 'text-[#9ca3af] hover:text-white hover:bg-[#1b2a5e]/40'
-      }`}
+          ? {
+              backgroundColor: 'var(--admin-brand-bg)',
+              color: 'var(--admin-brand)',
+              border: '1px solid var(--admin-brand-border)',
+            }
+          : { color: 'var(--admin-text-secondary)' }
+      }
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+          e.currentTarget.style.color = 'var(--admin-text)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.color = 'var(--admin-text-secondary)';
+        }
+      }}
     >
       <span
-        className={`material-symbols-outlined text-xl flex-none transition-colors ${
-          active ? 'text-[#d4a843]' : 'text-[#4b5563] group-hover:text-[#d4a843]'
-        }`}
+        className="material-symbols-outlined text-xl flex-none transition-colors"
+        style={{ color: active ? 'var(--admin-brand)' : 'var(--admin-text-muted)' }}
       >
         {icon}
       </span>
       {!collapsed && (
-        <span className={`font-medium ${active ? 'text-[#d4a843]' : ''}`}>{label}</span>
+        <span className="font-medium" style={active ? { color: 'var(--admin-brand)' } : undefined}>
+          {label}
+        </span>
       )}
-      {active && !collapsed && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#d4a843]" />}
+      {active && !collapsed && (
+        <span
+          className="ml-auto w-1.5 h-1.5 rounded-full"
+          style={{ backgroundColor: 'var(--admin-brand)' }}
+        />
+      )}
     </Link>
   );
 }
@@ -187,11 +210,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <AdminThemeProvider>
-        <div className="fixed inset-0 z-50 bg-[#0a0f1e] flex overflow-hidden">
+        <div
+          className="fixed inset-0 z-50 flex overflow-hidden"
+          style={{ backgroundColor: 'var(--admin-bg)' }}
+        >
           {/* ── Mobile backdrop ──────────────────────────────────────────── */}
           {mobileOpen && (
             <div
-              className="fixed inset-0 z-[51] bg-black/60 lg:hidden"
+              className="fixed inset-0 z-[51] lg:hidden"
+              style={{ backgroundColor: 'var(--admin-overlay)' }}
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
             />
@@ -200,33 +227,45 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {/* ── Sidebar ─────────────────────────────────────────────────── */}
           <aside
             className={[
-              'flex-none flex flex-col bg-[#0d1526] border-r border-[#1f2d4e] transition-all duration-300',
-              // Mobile: fixed drawer, hidden by default
+              'flex-none flex flex-col border-r transition-all duration-300',
               'fixed inset-y-0 left-0 z-[52] lg:relative lg:z-auto',
               mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
               collapsed ? 'w-[60px]' : 'w-64',
             ].join(' ')}
+            style={{
+              backgroundColor: 'var(--admin-bg-sidebar)',
+              borderColor: 'var(--admin-border)',
+            }}
           >
             {/* Logo */}
             <div
-              className={`flex items-center gap-3 border-b border-[#1f2d4e] h-16 transition-all ${
-                collapsed ? 'px-3 justify-center' : 'px-4'
+              className={`flex items-center border-b h-16 transition-all ${
+                collapsed ? 'px-3 justify-center' : 'px-4 gap-2.5'
               }`}
+              style={{ borderColor: 'var(--admin-border)' }}
             >
               <Image
                 src="/logo.png"
                 alt="StarBuy"
-                width={40}
-                height={40}
-                className="h-10 w-auto flex-none object-contain"
+                width={collapsed ? 32 : 36}
+                height={collapsed ? 32 : 36}
+                className={`${collapsed ? 'h-8' : 'h-9'} w-auto flex-none object-contain transition-all`}
               />
               {!collapsed && (
-                <span
-                  className="text-white font-bold text-sm tracking-wide"
-                  style={{ fontFamily: 'var(--font-heading)' }}
-                >
-                  Admin
-                </span>
+                <div className="flex flex-col leading-none">
+                  <span
+                    className="font-bold text-sm tracking-wide"
+                    style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
+                  >
+                    StarBuy
+                  </span>
+                  <span
+                    className="text-[10px] font-medium uppercase tracking-widest mt-0.5"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
+                    Admin
+                  </span>
+                </div>
               )}
             </div>
 
@@ -236,15 +275,33 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <button
                 onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
                 title={collapsed ? 'Search (⌘K)' : undefined}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group mb-3 text-[#9ca3af] hover:text-white hover:bg-[#1b2a5e]/40"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group mb-3"
+                style={{ color: 'var(--admin-text-secondary)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+                  e.currentTarget.style.color = 'var(--admin-text)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--admin-text-secondary)';
+                }}
               >
-                <span className="material-symbols-outlined text-xl flex-none text-[#4b5563] group-hover:text-[#d4a843] transition-colors">
+                <span
+                  className="material-symbols-outlined text-xl flex-none transition-colors"
+                  style={{ color: 'var(--admin-text-muted)' }}
+                >
                   search
                 </span>
                 {!collapsed && (
                   <>
                     <span className="font-medium flex-1 text-left">Search</span>
-                    <kbd className="px-1.5 py-0.5 rounded bg-[#1f2d4e] text-[#4b5563] font-mono text-[10px] flex-none">
+                    <kbd
+                      className="px-1.5 py-0.5 rounded font-mono text-[10px] flex-none"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--admin-border) 60%, transparent)',
+                        color: 'var(--admin-text-muted)',
+                      }}
+                    >
                       ⌘K
                     </kbd>
                   </>
@@ -255,11 +312,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {NAV_GROUPS.map((group, gi) => (
                 <div key={group.label} className={gi > 0 ? 'mt-4' : ''}>
                   {!collapsed && (
-                    <p className="text-[#374151] text-[10px] font-semibold uppercase tracking-widest mb-2 px-3">
+                    <p
+                      className="text-[10px] font-semibold uppercase tracking-widest mb-2 px-3"
+                      style={{ color: 'var(--admin-text-disabled)' }}
+                    >
                       {group.label}
                     </p>
                   )}
-                  {collapsed && gi > 0 && <div className="mx-2 mb-2 border-t border-[#1f2d4e]" />}
+                  {collapsed && gi > 0 && (
+                    <div
+                      className="mx-2 mb-2 border-t"
+                      style={{ borderColor: 'var(--admin-border)' }}
+                    />
+                  )}
                   <div className="space-y-0.5">
                     {group.items.map((item) => (
                       <NavItem
@@ -277,22 +342,39 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* Bottom actions */}
             <div
-              className={`border-t border-[#1f2d4e] py-4 space-y-1 ${collapsed ? 'px-2' : 'px-3'}`}
+              className={`py-4 space-y-1 ${collapsed ? 'px-2' : 'px-3'}`}
+              style={{ borderTop: '1px solid var(--admin-border)' }}
             >
               {/* AI Chat toggle */}
               <button
                 onClick={() => setChatOpen((v) => !v)}
                 title={collapsed ? 'AI Assistant' : undefined}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group ${
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group"
+                style={
                   chatOpen
-                    ? 'bg-[#d4a843]/10 text-[#d4a843] border border-[#d4a843]/20'
-                    : 'text-[#9ca3af] hover:text-white hover:bg-[#1b2a5e]/40'
-                }`}
+                    ? {
+                        backgroundColor: 'var(--admin-brand-bg)',
+                        color: 'var(--admin-brand)',
+                        border: '1px solid var(--admin-brand-border)',
+                      }
+                    : { color: 'var(--admin-text-secondary)' }
+                }
+                onMouseEnter={(e) => {
+                  if (!chatOpen) {
+                    e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+                    e.currentTarget.style.color = 'var(--admin-text)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!chatOpen) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--admin-text-secondary)';
+                  }
+                }}
               >
                 <span
-                  className={`material-symbols-outlined text-xl flex-none transition-colors ${
-                    chatOpen ? 'text-[#d4a843]' : 'text-[#4b5563] group-hover:text-[#d4a843]'
-                  }`}
+                  className="material-symbols-outlined text-xl flex-none transition-colors"
+                  style={{ color: chatOpen ? 'var(--admin-brand)' : 'var(--admin-text-muted)' }}
                 >
                   smart_toy
                 </span>
@@ -303,9 +385,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <button
                 onClick={handleLogout}
                 title={collapsed ? 'Sign out' : undefined}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#6b7280] hover:text-[#ef4444] hover:bg-[#ef4444]/5 transition-all group"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group"
+                style={{ color: 'var(--admin-text-muted)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-error)';
+                  e.currentTarget.style.backgroundColor = 'var(--admin-error-bg)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text-muted)';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
               >
-                <span className="material-symbols-outlined text-xl flex-none group-hover:text-[#ef4444] transition-colors">
+                <span className="material-symbols-outlined text-xl flex-none transition-colors">
                   logout
                 </span>
                 {!collapsed && <span>Sign out</span>}
@@ -317,7 +408,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <button
                 onClick={() => setCollapsed((v) => !v)}
                 title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[#374151] hover:text-[#6b7280] hover:bg-[#1f2d4e]/50 transition-all text-xs"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition-all text-xs"
+                style={{ color: 'var(--admin-text-disabled)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text-muted)';
+                  e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text-disabled)';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
               >
                 <span className="material-symbols-outlined text-base">
                   {collapsed ? 'chevron_right' : 'chevron_left'}
@@ -330,11 +430,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {/* ── Main Content ────────────────────────────────────────────── */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Top bar */}
-            <header className="flex-none flex items-center gap-3 px-4 lg:px-6 h-16 border-b border-[#1f2d4e] bg-[#0d1526]">
+            <header
+              className="flex-none flex items-center gap-3 px-4 lg:px-6 h-16"
+              style={{
+                borderBottom: '1px solid var(--admin-border)',
+                backgroundColor: 'var(--admin-bg-sidebar)',
+              }}
+            >
               {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileOpen(true)}
-                className="lg:hidden p-2 text-[#6b7280] hover:text-white hover:bg-[#1f2d4e] rounded-xl transition-colors"
+                className="lg:hidden p-2 rounded-xl transition-colors"
+                style={{ color: 'var(--admin-text-muted)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text)';
+                  e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--admin-text-muted)';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
                 aria-label="Open navigation menu"
               >
                 <span className="material-symbols-outlined text-xl">menu</span>
@@ -342,8 +457,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
               {/* Page title */}
               <h2
-                className="text-white text-sm font-semibold truncate flex-1"
-                style={{ fontFamily: 'var(--font-heading)' }}
+                className="text-sm font-semibold truncate flex-1"
+                style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
               >
                 {pathname === '/admin'
                   ? 'Dashboard'
@@ -355,9 +470,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </h2>
               <ThemeToggle />
               <AlertBellWidget unreadCount={alertCount} />
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#10b981]/10 border border-[#10b981]/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                <span className="text-[#10b981] text-xs font-medium">Store Online</span>
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{
+                  backgroundColor: 'var(--admin-success-bg)',
+                  border: '1px solid color-mix(in srgb, var(--admin-success) 20%, transparent)',
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: 'var(--admin-success)' }}
+                />
+                <span className="text-xs font-medium" style={{ color: 'var(--admin-success)' }}>
+                  Store Online
+                </span>
               </div>
             </header>
 

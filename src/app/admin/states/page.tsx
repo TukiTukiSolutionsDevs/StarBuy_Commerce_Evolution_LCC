@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * /admin/states — State Intelligence Dashboard
+ * /admin/states — State Intelligence Dashboard — Phase 4
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Interactive USA map with opportunity scores + Market Pulse feed sidebar.
  */
 
@@ -21,8 +22,6 @@ import type {
   MarketPulseEvent,
 } from '@/lib/states/types';
 
-// ─── Data Fetching ────────────────────────────────────────────────────────────
-
 async function fetchStates(): Promise<{ states: StateWithScore[]; computedAt: number }> {
   const res = await fetch('/api/admin/states');
   if (!res.ok) throw new Error('Failed to fetch states');
@@ -34,8 +33,6 @@ async function fetchPulse(): Promise<{ events: MarketPulseEvent[]; unreadCount: 
   if (!res.ok) throw new Error('Failed to fetch pulse');
   return res.json();
 }
-
-// ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function StatesPage() {
   const router = useRouter();
@@ -67,7 +64,6 @@ export default function StatesPage() {
     },
     [router],
   );
-
   const handleStateHover = useCallback((code: string | null) => {
     setHoveredState(code);
   }, []);
@@ -92,7 +88,6 @@ export default function StatesPage() {
     setPulseEvents((prev) => prev.map((e) => ({ ...e, isRead: true })));
   }, [pulseEvents]);
 
-  // Tooltip data
   const hoveredProfile: StateProfile | null = hoveredState
     ? (states.find((s) => s.code === hoveredState) ?? null)
     : null;
@@ -100,7 +95,6 @@ export default function StatesPage() {
     ? (scoreMap[hoveredState] ?? null)
     : null;
 
-  // Stats
   const avgScore =
     states.length > 0
       ? Math.round(states.reduce((sum, s) => sum + s.opportunityScore.score, 0) / states.length)
@@ -114,16 +108,17 @@ export default function StatesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-[#4b5563] text-sm">Loading state intelligence...</span>
+        <span className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+          Loading state intelligence...
+        </span>
       </div>
     );
   }
 
   return (
     <div data-testid="states-page" className="p-6">
-      <h1 className="text-xl font-bold text-white mb-6">State Intelligence</h1>
+      <h1 className="admin-h1 text-xl mb-6">State Intelligence</h1>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StateStatCard label="Avg Opportunity Score" value={avgScore} />
         <StateStatCard
@@ -138,18 +133,23 @@ export default function StatesPage() {
         />
       </div>
 
-      {/* Map + Pulse Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Map */}
-        <div className="lg:col-span-2 relative rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4">
+        <div
+          className="lg:col-span-2 relative rounded-xl p-4"
+          style={{
+            backgroundColor: 'var(--admin-bg-elevated)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-white">Market Opportunity Map</h2>
-            {/* Color legend */}
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--admin-text)' }}>
+              Market Opportunity Map
+            </h2>
             <div className="flex items-center gap-2 text-[10px]">
               {([1, 2, 3, 4, 5] as const).map((q) => (
                 <div key={q} className="flex items-center gap-1">
                   <span className={`w-3 h-3 rounded-sm ${QUINTILE_BG_COLORS[q]}`} />
-                  <span className="text-[#6b7280]">
+                  <span style={{ color: 'var(--admin-text-muted)' }}>
                     {q === 1
                       ? '0-20'
                       : q === 2
@@ -164,7 +164,6 @@ export default function StatesPage() {
               ))}
             </div>
           </div>
-
           <div
             className="relative"
             onMouseMove={(e) => {
@@ -187,8 +186,13 @@ export default function StatesPage() {
           </div>
         </div>
 
-        {/* Pulse Feed */}
-        <div className="rounded-xl border border-[#1f2d4e] bg-[#0d1526] p-4">
+        <div
+          className="rounded-xl p-4"
+          style={{
+            backgroundColor: 'var(--admin-bg-elevated)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           <PulseFeed
             events={pulseEvents}
             onMarkRead={handleMarkRead}

@@ -41,41 +41,49 @@ export function StateTooltip({ profile, score, position, visible }: StateTooltip
   return (
     <div
       data-testid="state-tooltip"
-      className="absolute z-50 pointer-events-none bg-[#0d1526] border border-[#1f2d4e] rounded-lg shadow-xl p-3 min-w-[180px]"
+      className="absolute z-50 pointer-events-none rounded-lg shadow-xl p-3 min-w-[180px]"
       style={{
         left: position.x,
         top: position.y,
         transform: 'translate(-50%, -110%)',
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
       }}
     >
-      <p className="text-sm font-semibold text-white mb-1">{profile.name}</p>
+      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--admin-text)' }}>
+        {profile.name}
+      </p>
       <div className="space-y-1 text-[11px]">
         <div className="flex justify-between">
-          <span className="text-[#6b7280]">Opportunity</span>
-          <span data-testid="tooltip-score" className="text-white font-medium">
+          <span style={{ color: 'var(--admin-text-muted)' }}>Opportunity</span>
+          <span
+            data-testid="tooltip-score"
+            className="font-medium"
+            style={{ color: 'var(--admin-text)' }}
+          >
             {opportunityScore} ({label})
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-[#6b7280]">Population</span>
-          <span data-testid="tooltip-population" className="text-white">
+          <span style={{ color: 'var(--admin-text-muted)' }}>Population</span>
+          <span data-testid="tooltip-population" style={{ color: 'var(--admin-text)' }}>
             {formatPopulation(profile.population)}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-[#6b7280]">Income</span>
-          <span data-testid="tooltip-income" className="text-white">
+          <span style={{ color: 'var(--admin-text-muted)' }}>Income</span>
+          <span data-testid="tooltip-income" style={{ color: 'var(--admin-text)' }}>
             {formatIncome(profile.medianIncome)}
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-[#6b7280]">E-Commerce</span>
-          <span className="text-white">{profile.ecommerceIndex}/100</span>
+          <span style={{ color: 'var(--admin-text-muted)' }}>E-Commerce</span>
+          <span style={{ color: 'var(--admin-text)' }}>{profile.ecommerceIndex}/100</span>
         </div>
         {score && score.topCategories.length > 0 && (
-          <div className="pt-1 border-t border-[#1f2d4e]">
-            <span className="text-[#6b7280]">Top: </span>
-            <span className="text-[#d4a843]">{score.topCategories.join(', ')}</span>
+          <div className="pt-1 border-t" style={{ borderColor: 'var(--admin-border)' }}>
+            <span style={{ color: 'var(--admin-text-muted)' }}>Top: </span>
+            <span style={{ color: 'var(--admin-accent)' }}>{score.topCategories.join(', ')}</span>
           </div>
         )}
       </div>

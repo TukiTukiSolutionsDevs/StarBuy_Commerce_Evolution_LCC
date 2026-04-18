@@ -83,7 +83,9 @@ export default function AlertsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Alerts</h1>
-          <p className="text-sm text-[#6b7280] mt-1">Monitor product health and market signals</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+            Monitor product health and market signals
+          </p>
         </div>
       </div>
 

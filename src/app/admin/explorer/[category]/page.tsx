@@ -1,11 +1,10 @@
 'use client';
 
 /**
- * Market Explorer — Category Detail
+ * Market Explorer — Category Detail — Phase 4
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Shows subcategory tabs for a given category.
- * Clicking a tab fetches trend data via POST /api/admin/trends/search.
- * Results are cached in-memory — no re-fetch on tab re-click.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -36,20 +35,23 @@ function TrendResultCard({
   const analyzeHref = `/admin/trends?keywords=${encodeURIComponent(result.keyword)}&autorun=true`;
 
   return (
-    <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl p-4 flex items-center gap-4 hover:border-[#1f3a6e] transition-colors">
-      {/* Score Ring */}
+    <div
+      className="rounded-2xl p-4 flex items-center gap-4 transition-colors"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
+    >
       <ScoreRing score={result.score} state={result.state} size="md" />
-
-      {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-white font-medium text-sm truncate mb-1">{result.keyword}</p>
+        <p className="font-medium text-sm truncate mb-1" style={{ color: 'var(--admin-text)' }}>
+          {result.keyword}
+        </p>
         <div className="flex items-center gap-2 flex-wrap">
           <TrendStateBadge state={result.state} size="sm" />
           <SourcePills sources={result.sources} />
         </div>
       </div>
-
-      {/* Actions */}
       <div className="flex items-center gap-2 flex-none">
         <button
           onClick={() =>
@@ -63,13 +65,18 @@ function TrendResultCard({
             })
           }
           data-testid="add-to-research-btn"
-          className="text-xs text-[#d4a843] border border-[#d4a843]/30 hover:bg-[#d4a843]/10 rounded-xl px-3 py-1.5 transition-colors"
+          className="text-xs rounded-xl px-3 py-1.5 transition-colors"
+          style={{
+            color: 'var(--admin-brand)',
+            border: '1px solid color-mix(in srgb, var(--admin-brand) 30%, transparent)',
+          }}
         >
           + Research
         </button>
         <Link
           href={analyzeHref}
-          className="flex items-center gap-1 text-[#6b8cff] hover:text-[#8ba4ff] text-xs font-medium transition-colors"
+          className="flex items-center gap-1 text-xs font-medium transition-colors"
+          style={{ color: 'var(--admin-info)' }}
         >
           Analyze
           <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -85,14 +92,22 @@ function NotFound() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <span className="material-symbols-outlined text-[#374151] text-5xl mb-4">category</span>
-        <h2 className="text-white font-semibold text-lg mb-2">Category not found</h2>
-        <p className="text-[#6b7280] text-sm mb-6">
+        <span
+          className="material-symbols-outlined text-5xl mb-4"
+          style={{ color: 'var(--admin-text-disabled)' }}
+        >
+          category
+        </span>
+        <h2 className="font-semibold text-lg mb-2" style={{ color: 'var(--admin-text)' }}>
+          Category not found
+        </h2>
+        <p className="text-sm mb-6" style={{ color: 'var(--admin-text-muted)' }}>
           The category you&apos;re looking for doesn&apos;t exist in the catalog.
         </p>
         <Link
           href="/admin/explorer"
-          className="flex items-center gap-2 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
+          className="flex items-center gap-2 text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
+          style={{ backgroundColor: 'var(--admin-border)' }}
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Back to Explorer
@@ -107,16 +122,13 @@ function NotFound() {
 export default function CategoryPage() {
   const params = useParams();
   const categoryId = typeof params?.category === 'string' ? params.category : '';
-
   const category = getCategoryById(categoryId);
 
-  // ── State ───────────────────────────────────────────────────────────────────
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [results, setResults] = useState<AggregatedTrendResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Research modal ─────────────────────────────────────────────────────────
   const [researchModalOpen, setResearchModalOpen] = useState(false);
   const [researchTrendData, setResearchTrendData] = useState<AddToResearchTrendData | null>(null);
 
@@ -125,48 +137,30 @@ export default function CategoryPage() {
     setResearchModalOpen(true);
   }
 
-  // In-memory cache: subcategoryId → results
   const cacheRef = useRef<Map<string, AggregatedTrendResult[]>>(new Map());
-
-  // ── Fetch ───────────────────────────────────────────────────────────────────
 
   const fetchSubcategory = useCallback(
     async (subcategoryId: string) => {
       if (!category) return;
-
       setActiveTabId(subcategoryId);
-
-      // Cache hit — no re-fetch
       if (cacheRef.current.has(subcategoryId)) {
         setResults(cacheRef.current.get(subcategoryId)!);
         setError(null);
         return;
       }
-
       const sub = category.subcategories.find((s) => s.id === subcategoryId);
       if (!sub) return;
-
       const keywords = sub.keywords.map((k) => k.keyword);
-
       setLoading(true);
       setError(null);
-
       try {
         const res = await fetch('/api/admin/trends/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ keywords, category: category.id }),
         });
-
-        const data = (await res.json()) as {
-          results?: AggregatedTrendResult[];
-          error?: string;
-        };
-
-        if (!res.ok) {
-          throw new Error(data.error ?? 'Failed to load trends');
-        }
-
+        const data = (await res.json()) as { results?: AggregatedTrendResult[]; error?: string };
+        if (!res.ok) throw new Error(data.error ?? 'Failed to load trends');
         const fetched = data.results ?? [];
         cacheRef.current.set(subcategoryId, fetched);
         setResults(fetched);
@@ -180,57 +174,61 @@ export default function CategoryPage() {
     [category],
   );
 
-  // ── Auto-load first tab on mount ────────────────────────────────────────────
   useEffect(() => {
     if (category && category.subcategories.length > 0) {
       fetchSubcategory(category.subcategories[0].id);
     }
   }, [category, fetchSubcategory]);
 
-  // ── Not found guard ─────────────────────────────────────────────────────────
-
-  if (!category) {
-    return <NotFound />;
-  }
-
-  // ── Render ──────────────────────────────────────────────────────────────────
+  if (!category) return <NotFound />;
 
   const activeSubcategory = category.subcategories.find((s) => s.id === activeTabId);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* ── Breadcrumb ── */}
+      {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
-        <Link href="/admin/explorer" className="text-[#6b7280] hover:text-white transition-colors">
+        <Link
+          href="/admin/explorer"
+          className="transition-colors"
+          style={{ color: 'var(--admin-text-muted)' }}
+        >
           Explorer
         </Link>
-        <span className="material-symbols-outlined text-[#374151] text-base">chevron_right</span>
-        <span className="text-white font-medium">{category.label}</span>
+        <span
+          className="material-symbols-outlined text-base"
+          style={{ color: 'var(--admin-text-disabled)' }}
+        >
+          chevron_right
+        </span>
+        <span className="font-medium" style={{ color: 'var(--admin-text)' }}>
+          {category.label}
+        </span>
       </nav>
 
-      {/* ── Category Header ── */}
+      {/* Category Header */}
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-[#6b8cff]/10 flex items-center justify-center flex-none">
-          <span className="material-symbols-outlined text-[#6b8cff]" style={{ fontSize: 32 }}>
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center flex-none"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--admin-info) 10%, transparent)' }}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 32, color: 'var(--admin-info)' }}
+          >
             {category.icon}
           </span>
         </div>
         <div>
-          <h1
-            role="heading"
-            className="text-2xl font-bold text-white"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            {category.label}
-          </h1>
-          <p className="text-[#6b7280] text-sm mt-0.5">
+          <h1 className="admin-h1 text-2xl">{category.label}</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--admin-text-muted)' }}>
             {category.subcategories.length} subcategories &middot;{' '}
             {category.subcategories.reduce((s, sub) => s + sub.keywords.length, 0)} keywords
           </p>
         </div>
       </div>
 
-      {/* ── Subcategory Tabs ── */}
+      {/* Subcategory Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {category.subcategories.map((sub) => {
           const isActive = activeTabId === sub.id;
@@ -241,17 +239,24 @@ export default function CategoryPage() {
               role="button"
               aria-selected={isActive}
               onClick={() => fetchSubcategory(sub.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex-none ${
-                isActive
-                  ? 'bg-[#6b8cff]/15 text-[#6b8cff] border border-[#6b8cff]/30'
-                  : 'bg-[#111827] border border-[#1f2d4e] text-[#6b7280] hover:text-[#9ca3af] hover:border-[#374151]'
-              }`}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex-none"
+              style={{
+                backgroundColor: isActive
+                  ? 'color-mix(in srgb, var(--admin-info) 15%, transparent)'
+                  : 'var(--admin-bg-card)',
+                border: `1px solid ${isActive ? 'color-mix(in srgb, var(--admin-info) 30%, transparent)' : 'var(--admin-border)'}`,
+                color: isActive ? 'var(--admin-info)' : 'var(--admin-text-muted)',
+              }}
             >
               {sub.label}
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
-                  isActive ? 'bg-[#6b8cff]/20 text-[#6b8cff]' : 'bg-[#1f2d4e] text-[#374151]'
-                }`}
+                className="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
+                style={{
+                  backgroundColor: isActive
+                    ? 'color-mix(in srgb, var(--admin-info) 20%, transparent)'
+                    : 'var(--admin-border)',
+                  color: isActive ? 'var(--admin-info)' : 'var(--admin-text-disabled)',
+                }}
               >
                 {sub.keywords.length}
               </span>
@@ -260,35 +265,43 @@ export default function CategoryPage() {
         })}
       </div>
 
-      {/* ── Results Area ── */}
+      {/* Results Area */}
       <div>
-        {/* No tab selected */}
         {!activeTabId && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="material-symbols-outlined text-[#374151] text-5xl mb-3">tab</span>
-            <p className="text-[#6b7280] text-sm">
+            <span
+              className="material-symbols-outlined text-5xl mb-3"
+              style={{ color: 'var(--admin-text-disabled)' }}
+            >
+              tab
+            </span>
+            <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
               Select a subcategory above to explore trend data
             </p>
           </div>
         )}
 
-        {/* Loading */}
         {activeTabId && loading && (
           <div className="grid grid-cols-1 gap-3">
             <TrendSkeleton variant="row" count={6} />
           </div>
         )}
 
-        {/* Error */}
         {activeTabId && !loading && error && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="material-symbols-outlined text-[#ef4444] text-4xl mb-3">
+            <span
+              className="material-symbols-outlined text-4xl mb-3"
+              style={{ color: 'var(--admin-error)' }}
+            >
               error_outline
             </span>
-            <p className="text-[#ef4444] text-sm mb-4">Failed to load trends</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--admin-error)' }}>
+              Failed to load trends
+            </p>
             <button
               onClick={() => activeTabId && fetchSubcategory(activeTabId)}
-              className="flex items-center gap-2 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl px-4 py-2 text-sm font-medium transition-colors"
+              className="flex items-center gap-2 text-white rounded-xl px-4 py-2 text-sm font-medium transition-colors"
+              style={{ backgroundColor: 'var(--admin-border)' }}
             >
               <span className="material-symbols-outlined text-base">refresh</span>
               Try again
@@ -296,32 +309,36 @@ export default function CategoryPage() {
           </div>
         )}
 
-        {/* Empty results */}
         {activeTabId && !loading && !error && results.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="material-symbols-outlined text-[#374151] text-4xl mb-3">
+            <span
+              className="material-symbols-outlined text-4xl mb-3"
+              style={{ color: 'var(--admin-text-disabled)' }}
+            >
               signal_cellular_nodata
             </span>
-            <p className="text-[#6b7280] text-sm">
+            <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
               No trend data available for{' '}
-              <span className="text-white font-medium">{activeSubcategory?.label}</span>
+              <span className="font-medium" style={{ color: 'var(--admin-text)' }}>
+                {activeSubcategory?.label}
+              </span>
             </p>
-            <p className="text-[#374151] text-xs mt-1">Try enabling more providers in Settings</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--admin-text-disabled)' }}>
+              Try enabling more providers in Settings
+            </p>
           </div>
         )}
 
-        {/* Results */}
         {activeTabId && !loading && !error && results.length > 0 && (
           <div className="space-y-3">
-            {/* Sub-header */}
             <div className="flex items-center justify-between">
-              <p className="text-[#6b7280] text-xs">
+              <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
                 {results.length} result{results.length !== 1 ? 's' : ''} for{' '}
-                <span className="text-[#9ca3af] font-medium">{activeSubcategory?.label}</span>
+                <span className="font-medium" style={{ color: 'var(--admin-text-secondary)' }}>
+                  {activeSubcategory?.label}
+                </span>
               </p>
             </div>
-
-            {/* Cards */}
             <div className="grid grid-cols-1 gap-3">
               {results.map((result) => (
                 <TrendResultCard
@@ -336,7 +353,6 @@ export default function CategoryPage() {
         )}
       </div>
 
-      {/* ── Add to Research Modal ── */}
       {researchTrendData && (
         <AddToResearchModal
           isOpen={researchModalOpen}

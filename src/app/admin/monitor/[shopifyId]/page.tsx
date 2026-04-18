@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * Monitor Detail Page — Phase 4
+ *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
+ */
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { HealthBadge } from '@/components/admin/monitor/HealthBadge';
@@ -43,7 +49,7 @@ export default function MonitorDetailPage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-[#4b5563]">Loading…</p>
+        <p style={{ color: 'var(--admin-text-muted)' }}>Loading…</p>
       </div>
     );
   }
@@ -51,7 +57,7 @@ export default function MonitorDetailPage() {
   if (error || !metrics) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-red-400">{error ?? 'Metrics not found'}</p>
+        <p style={{ color: 'var(--admin-error)' }}>{error ?? 'Metrics not found'}</p>
       </div>
     );
   }
@@ -60,13 +66,14 @@ export default function MonitorDetailPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <button
         onClick={() => router.push('/admin/monitor')}
-        className="mb-6 flex items-center gap-1 text-sm text-[#6b7280] hover:text-white transition-colors"
+        className="mb-6 flex items-center gap-1 text-sm transition-colors"
+        style={{ color: 'var(--admin-text-muted)' }}
       >
         ← Back to Monitor
       </button>
 
       <div className="mb-6 flex items-center gap-3">
-        <h1 className="text-xl font-semibold text-white">{metrics.title}</h1>
+        <h1 className="admin-h1 text-xl">{metrics.title}</h1>
         <HealthBadge health={metrics.health} reasons={metrics.healthReasons} showTooltip />
       </div>
 
@@ -79,7 +86,6 @@ export default function MonitorDetailPage() {
         <MetricCard label="Inventory" value={String(metrics.inventory)} />
       </div>
 
-      {/* Performance History */}
       <PerformanceHistory
         shopifyProductId={shopifyId}
         snapshots={snapshots}
@@ -91,9 +97,19 @@ export default function MonitorDetailPage() {
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[#1f2d4e] bg-[#111827] px-4 py-3">
-      <p className="text-xs text-[#6b7280]">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+    <div
+      className="rounded-lg px-4 py-3"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
+    >
+      <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-semibold" style={{ color: 'var(--admin-text)' }}>
+        {value}
+      </p>
     </div>
   );
 }

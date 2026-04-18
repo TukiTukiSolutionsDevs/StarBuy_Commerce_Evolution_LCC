@@ -84,13 +84,15 @@ export default async function HomePage() {
       <HeroSection />
 
       {/* ── Featured Collections — Bento Grid ────────────────────────────── */}
-      <section className="px-6 mb-20">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
               Curated For Your Family
             </p>
-            <h2 className="font-headline text-4xl text-[#1a1a2e]">Featured Baby Collections</h2>
+            <h2 className="font-headline text-2xl md:text-4xl text-[#1a1a2e]">
+              Featured Baby Collections
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -101,7 +103,7 @@ export default async function HomePage() {
                   ? `/collections/${featuredCollection.handle}`
                   : '/collections/all'
               }
-              className="group md:col-span-2 bg-gradient-to-br from-[#f5e1dc] to-[#faf5f0] rounded-[1.5rem] p-10 transition-all duration-500 hover:shadow-[0_16px_48px_rgba(45,27,78,0.08)]"
+              className="group md:col-span-2 bg-gradient-to-br from-[#f5e1dc] to-[#faf5f0] rounded-[1.5rem] p-6 md:p-10 transition-all duration-500 hover:shadow-[0_16px_48px_rgba(45,27,78,0.08)]"
             >
               {featuredCollection?.image && (
                 <div className="relative w-full aspect-[2/1] rounded-lg overflow-hidden mb-6">
@@ -114,7 +116,7 @@ export default async function HomePage() {
                   />
                 </div>
               )}
-              <h3 className="font-headline text-3xl text-[#1a1a2e] mb-2">
+              <h3 className="font-headline text-xl md:text-3xl text-[#1a1a2e] mb-2">
                 {featuredCollection?.title ?? 'All Products'}
               </h3>
               <p className="text-[#6b6580] max-w-sm">
@@ -139,7 +141,7 @@ export default async function HomePage() {
                   />
                 </div>
               )}
-              <h3 className="font-headline text-3xl mb-2">
+              <h3 className="font-headline text-xl md:text-3xl mb-2">
                 {accentCollection?.title ?? 'Browse Collections'}
               </h3>
               <p className="text-[#2d1b4e]/70 max-w-sm">
@@ -156,7 +158,7 @@ export default async function HomePage() {
                 <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
                   New Arrivals
                 </p>
-                <h3 className="font-headline text-3xl text-[#1a1a2e] mb-2">
+                <h3 className="font-headline text-xl md:text-3xl text-[#1a1a2e] mb-2">
                   {promoCollection?.title ?? 'Discover More'}
                 </h3>
                 <p className="text-[#6b6580] max-w-md">
@@ -181,10 +183,12 @@ export default async function HomePage() {
       <BrandStorySection />
 
       {/* ── Trending Products ─────────────────────────────────────────────── */}
-      <section className="bg-[#f5ede5] py-20 -mx-0 px-6 mb-20">
+      <section className="bg-[#f5ede5] py-12 md:py-20 -mx-0 px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-headline text-4xl text-[#1a1a2e] mb-4">Bestsellers Parents Love</h2>
+            <h2 className="font-headline text-2xl md:text-4xl text-[#1a1a2e] mb-4">
+              Bestsellers Parents Love
+            </h2>
             <p className="text-[#6b6580] text-lg">
               Top-rated baby essentials flying off the shelves
             </p>
@@ -219,16 +223,16 @@ export default async function HomePage() {
       </section>
 
       {/* ── Trust Section ─────────────────────────────────────────────────── */}
-      <section className="px-6 mb-20">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-headline text-3xl text-[#1a1a2e] text-center mb-12">
+          <h2 className="font-headline text-2xl md:text-3xl text-[#1a1a2e] text-center mb-8 md:mb-12">
             Why Parents Choose StarBuyBaby
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {TRUST_ITEMS.map((item) => (
               <div
                 key={item.title}
-                className="text-center group bg-white rounded-[1.5rem] p-8 shadow-[0_4px_24px_rgba(45,27,78,0.06)] hover:shadow-[0_16px_48px_rgba(45,27,78,0.12)] transition-all duration-500"
+                className="text-center group bg-white rounded-[1.5rem] p-5 md:p-8 shadow-[0_4px_24px_rgba(45,27,78,0.06)] hover:shadow-[0_16px_48px_rgba(45,27,78,0.12)] transition-all duration-500"
               >
                 <div className="w-14 h-14 bg-[#f5ede5] rounded-2xl flex items-center justify-center mb-5 mx-auto group-hover:bg-[#f8cc69]/20 transition-colors duration-500">
                   <span

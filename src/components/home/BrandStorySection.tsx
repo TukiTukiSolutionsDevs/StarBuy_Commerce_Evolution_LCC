@@ -108,13 +108,13 @@ export function BrandStorySection() {
   return (
     <>
       {/* ── Brand Pillars ──────────────────────────────────────────────── */}
-      <section className="px-6 mb-20">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 md:mb-16">
             <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
               The StarBuyBaby Promise
             </p>
-            <h2 className="font-headline text-4xl md:text-5xl text-[#1a1a2e] mb-5">
+            <h2 className="font-headline text-2xl md:text-4xl lg:text-5xl text-[#1a1a2e] mb-5">
               Because They Deserve the Best
             </h2>
             <p className="font-body text-[#6b6580] max-w-2xl mx-auto text-lg leading-relaxed">
@@ -149,7 +149,7 @@ export function BrandStorySection() {
           </div>
 
           {/* Stats */}
-          <div className="bg-gradient-to-r from-[#1a1a3e] to-[#2d1b4e] rounded-[1.5rem] p-8 md:p-12">
+          <div className="bg-gradient-to-r from-[#1a1a3e] to-[#2d1b4e] rounded-[1.5rem] p-6 md:p-12">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {STATS.map((stat) => (
                 <div key={stat.label} className="text-center">
@@ -167,13 +167,13 @@ export function BrandStorySection() {
       </section>
 
       {/* ── Shop by Category ───────────────────────────────────────────── */}
-      <section className="px-6 mb-20">
+      <section className="px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
               Shop by Category
             </p>
-            <h2 className="font-headline text-4xl text-[#1a1a2e]">
+            <h2 className="font-headline text-2xl md:text-4xl text-[#1a1a2e]">
               Everything for Your Little One
             </h2>
           </div>
@@ -235,13 +235,15 @@ export function BrandStorySection() {
       </section>
 
       {/* ── Parent Testimonials ────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-[#f5e1dc] via-[#faf5f0] to-[#e8daf0] py-20 px-6 mb-20">
+      <section className="bg-gradient-to-br from-[#f5e1dc] via-[#faf5f0] to-[#e8daf0] py-12 md:py-20 px-4 md:px-6 mb-12 md:mb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <p className="font-label text-[#c9a84c] uppercase tracking-[0.3em] text-xs font-bold mb-3">
               Loved by Parents
             </p>
-            <h2 className="font-headline text-4xl text-[#1a1a2e]">What Families Are Saying</h2>
+            <h2 className="font-headline text-2xl md:text-4xl text-[#1a1a2e]">
+              What Families Are Saying
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

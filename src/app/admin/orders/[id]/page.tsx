@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Admin Order Detail Page
+ * Admin Order Detail Page — Phase 3
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Full Shopify Admin parity:
  * - Header with order #, date, status badges, risk indicator
  * - Line items: product, variant, SKU, unit price, qty, total, fulfillment status
@@ -24,21 +25,21 @@ import type { AdminOrder } from '@/lib/shopify/admin/tools/orders';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
-const PAYMENT_COLORS: Record<string, string> = {
-  PAID: '#10b981',
-  PENDING: '#d4a843',
-  PARTIALLY_PAID: '#f59e0b',
-  REFUNDED: '#ef4444',
-  PARTIALLY_REFUNDED: '#f97316',
-  VOIDED: '#6b7280',
+const PAYMENT_TOKENS: Record<string, string> = {
+  PAID: 'var(--admin-success)',
+  PENDING: 'var(--admin-brand)',
+  PARTIALLY_PAID: 'var(--admin-warning)',
+  REFUNDED: 'var(--admin-error)',
+  PARTIALLY_REFUNDED: 'var(--admin-warning)',
+  VOIDED: 'var(--admin-text-muted)',
 };
 
-const FULFILLMENT_COLORS: Record<string, string> = {
-  FULFILLED: '#10b981',
-  UNFULFILLED: '#f59e0b',
-  PARTIALLY_FULFILLED: '#eab308',
-  SCHEDULED: '#6366f1',
-  ON_HOLD: '#8b5cf6',
+const FULFILLMENT_TOKENS: Record<string, string> = {
+  FULFILLED: 'var(--admin-success)',
+  UNFULFILLED: 'var(--admin-warning)',
+  PARTIALLY_FULFILLED: 'var(--admin-warning)',
+  SCHEDULED: 'var(--admin-accent)',
+  ON_HOLD: 'var(--admin-accent)',
 };
 
 const CANCEL_REASONS = [
@@ -121,13 +122,20 @@ function addressLines(addr: {
 
 // ─── Badges ─────────────────────────────────────────────────────────────────────
 
-function StatusBadge({ label, color }: { label: string; color: string }) {
+function StatusBadge({ label, colorToken }: { label: string; colorToken: string }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-      style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}
+      style={{
+        backgroundColor: `color-mix(in srgb, ${colorToken} 8%, transparent)`,
+        color: colorToken,
+        border: `1px solid color-mix(in srgb, ${colorToken} 20%, transparent)`,
+      }}
     >
-      <span className="w-1.5 h-1.5 rounded-full flex-none" style={{ backgroundColor: color }} />
+      <span
+        className="w-1.5 h-1.5 rounded-full flex-none"
+        style={{ backgroundColor: colorToken }}
+      />
       {label}
     </span>
   );
@@ -135,12 +143,16 @@ function StatusBadge({ label, color }: { label: string; color: string }) {
 
 function RiskBadge({ level }: { level: string }) {
   if (!level || level === 'LOW') return null;
-  const color = level === 'HIGH' ? '#ef4444' : '#f59e0b';
+  const token = level === 'HIGH' ? 'var(--admin-error)' : 'var(--admin-warning)';
   const icon = level === 'HIGH' ? 'gpp_bad' : 'gpp_maybe';
   return (
     <span
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
-      style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}
+      style={{
+        backgroundColor: `color-mix(in srgb, ${token} 8%, transparent)`,
+        color: token,
+        border: `1px solid color-mix(in srgb, ${token} 20%, transparent)`,
+      }}
     >
       <span className="material-symbols-outlined text-sm">{icon}</span>
       {level === 'HIGH' ? 'High fraud risk' : 'Medium fraud risk'}
@@ -174,24 +186,29 @@ function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--admin-overlay)' }}
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
       <div
-        className={`bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col shadow-2xl shadow-black/60`}
+        className={`rounded-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`}
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
-          <h2
-            className="font-semibold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-          >
-            {title}
-          </h2>
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: '1px solid var(--admin-border)' }}
+        >
+          <h2 className="admin-h2">{title}</h2>
           <button
             onClick={onClose}
-            className="text-[#6b7280] hover:text-white transition-colors p-1 rounded-lg hover:bg-[#1f2d4e]"
+            className="transition-colors p-1 rounded-lg"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
@@ -220,10 +237,12 @@ function FulfillModal({
   const [notifyCustomer, setNotifyCustomer] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const inputClass =
-    'w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors';
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border)',
+    color: 'var(--admin-text)',
+  };
 
-  // Auto-fill tracking URL when carrier + number are set
   useEffect(() => {
     if (!trackingNumber || !company) return;
     const num = encodeURIComponent(trackingNumber);
@@ -267,21 +286,20 @@ function FulfillModal({
   return (
     <Modal title="Fulfill Order" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-[#9ca3af] text-sm">
+        <p className="text-sm" style={{ color: 'var(--admin-text-secondary)' }}>
           Mark this order as fulfilled. Tracking information is optional.
         </p>
 
         <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-            Shipping Carrier
-          </label>
+          <label className="admin-label block mb-1.5">Shipping Carrier</label>
           <select
             value={company}
             onChange={(e) => {
               setCompany(e.target.value);
-              setTrackingUrl(''); // reset URL so auto-fill kicks in
+              setTrackingUrl('');
             }}
-            className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+            style={inputStyle}
           >
             {SHIPPING_CARRIERS.map((c) => (
               <option key={c} value={c}>
@@ -292,39 +310,54 @@ function FulfillModal({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Tracking Number</label>
+          <label className="admin-label block mb-1.5">Tracking Number</label>
           <input
             value={trackingNumber}
             onChange={(e) => setTrackingNumber(e.target.value)}
             placeholder="e.g. 1Z999AA10123456784"
-            className={inputClass}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+            style={inputStyle}
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Tracking URL</label>
+          <label className="admin-label block mb-1.5">Tracking URL</label>
           <input
             type="url"
             value={trackingUrl}
             onChange={(e) => setTrackingUrl(e.target.value)}
             placeholder="https://track.example.com/…"
-            className={inputClass}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+            style={inputStyle}
           />
           {company && trackingNumber && trackingUrl && (
-            <p className="text-[#6b7280] text-xs mt-1">Auto-filled based on carrier</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--admin-text-muted)' }}>
+              Auto-filled based on carrier
+            </p>
           )}
         </div>
 
-        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-[#0a0f1e] border border-[#1f2d4e]">
+        <label
+          className="flex items-center gap-3 cursor-pointer p-3 rounded-xl"
+          style={{
+            backgroundColor: 'var(--admin-bg-input)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           <input
             type="checkbox"
             checked={notifyCustomer}
             onChange={(e) => setNotifyCustomer(e.target.checked)}
-            className="w-4 h-4 rounded border-[#1f2d4e] bg-[#0a0f1e] accent-[#d4a843] cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer"
+            style={{ accentColor: 'var(--admin-brand)' }}
           />
           <div>
-            <p className="text-[#e5e7eb] text-sm font-medium">Notify customer</p>
-            <p className="text-[#6b7280] text-xs">Send shipping confirmation email</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--admin-text-body)' }}>
+              Notify customer
+            </p>
+            <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+              Send shipping confirmation email
+            </p>
           </div>
         </label>
 
@@ -333,14 +366,16 @@ function FulfillModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
+            style={{ backgroundColor: 'var(--admin-border)', color: 'var(--admin-text)' }}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:cursor-not-allowed text-[#0a0f1e] font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+            className="flex-1 font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
           >
             {loading ? (
               <>
@@ -381,8 +416,11 @@ function CancelModal({
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const selectClass =
-    'w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer';
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border)',
+    color: 'var(--admin-text)',
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -409,25 +447,35 @@ function CancelModal({
   return (
     <Modal title="Cancel Order" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-[#ef4444]/8 border border-[#ef4444]/20">
-          <span className="material-symbols-outlined text-[#ef4444] text-xl flex-none mt-0.5">
+        <div
+          className="flex items-start gap-3 p-3 rounded-xl"
+          style={{
+            backgroundColor: 'var(--admin-error-bg)',
+            border: '1px solid color-mix(in srgb, var(--admin-error) 20%, transparent)',
+          }}
+        >
+          <span
+            className="material-symbols-outlined text-xl flex-none mt-0.5"
+            style={{ color: 'var(--admin-error)' }}
+          >
             warning
           </span>
-          <p className="text-[#fca5a5] text-sm">
+          <p className="text-sm" style={{ color: 'var(--admin-error)' }}>
             Cancelling an order cannot be undone. The order will be permanently cancelled in
             Shopify.
           </p>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-            Reason <span style={{ color: '#ef4444' }}>*</span>
+          <label className="admin-label block mb-1.5">
+            Reason <span style={{ color: 'var(--admin-error)' }}>*</span>
           </label>
           <select
             required
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className={selectClass}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+            style={inputStyle}
           >
             {CANCEL_REASONS.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -438,53 +486,61 @@ function CancelModal({
         </div>
 
         <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={restock}
-              onChange={(e) => setRestock(e.target.checked)}
-              className="w-4 h-4 rounded border-[#1f2d4e] bg-[#0a0f1e] accent-[#d4a843] cursor-pointer"
-            />
-            <div>
-              <p className="text-[#e5e7eb] text-sm font-medium">Restock inventory</p>
-              <p className="text-[#6b7280] text-xs">Return items to available inventory</p>
-            </div>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={refund}
-              onChange={(e) => setRefund(e.target.checked)}
-              className="w-4 h-4 rounded border-[#1f2d4e] bg-[#0a0f1e] accent-[#d4a843] cursor-pointer"
-            />
-            <div>
-              <p className="text-[#e5e7eb] text-sm font-medium">Issue refund</p>
-              <p className="text-[#6b7280] text-xs">Automatically refund payment to customer</p>
-            </div>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notifyCustomer}
-              onChange={(e) => setNotifyCustomer(e.target.checked)}
-              className="w-4 h-4 rounded border-[#1f2d4e] bg-[#0a0f1e] accent-[#d4a843] cursor-pointer"
-            />
-            <div>
-              <p className="text-[#e5e7eb] text-sm font-medium">Notify customer</p>
-              <p className="text-[#6b7280] text-xs">Send cancellation email to customer</p>
-            </div>
-          </label>
+          {[
+            {
+              checked: restock,
+              onChange: setRestock,
+              title: 'Restock inventory',
+              desc: 'Return items to available inventory',
+            },
+            {
+              checked: refund,
+              onChange: setRefund,
+              title: 'Issue refund',
+              desc: 'Automatically refund payment to customer',
+            },
+            {
+              checked: notifyCustomer,
+              onChange: setNotifyCustomer,
+              title: 'Notify customer',
+              desc: 'Send cancellation email to customer',
+            },
+          ].map(({ checked, onChange, title, desc }) => (
+            <label key={title} className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                className="w-4 h-4 rounded cursor-pointer"
+                style={{ accentColor: 'var(--admin-brand)' }}
+              />
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--admin-text-body)' }}>
+                  {title}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+                  {desc}
+                </p>
+              </div>
+            </label>
+          ))}
         </div>
 
-        {/* Confirmation checkbox */}
-        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-[#ef4444]/5 border border-[#ef4444]/20">
+        <label
+          className="flex items-center gap-3 cursor-pointer p-3 rounded-xl"
+          style={{
+            backgroundColor: 'var(--admin-error-bg)',
+            border: '1px solid color-mix(in srgb, var(--admin-error) 20%, transparent)',
+          }}
+        >
           <input
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="w-4 h-4 rounded border-[#ef4444]/40 bg-[#0a0f1e] accent-[#ef4444] cursor-pointer"
+            className="w-4 h-4 rounded cursor-pointer"
+            style={{ accentColor: 'var(--admin-error)' }}
           />
-          <p className="text-[#fca5a5] text-sm font-medium">
+          <p className="text-sm font-medium" style={{ color: 'var(--admin-error)' }}>
             I understand this action cannot be undone
           </p>
         </label>
@@ -494,14 +550,16 @@ function CancelModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
+            style={{ backgroundColor: 'var(--admin-border)', color: 'var(--admin-text)' }}
           >
             Keep Order
           </button>
           <button
             type="submit"
             disabled={loading || !confirmed}
-            className="flex-1 bg-[#ef4444] hover:bg-[#dc2626] disabled:bg-[#374151] disabled:cursor-not-allowed text-white font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+            className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ backgroundColor: 'var(--admin-error)', color: 'white' }}
           >
             {loading ? (
               <>
@@ -546,14 +604,16 @@ function RefundModal({
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const inputClass =
-    'w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors';
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border)',
+    color: 'var(--admin-text)',
+  };
 
   function setQty(id: string, val: number, max: number) {
     setQuantities((prev) => ({ ...prev, [id]: Math.min(max, Math.max(0, val)) }));
   }
 
-  // Compute refund total based on quantities and unit prices
   const refundTotal = lineItems.reduce((sum, li) => {
     const qty = quantities[li.id] ?? 0;
     const unitPrice = parseFloat(li.originalUnitPriceSet.shopMoney.amount);
@@ -595,11 +655,10 @@ function RefundModal({
   return (
     <Modal title="Issue Refund" onClose={onClose} maxWidth="max-w-xl">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-[#9ca3af] text-sm">
+        <p className="text-sm" style={{ color: 'var(--admin-text-secondary)' }}>
           Select items to refund. Leave all at 0 to issue a manual/custom refund.
         </p>
 
-        {/* Line items */}
         <div className="space-y-2">
           {lineItems.map((li) => {
             const unitMoney = li.originalUnitPriceSet.shopMoney;
@@ -609,28 +668,44 @@ function RefundModal({
             return (
               <div
                 key={li.id}
-                className="p-3 rounded-xl bg-[#0a0f1e] border border-[#1f2d4e] space-y-2"
+                className="p-3 rounded-xl space-y-2"
+                style={{
+                  backgroundColor: 'var(--admin-bg-input)',
+                  border: '1px solid var(--admin-border)',
+                }}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[#e5e7eb] text-sm font-medium truncate">{li.name}</p>
+                    <p
+                      className="text-sm font-medium truncate"
+                      style={{ color: 'var(--admin-text-body)' }}
+                    >
+                      {li.name}
+                    </p>
                     {li.variant && li.variant.title !== 'Default Title' && (
-                      <p className="text-[#6b7280] text-xs">{li.variant.title}</p>
+                      <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+                        {li.variant.title}
+                      </p>
                     )}
                     {(li.sku ?? li.variant?.sku) && (
-                      <p className="text-[#4b5563] text-xs">SKU: {li.sku ?? li.variant?.sku}</p>
+                      <p className="text-xs" style={{ color: 'var(--admin-text-disabled)' }}>
+                        SKU: {li.sku ?? li.variant?.sku}
+                      </p>
                     )}
-                    <p className="text-[#9ca3af] text-xs mt-0.5">
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--admin-text-secondary)' }}>
                       {formatCurrency(unitMoney.amount, unitMoney.currencyCode)} × {li.quantity} ={' '}
                       {formatCurrency(totalMoney.amount, totalMoney.currencyCode)}
                     </p>
                   </div>
-                  {/* Qty stepper */}
                   <div className="flex items-center gap-2 flex-none">
                     <button
                       type="button"
                       onClick={() => setQty(li.id, qty - 1, li.quantity)}
-                      className="w-7 h-7 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white flex items-center justify-center transition-colors"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      style={{
+                        backgroundColor: 'var(--admin-border)',
+                        color: 'var(--admin-text-secondary)',
+                      }}
                     >
                       <span className="material-symbols-outlined text-sm">remove</span>
                     </button>
@@ -642,27 +717,45 @@ function RefundModal({
                       onChange={(e) =>
                         setQty(li.id, parseInt(e.target.value, 10) || 0, li.quantity)
                       }
-                      className="w-12 text-center bg-[#1f2d4e] border border-[#1f2d4e] text-white rounded-lg py-1 text-sm outline-none"
+                      className="w-12 text-center rounded-lg py-1 text-sm outline-none"
+                      style={{
+                        backgroundColor: 'var(--admin-border)',
+                        color: 'var(--admin-text)',
+                        border: '1px solid var(--admin-border)',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setQty(li.id, qty + 1, li.quantity)}
-                      className="w-7 h-7 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white flex items-center justify-center transition-colors"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                      style={{
+                        backgroundColor: 'var(--admin-border)',
+                        color: 'var(--admin-text-secondary)',
+                      }}
                     >
                       <span className="material-symbols-outlined text-sm">add</span>
                     </button>
                   </div>
                 </div>
-                {/* Restock type — only show when qty > 0 */}
                 {qty > 0 && (
                   <div>
-                    <label className="block text-xs font-medium text-[#6b7280] mb-1">Restock</label>
+                    <label
+                      className="block text-xs font-medium mb-1"
+                      style={{ color: 'var(--admin-text-muted)' }}
+                    >
+                      Restock
+                    </label>
                     <select
                       value={restockTypes[li.id] ?? 'NO_RESTOCK'}
                       onChange={(e) =>
                         setRestockTypes((prev) => ({ ...prev, [li.id]: e.target.value }))
                       }
-                      className="w-full bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] text-[#9ca3af] rounded-lg px-3 py-1.5 text-xs outline-none cursor-pointer"
+                      className="w-full rounded-lg px-3 py-1.5 text-xs outline-none cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--admin-bg-card)',
+                        border: '1px solid var(--admin-border)',
+                        color: 'var(--admin-text-secondary)',
+                      }}
                     >
                       {RESTOCK_TYPES.map(({ value, label }) => (
                         <option key={value} value={value}>
@@ -677,27 +770,32 @@ function RefundModal({
           })}
         </div>
 
-        {/* Refund total */}
         {refundTotal > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#10b981]/8 border border-[#10b981]/20">
-            <span className="text-[#6b7280] text-sm">Estimated refund</span>
-            <span className="text-[#10b981] text-sm font-bold">
+          <div
+            className="flex items-center justify-between px-4 py-3 rounded-xl"
+            style={{
+              backgroundColor: 'var(--admin-success-bg)',
+              border: '1px solid color-mix(in srgb, var(--admin-success) 20%, transparent)',
+            }}
+          >
+            <span className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+              Estimated refund
+            </span>
+            <span className="text-sm font-bold" style={{ color: 'var(--admin-success)' }}>
               {formatCurrency(refundTotal.toFixed(2), currency)}
             </span>
           </div>
         )}
 
-        {/* Note */}
         <div>
-          <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-            Internal note (optional)
-          </label>
+          <label className="admin-label block mb-1.5">Internal note (optional)</label>
           <textarea
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Reason for refund…"
-            className={`${inputClass} resize-none`}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors resize-none"
+            style={inputStyle}
           />
         </div>
 
@@ -706,14 +804,16 @@ function RefundModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors"
+            style={{ backgroundColor: 'var(--admin-border)', color: 'var(--admin-text)' }}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:cursor-not-allowed text-[#0a0f1e] font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+            className="flex-1 font-semibold rounded-xl py-2.5 text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }}
           >
             {loading ? (
               <>
@@ -749,16 +849,22 @@ function InfoCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
-      <div className="flex items-center justify-between gap-2 px-5 py-3.5 border-b border-[#1f2d4e]">
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: 'var(--admin-bg-card)', border: '1px solid var(--admin-border)' }}
+    >
+      <div
+        className="flex items-center justify-between gap-2 px-5 py-3.5"
+        style={{ borderBottom: '1px solid var(--admin-border)' }}
+      >
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#d4a843] text-base">{icon}</span>
-          <h3
-            className="text-sm font-semibold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
+          <span
+            className="material-symbols-outlined text-base"
+            style={{ color: 'var(--admin-brand)' }}
           >
-            {title}
-          </h3>
+            {icon}
+          </span>
+          <h3 className="admin-h3">{title}</h3>
         </div>
         {action}
       </div>
@@ -771,13 +877,22 @@ function InfoCard({
 
 function AddressBlock({ addr }: { addr: Parameters<typeof addressLines>[0] }) {
   const lines = addressLines(addr);
-  if (lines.length === 0) return <p className="text-[#6b7280] text-sm">No address provided</p>;
+  if (lines.length === 0)
+    return (
+      <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+        No address provided
+      </p>
+    );
   return (
     <div className="space-y-0.5">
       {lines.map((line, i) => (
         <p
           key={i}
-          className={`text-sm ${i === 0 ? 'text-[#e5e7eb] font-medium' : 'text-[#9ca3af]'}`}
+          className="text-sm"
+          style={{
+            color: i === 0 ? 'var(--admin-text-body)' : 'var(--admin-text-secondary)',
+            fontWeight: i === 0 ? 500 : 400,
+          }}
         >
           {line}
         </p>
@@ -792,24 +907,30 @@ function SummaryRow({
   label,
   value,
   bold = false,
-  color,
+  colorToken,
 }: {
   label: string;
   value: string;
   bold?: boolean;
-  color?: string;
+  colorToken?: string;
 }) {
   return (
     <div className="flex justify-between items-center">
       <span
         className="text-sm"
-        style={{ color: bold ? '#ffffff' : '#6b7280', fontWeight: bold ? 600 : 400 }}
+        style={{
+          color: bold ? 'var(--admin-text)' : 'var(--admin-text-muted)',
+          fontWeight: bold ? 600 : 400,
+        }}
       >
         {label}
       </span>
       <span
         className="text-sm"
-        style={{ color: color ?? (bold ? '#ffffff' : '#9ca3af'), fontWeight: bold ? 700 : 400 }}
+        style={{
+          color: colorToken ?? (bold ? 'var(--admin-text)' : 'var(--admin-text-secondary)'),
+          fontWeight: bold ? 700 : 400,
+        }}
       >
         {value}
       </span>
@@ -831,8 +952,6 @@ export default function OrderDetailPage() {
   const [fulfillOpen, setFulfillOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [refundOpen, setRefundOpen] = useState(false);
-
-  // ── Fetch order ─────────────────────────────────────────────────────────────
 
   const fetchOrder = useCallback(async () => {
     setLoading(true);
@@ -859,8 +978,6 @@ export default function OrderDetailPage() {
     window.print();
   }
 
-  // ── Derived state ────────────────────────────────────────────────────────────
-
   const isCancelled = !!order?.cancelledAt;
   const isFulfilled = order?.displayFulfillmentStatus === 'FULFILLED';
   const isRefunded = order?.displayFinancialStatus === 'REFUNDED';
@@ -873,59 +990,56 @@ export default function OrderDetailPage() {
   const total = order?.currentTotalPriceSet.shopMoney;
   const currency = total?.currencyCode ?? 'USD';
 
-  const paymentColor = order
-    ? (PAYMENT_COLORS[order.displayFinancialStatus] ?? '#6b7280')
-    : '#6b7280';
-  const fulfillColor = order
-    ? (FULFILLMENT_COLORS[order.displayFulfillmentStatus] ?? '#6b7280')
-    : '#6b7280';
+  const paymentToken = order
+    ? (PAYMENT_TOKENS[order.displayFinancialStatus] ?? 'var(--admin-text-muted)')
+    : 'var(--admin-text-muted)';
+  const fulfillToken = order
+    ? (FULFILLMENT_TOKENS[order.displayFulfillmentStatus] ?? 'var(--admin-text-muted)')
+    : 'var(--admin-text-muted)';
 
   const existingFulfillments = order?.fulfillments ?? [];
   const timeline = order?.events?.edges?.map((e) => e.node) ?? [];
 
-  // ─────────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-5">
-      {/* ── Back + Header ────────────────────────────────────────── */}
+      {/* Header */}
       <div className="flex items-start gap-4 flex-wrap">
         <Link
           href="/admin/orders"
-          className="flex items-center gap-1.5 text-[#6b7280] hover:text-white text-sm transition-colors mt-1"
+          className="flex items-center gap-1.5 text-sm transition-colors mt-1"
+          style={{ color: 'var(--admin-text-muted)' }}
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Orders
         </Link>
         <div className="flex-1">
           {loading ? (
-            <div className="h-8 w-40 bg-[#1f2d4e] rounded-lg animate-pulse" />
+            <div
+              className="h-8 w-40 rounded-lg animate-pulse"
+              style={{ backgroundColor: 'var(--admin-border)' }}
+            />
           ) : order ? (
             <div className="flex items-center gap-3 flex-wrap">
-              <h1
-                className="text-2xl font-bold"
-                style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-              >
-                Order {order.name}
-              </h1>
+              <h1 className="admin-h1 text-2xl">Order {order.name}</h1>
               <StatusBadge
                 label={order.displayFinancialStatus.replace(/_/g, ' ')}
-                color={paymentColor}
+                colorToken={paymentToken}
               />
               <StatusBadge
                 label={order.displayFulfillmentStatus?.replace(/_/g, ' ') ?? 'No status'}
-                color={fulfillColor}
+                colorToken={fulfillToken}
               />
-              {isCancelled && <StatusBadge label="CANCELLED" color="#ef4444" />}
+              {isCancelled && <StatusBadge label="CANCELLED" colorToken="var(--admin-error)" />}
               {order.riskLevel && order.riskLevel !== 'LOW' && (
                 <RiskBadge level={order.riskLevel} />
               )}
             </div>
           ) : null}
           {order && (
-            <p className="text-[#6b7280] text-sm mt-1">
+            <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
               {order.createdAt ? formatDate(order.createdAt) : ''}
               {order.cancelledAt && (
-                <span className="text-[#ef4444] ml-2">
+                <span className="ml-2" style={{ color: 'var(--admin-error)' }}>
                   · Cancelled {formatDate(order.cancelledAt)}
                   {order.cancelReason && ` (${order.cancelReason.toLowerCase()})`}
                 </span>
@@ -935,13 +1049,18 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* ── Action Bar ──────────────────────────────────────────── */}
+      {/* Action Bar */}
       {!loading && order && (
         <div className="flex items-center gap-3 flex-wrap">
           {!isCancelled && !isFulfilled && (
             <button
               onClick={() => setFulfillOpen(true)}
-              className="flex items-center gap-2 bg-[#10b981]/10 hover:bg-[#10b981]/20 border border-[#10b981]/30 text-[#10b981] rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              style={{
+                backgroundColor: 'var(--admin-success-bg)',
+                border: '1px solid color-mix(in srgb, var(--admin-success) 30%, transparent)',
+                color: 'var(--admin-success)',
+              }}
             >
               <span className="material-symbols-outlined text-base">local_shipping</span>
               Fulfill Order
@@ -950,7 +1069,12 @@ export default function OrderDetailPage() {
           {!isCancelled && !isRefunded && (
             <button
               onClick={() => setRefundOpen(true)}
-              className="flex items-center gap-2 bg-[#d4a843]/10 hover:bg-[#d4a843]/20 border border-[#d4a843]/30 text-[#d4a843] rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              style={{
+                backgroundColor: 'var(--admin-brand-bg)',
+                border: '1px solid var(--admin-brand-border)',
+                color: 'var(--admin-brand)',
+              }}
             >
               <span className="material-symbols-outlined text-base">currency_exchange</span>
               Issue Refund
@@ -959,7 +1083,12 @@ export default function OrderDetailPage() {
           {!isCancelled && (
             <button
               onClick={() => setCancelOpen(true)}
-              className="flex items-center gap-2 bg-[#ef4444]/10 hover:bg-[#ef4444]/20 border border-[#ef4444]/30 text-[#ef4444] rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              style={{
+                backgroundColor: 'var(--admin-error-bg)',
+                border: '1px solid color-mix(in srgb, var(--admin-error) 30%, transparent)',
+                color: 'var(--admin-error)',
+              }}
             >
               <span className="material-symbols-outlined text-base">cancel</span>
               Cancel Order
@@ -967,7 +1096,12 @@ export default function OrderDetailPage() {
           )}
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] hover:border-[#374151] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-all ml-auto"
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ml-auto"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              border: '1px solid var(--admin-border)',
+              color: 'var(--admin-text-secondary)',
+            }}
           >
             <span className="material-symbols-outlined text-base">print</span>
             Print
@@ -975,29 +1109,47 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* ── Error ──────────────────────────────────────────────── */}
+      {/* Error */}
       {error && (
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-[#ef4444]/8 border border-[#ef4444]/20">
-          <span className="material-symbols-outlined text-[#ef4444] text-xl">error</span>
-          <p className="text-[#fca5a5] text-sm">{error}</p>
+        <div
+          className="flex items-center gap-3 p-4 rounded-xl"
+          style={{
+            backgroundColor: 'var(--admin-error-bg)',
+            border: '1px solid color-mix(in srgb, var(--admin-error) 20%, transparent)',
+          }}
+        >
+          <span
+            className="material-symbols-outlined text-xl"
+            style={{ color: 'var(--admin-error)' }}
+          >
+            error
+          </span>
+          <p className="text-sm" style={{ color: 'var(--admin-error)' }}>
+            {error}
+          </p>
           <button
             onClick={fetchOrder}
-            className="ml-auto text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
+            className="ml-auto text-sm transition-colors"
+            style={{ color: 'var(--admin-brand)' }}
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* ── Loading skeleton ──────────────────────────────────── */}
+      {/* Loading skeleton */}
       {loading && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           <div className="xl:col-span-2 space-y-5">
             {[220, 140].map((h, i) => (
               <div
                 key={i}
-                className="bg-[#111827] border border-[#1f2d4e] rounded-2xl animate-pulse"
-                style={{ height: h }}
+                className="rounded-2xl animate-pulse"
+                style={{
+                  height: h,
+                  backgroundColor: 'var(--admin-bg-card)',
+                  border: '1px solid var(--admin-border)',
+                }}
               />
             ))}
           </div>
@@ -1005,58 +1157,93 @@ export default function OrderDetailPage() {
             {[150, 140, 160, 120].map((h, i) => (
               <div
                 key={i}
-                className="bg-[#111827] border border-[#1f2d4e] rounded-2xl animate-pulse"
-                style={{ height: h }}
+                className="rounded-2xl animate-pulse"
+                style={{
+                  height: h,
+                  backgroundColor: 'var(--admin-bg-card)',
+                  border: '1px solid var(--admin-border)',
+                }}
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* ── Main Content ─────────────────────────────────────── */}
+      {/* Main Content */}
       {!loading && order && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          {/* ── Left Column ─────────────────────────────────── */}
+          {/* Left Column */}
           <div className="xl:col-span-2 space-y-5">
             {/* Line Items */}
             <InfoCard title="Line Items" icon="shopping_cart">
               <div className="space-y-0 -mx-5">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-[#1f2d4e]">
-                      <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-2.5">
-                        Product
-                      </th>
-                      <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-2.5">
-                        Unit Price
-                      </th>
-                      <th className="text-center text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-2.5">
-                        Qty
-                      </th>
-                      <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-5 py-2.5">
-                        Total
-                      </th>
+                    <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
+                      {[
+                        { label: 'Product', align: 'left' },
+                        { label: 'Unit Price', align: 'right' },
+                        { label: 'Qty', align: 'center' },
+                        { label: 'Total', align: 'right' },
+                      ].map((h) => (
+                        <th
+                          key={h.label}
+                          className={`text-${h.align} text-xs font-medium uppercase tracking-wider px-5 py-2.5`}
+                          style={{ color: 'var(--admin-text-muted)' }}
+                        >
+                          {h.label}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1f2d4e]">
+                  <tbody>
                     {lineItems.map((li) => {
                       const unitMoney = li.originalUnitPriceSet.shopMoney;
                       const totalMoney = li.originalTotalSet.shopMoney;
                       const sku = li.sku ?? li.variant?.sku;
+                      const fToken =
+                        FULFILLMENT_TOKENS[li.fulfillmentStatus] ?? 'var(--admin-text-muted)';
                       return (
-                        <tr key={li.id} className="hover:bg-[#1f2d4e]/10 transition-colors">
+                        <tr
+                          key={li.id}
+                          className="transition-colors"
+                          style={{ borderBottom: '1px solid var(--admin-border)' }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)')
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor = 'transparent')
+                          }
+                        >
                           <td className="px-5 py-3.5">
-                            <p className="text-[#e5e7eb] text-sm font-medium">{li.name}</p>
+                            <p
+                              className="text-sm font-medium"
+                              style={{ color: 'var(--admin-text-body)' }}
+                            >
+                              {li.name}
+                            </p>
                             {li.variant && li.variant.title !== 'Default Title' && (
-                              <p className="text-[#6b7280] text-xs mt-0.5">{li.variant.title}</p>
+                              <p
+                                className="text-xs mt-0.5"
+                                style={{ color: 'var(--admin-text-muted)' }}
+                              >
+                                {li.variant.title}
+                              </p>
                             )}
-                            {sku && <p className="text-[#4b5563] text-xs mt-0.5">SKU: {sku}</p>}
+                            {sku && (
+                              <p
+                                className="text-xs mt-0.5"
+                                style={{ color: 'var(--admin-text-disabled)' }}
+                              >
+                                SKU: {sku}
+                              </p>
+                            )}
                             {li.fulfillmentStatus && li.fulfillmentStatus !== 'UNFULFILLED' && (
                               <span
                                 className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium"
                                 style={{
-                                  backgroundColor: `${FULFILLMENT_COLORS[li.fulfillmentStatus] ?? '#6b7280'}20`,
-                                  color: FULFILLMENT_COLORS[li.fulfillmentStatus] ?? '#6b7280',
+                                  backgroundColor: `color-mix(in srgb, ${fToken} 12%, transparent)`,
+                                  color: fToken,
                                 }}
                               >
                                 {li.fulfillmentStatus.replace(/_/g, ' ').toLowerCase()}
@@ -1064,15 +1251,26 @@ export default function OrderDetailPage() {
                             )}
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            <span className="text-[#9ca3af] text-sm">
+                            <span
+                              className="text-sm"
+                              style={{ color: 'var(--admin-text-secondary)' }}
+                            >
                               {formatCurrency(unitMoney.amount, unitMoney.currencyCode)}
                             </span>
                           </td>
                           <td className="px-5 py-3.5 text-center">
-                            <span className="text-[#9ca3af] text-sm">{li.quantity}</span>
+                            <span
+                              className="text-sm"
+                              style={{ color: 'var(--admin-text-secondary)' }}
+                            >
+                              {li.quantity}
+                            </span>
                           </td>
                           <td className="px-5 py-3.5 text-right">
-                            <span className="text-[#e5e7eb] text-sm font-medium">
+                            <span
+                              className="text-sm font-medium"
+                              style={{ color: 'var(--admin-text-body)' }}
+                            >
                               {formatCurrency(totalMoney.amount, totalMoney.currencyCode)}
                             </span>
                           </td>
@@ -1088,59 +1286,82 @@ export default function OrderDetailPage() {
             {existingFulfillments.length > 0 && (
               <InfoCard title="Fulfillments" icon="local_shipping">
                 <div className="space-y-4">
-                  {existingFulfillments.map((f) => (
-                    <div key={f.id} className="p-4 rounded-xl bg-[#0a0f1e] border border-[#1f2d4e]">
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold"
-                          style={{
-                            backgroundColor: `${FULFILLMENT_COLORS[f.status] ?? '#6b7280'}15`,
-                            color: FULFILLMENT_COLORS[f.status] ?? '#6b7280',
-                          }}
-                        >
+                  {existingFulfillments.map((f) => {
+                    const fToken = FULFILLMENT_TOKENS[f.status] ?? 'var(--admin-text-muted)';
+                    return (
+                      <div
+                        key={f.id}
+                        className="p-4 rounded-xl"
+                        style={{
+                          backgroundColor: 'var(--admin-bg)',
+                          border: '1px solid var(--admin-border)',
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
                           <span
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: FULFILLMENT_COLORS[f.status] ?? '#6b7280' }}
-                          />
-                          {f.status}
-                        </span>
-                        <span className="text-[#4b5563] text-xs">
-                          {formatDateShort(f.createdAt)}
-                        </span>
-                      </div>
-                      {f.trackingInfo.map((t, ti) => (
-                        <div key={ti} className="space-y-1">
-                          {t.company && (
-                            <p className="text-[#9ca3af] text-xs flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-xs text-[#6b7280]">
-                                business
-                              </span>
-                              {t.company}
-                            </p>
-                          )}
-                          {t.number && (
-                            <p className="text-[#9ca3af] text-xs flex items-center gap-1.5">
-                              <span className="material-symbols-outlined text-xs text-[#6b7280]">
-                                tag
-                              </span>
-                              {t.url ? (
-                                <a
-                                  href={t.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[#d4a843] hover:text-[#e4c06a] transition-colors"
-                                >
-                                  {t.number}
-                                </a>
-                              ) : (
-                                t.number
-                              )}
-                            </p>
-                          )}
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold"
+                            style={{
+                              backgroundColor: `color-mix(in srgb, ${fToken} 10%, transparent)`,
+                              color: fToken,
+                            }}
+                          >
+                            <span
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: fToken }}
+                            />
+                            {f.status}
+                          </span>
+                          <span className="text-xs" style={{ color: 'var(--admin-text-disabled)' }}>
+                            {formatDateShort(f.createdAt)}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  ))}
+                        {f.trackingInfo.map((t, ti) => (
+                          <div key={ti} className="space-y-1">
+                            {t.company && (
+                              <p
+                                className="text-xs flex items-center gap-1.5"
+                                style={{ color: 'var(--admin-text-secondary)' }}
+                              >
+                                <span
+                                  className="material-symbols-outlined text-xs"
+                                  style={{ color: 'var(--admin-text-muted)' }}
+                                >
+                                  business
+                                </span>
+                                {t.company}
+                              </p>
+                            )}
+                            {t.number && (
+                              <p
+                                className="text-xs flex items-center gap-1.5"
+                                style={{ color: 'var(--admin-text-secondary)' }}
+                              >
+                                <span
+                                  className="material-symbols-outlined text-xs"
+                                  style={{ color: 'var(--admin-text-muted)' }}
+                                >
+                                  tag
+                                </span>
+                                {t.url ? (
+                                  <a
+                                    href={t.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="transition-colors"
+                                    style={{ color: 'var(--admin-brand)' }}
+                                  >
+                                    {t.number}
+                                  </a>
+                                ) : (
+                                  t.number
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </InfoCard>
             )}
@@ -1148,7 +1369,10 @@ export default function OrderDetailPage() {
             {/* Notes */}
             {order.note && (
               <InfoCard title="Order Notes" icon="sticky_note_2">
-                <p className="text-[#9ca3af] text-sm leading-relaxed whitespace-pre-wrap">
+                <p
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                  style={{ color: 'var(--admin-text-secondary)' }}
+                >
                   {order.note}
                 </p>
               </InfoCard>
@@ -1161,7 +1385,11 @@ export default function OrderDetailPage() {
                   {order.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-[#1f2d4e] text-[#9ca3af]"
+                      className="px-2.5 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: 'var(--admin-border)',
+                        color: 'var(--admin-text-secondary)',
+                      }}
                     >
                       {tag}
                     </span>
@@ -1179,15 +1407,29 @@ export default function OrderDetailPage() {
                       <div className="flex flex-col items-center">
                         <span
                           className="w-2 h-2 rounded-full mt-1.5 flex-none"
-                          style={{ backgroundColor: idx === 0 ? '#d4a843' : '#1f2d4e' }}
+                          style={{
+                            backgroundColor:
+                              idx === 0 ? 'var(--admin-brand)' : 'var(--admin-border)',
+                          }}
                         />
                         {idx < timeline.length - 1 && (
-                          <div className="w-px flex-1 bg-[#1f2d4e] mt-1 min-h-[20px]" />
+                          <div
+                            className="w-px flex-1 mt-1 min-h-[20px]"
+                            style={{ backgroundColor: 'var(--admin-border)' }}
+                          />
                         )}
                       </div>
                       <div className="pb-3">
-                        <p className="text-[#e5e7eb] text-sm leading-snug">{event.message}</p>
-                        <p className="text-[#4b5563] text-xs mt-0.5">
+                        <p
+                          className="text-sm leading-snug"
+                          style={{ color: 'var(--admin-text-body)' }}
+                        >
+                          {event.message}
+                        </p>
+                        <p
+                          className="text-xs mt-0.5"
+                          style={{ color: 'var(--admin-text-disabled)' }}
+                        >
                           {formatDateShort(event.createdAt)}
                         </p>
                       </div>
@@ -1198,14 +1440,14 @@ export default function OrderDetailPage() {
             )}
           </div>
 
-          {/* ── Right Column ────────────────────────────────── */}
+          {/* Right Column */}
           <div className="space-y-5">
             {/* Customer */}
             <InfoCard title="Customer" icon="person">
               {order.customer ? (
                 <div className="space-y-2">
                   {(order.customer.firstName || order.customer.lastName) && (
-                    <p className="text-[#e5e7eb] text-sm font-medium">
+                    <p className="text-sm font-medium" style={{ color: 'var(--admin-text-body)' }}>
                       {[order.customer.firstName, order.customer.lastName]
                         .filter(Boolean)
                         .join(' ')}
@@ -1214,17 +1456,27 @@ export default function OrderDetailPage() {
                   {order.customer.email && (
                     <a
                       href={`mailto:${order.customer.email}`}
-                      className="text-[#d4a843] hover:text-[#e4c06a] text-sm flex items-center gap-1.5 transition-colors"
+                      className="text-sm flex items-center gap-1.5 transition-colors"
+                      style={{ color: 'var(--admin-brand)' }}
                     >
-                      <span className="material-symbols-outlined text-sm text-[#6b7280]">
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ color: 'var(--admin-text-muted)' }}
+                      >
                         email
                       </span>
                       {order.customer.email}
                     </a>
                   )}
                   {(order.customer.phone ?? order.phone) && (
-                    <p className="text-[#9ca3af] text-sm flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-sm text-[#6b7280]">
+                    <p
+                      className="text-sm flex items-center gap-1.5"
+                      style={{ color: 'var(--admin-text-secondary)' }}
+                    >
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ color: 'var(--admin-text-muted)' }}
+                      >
                         phone
                       </span>
                       {order.customer.phone ?? order.phone}
@@ -1233,21 +1485,33 @@ export default function OrderDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-[#6b7280] text-sm">Guest checkout</p>
+                  <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+                    Guest checkout
+                  </p>
                   {order.email && (
                     <a
                       href={`mailto:${order.email}`}
-                      className="text-[#d4a843] hover:text-[#e4c06a] text-sm flex items-center gap-1.5 transition-colors"
+                      className="text-sm flex items-center gap-1.5 transition-colors"
+                      style={{ color: 'var(--admin-brand)' }}
                     >
-                      <span className="material-symbols-outlined text-sm text-[#6b7280]">
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ color: 'var(--admin-text-muted)' }}
+                      >
                         email
                       </span>
                       {order.email}
                     </a>
                   )}
                   {order.phone && (
-                    <p className="text-[#9ca3af] text-sm flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-sm text-[#6b7280]">
+                    <p
+                      className="text-sm flex items-center gap-1.5"
+                      style={{ color: 'var(--admin-text-secondary)' }}
+                    >
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ color: 'var(--admin-text-muted)' }}
+                      >
                         phone
                       </span>
                       {order.phone}
@@ -1262,7 +1526,9 @@ export default function OrderDetailPage() {
               {order.shippingAddress ? (
                 <AddressBlock addr={order.shippingAddress} />
               ) : (
-                <p className="text-[#6b7280] text-sm">No shipping address</p>
+                <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+                  No shipping address
+                </p>
               )}
             </InfoCard>
 
@@ -1271,7 +1537,9 @@ export default function OrderDetailPage() {
               {order.billingAddress ? (
                 <AddressBlock addr={order.billingAddress} />
               ) : (
-                <p className="text-[#6b7280] text-sm">No billing address</p>
+                <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+                  No billing address
+                </p>
               )}
             </InfoCard>
 
@@ -1288,7 +1556,7 @@ export default function OrderDetailPage() {
                   <SummaryRow
                     label="Discounts"
                     value={`-${formatCurrency(discounts.amount, discounts.currencyCode)}`}
-                    color="#10b981"
+                    colorToken="var(--admin-success)"
                   />
                 )}
                 {shipping && (
@@ -1299,13 +1567,18 @@ export default function OrderDetailPage() {
                         ? 'Free'
                         : formatCurrency(shipping.amount, shipping.currencyCode)
                     }
-                    color={parseFloat(shipping.amount) === 0 ? '#10b981' : undefined}
+                    colorToken={
+                      parseFloat(shipping.amount) === 0 ? 'var(--admin-success)' : undefined
+                    }
                   />
                 )}
                 {tax && (
                   <SummaryRow label="Tax" value={formatCurrency(tax.amount, tax.currencyCode)} />
                 )}
-                <div className="border-t border-[#1f2d4e] pt-2.5 mt-0.5">
+                <div
+                  className="pt-2.5 mt-0.5"
+                  style={{ borderTop: '1px solid var(--admin-border)' }}
+                >
                   <SummaryRow
                     label="Total"
                     value={total ? formatCurrency(total.amount, total.currencyCode) : '—'}
@@ -1318,7 +1591,7 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* ── Modals ───────────────────────────────────────────── */}
+      {/* Modals */}
       {fulfillOpen && (
         <FulfillModal
           orderId={orderId}

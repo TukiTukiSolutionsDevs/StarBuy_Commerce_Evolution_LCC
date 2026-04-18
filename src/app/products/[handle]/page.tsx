@@ -133,7 +133,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* Title + wishlist */}
           <div className="flex items-start gap-3 mb-2">
-            <h1 className="font-headline text-3xl md:text-4xl text-[#303330] flex-1">
+            <h1 className="font-headline text-2xl md:text-4xl text-[#303330] flex-1">
               {product.title}
             </h1>
             <WishlistButton productId={product.id} size="md" className="mt-1 flex-shrink-0" />
@@ -177,7 +177,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Related products */}
       {relatedProducts.length > 0 && (
         <section className="mb-20">
-          <h2 className="font-headline text-3xl text-[#303330] mb-8">Other Parents Also Love</h2>
+          <h2 className="font-headline text-2xl md:text-3xl text-[#303330] mb-6 md:mb-8">
+            Other Parents Also Love
+          </h2>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-8">
             {relatedProducts.map((rp) => (
               <ProductCard key={rp.id} product={rp} />

@@ -42,7 +42,7 @@ export default async function CollectionsPage() {
             </ol>
           </nav>
 
-          <h1 className="font-headline text-4xl md:text-5xl text-white mb-3">Baby Collections</h1>
+          <h1 className="font-headline text-3xl md:text-5xl text-white mb-3">Baby Collections</h1>
           <p className="font-body text-white/70 max-w-lg text-lg leading-relaxed">
             Everything your little star needs — organized by category so you can find the perfect
             essentials quickly and easily.

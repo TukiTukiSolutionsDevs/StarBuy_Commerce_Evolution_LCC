@@ -29,7 +29,7 @@ const STARS = [
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-[#faf5f0] via-[#f5e1dc] to-[#e8daf0]">
+    <section className="relative min-h-[70vh] md:min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-[#faf5f0] via-[#f5e1dc] to-[#e8daf0]">
       {/* Soft pastel glow layers */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_30%_20%,rgba(232,218,240,0.5),transparent)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_70%_60%,rgba(245,225,220,0.4),transparent)]" />

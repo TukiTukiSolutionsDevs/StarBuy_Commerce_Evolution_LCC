@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Admin Discounts Page
+ * Admin Discounts Page — Phase 3
  *
+ * Migrated to use admin design tokens. Zero hardcoded hex colors.
  * Full discount code management: stats, status filter tabs, search,
  * sortable table, create modal, edit modal, delete confirm, copy code.
  */
@@ -109,10 +110,10 @@ function discountToForm(discount: AdminDiscount): DiscountForm {
 
 // ─── Status Badge ────────────────────────────────────────────────────────────────
 
-const STATUS_STYLE: Record<string, { color: string; label: string; icon: string }> = {
-  ACTIVE: { color: '#10b981', label: 'Active', icon: 'check_circle' },
-  EXPIRED: { color: '#6b7280', label: 'Expired', icon: 'cancel' },
-  SCHEDULED: { color: '#6b8cff', label: 'Scheduled', icon: 'schedule' },
+const STATUS_STYLE: Record<string, { token: string; label: string; icon: string }> = {
+  ACTIVE: { token: 'var(--admin-success)', label: 'Active', icon: 'check_circle' },
+  EXPIRED: { token: 'var(--admin-text-muted)', label: 'Expired', icon: 'cancel' },
+  SCHEDULED: { token: 'var(--admin-info)', label: 'Scheduled', icon: 'schedule' },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -120,9 +121,9 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-      style={{ backgroundColor: `${s.color}18`, color: s.color }}
+      style={{ backgroundColor: `color-mix(in srgb, ${s.token} 10%, transparent)`, color: s.token }}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: '11px', color: s.color }}>
+      <span className="material-symbols-outlined" style={{ fontSize: '11px', color: s.token }}>
         {s.icon}
       </span>
       {s.label}
@@ -136,26 +137,36 @@ function StatCard({
   icon,
   label,
   value,
-  color = '#6b8cff',
+  colorToken = 'var(--admin-info)',
 }: {
   icon: string;
   label: string;
   value: string | number;
-  color?: string;
+  colorToken?: string;
 }) {
   return (
-    <div className="bg-[#111827] border border-[#1f2d4e] rounded-xl p-4 flex items-center gap-3">
+    <div
+      className="rounded-xl p-4 flex items-center gap-3"
+      style={{
+        backgroundColor: 'var(--admin-bg-card)',
+        border: '1px solid var(--admin-border)',
+      }}
+    >
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center flex-none"
-        style={{ backgroundColor: `${color}18` }}
+        style={{ backgroundColor: `color-mix(in srgb, ${colorToken} 10%, transparent)` }}
       >
-        <span className="material-symbols-outlined text-base" style={{ color }}>
+        <span className="material-symbols-outlined text-base" style={{ color: colorToken }}>
           {icon}
         </span>
       </div>
       <div>
-        <p className="text-[#6b7280] text-xs">{label}</p>
-        <p className="text-white font-semibold text-sm mt-0.5">{value}</p>
+        <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+          {label}
+        </p>
+        <p className="font-semibold text-sm mt-0.5" style={{ color: 'var(--admin-text)' }}>
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -165,10 +176,13 @@ function StatCard({
 
 function SkeletonRow() {
   return (
-    <tr className="border-b border-[#1f2d4e]">
+    <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
       {[120, 100, 80, 60, 60, 80, 140, 120].map((w, i) => (
         <td key={i} className="px-4 py-4">
-          <div className="h-3.5 bg-[#1f2d4e] rounded animate-pulse" style={{ width: `${w}px` }} />
+          <div
+            className="h-3.5 rounded animate-pulse"
+            style={{ width: `${w}px`, backgroundColor: 'var(--admin-border)' }}
+          />
         </td>
       ))}
     </tr>
@@ -194,7 +208,8 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={handleCopy}
       title={copied ? 'Copied!' : 'Copy code'}
-      className="ml-1.5 p-0.5 rounded text-[#6b7280] hover:text-[#d4a843] transition-colors"
+      className="ml-1.5 p-0.5 rounded transition-colors"
+      style={{ color: copied ? 'var(--admin-success)' : 'var(--admin-text-muted)' }}
     >
       <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
         {copied ? 'check' : 'content_copy'}
@@ -225,33 +240,66 @@ function DeleteModal({
   }, [onCancel]);
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-sm p-6 shadow-2xl shadow-black/60">
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--admin-overlay)' }}
+    >
+      <div
+        className="rounded-2xl w-full max-w-sm p-6"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
+      >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-[#ef4444]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#ef4444] text-xl">local_offer</span>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: 'var(--admin-error-bg)' }}
+          >
+            <span
+              className="material-symbols-outlined text-xl"
+              style={{ color: 'var(--admin-error)' }}
+            >
+              local_offer
+            </span>
           </div>
           <div>
-            <p className="text-white font-semibold">Delete Discount</p>
-            <p className="text-[#6b7280] text-xs">This action cannot be undone</p>
+            <p className="font-semibold" style={{ color: 'var(--admin-text)' }}>
+              Delete Discount
+            </p>
+            <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+              This action cannot be undone
+            </p>
           </div>
         </div>
-        <p className="text-[#9ca3af] text-sm mb-6">
+        <p className="text-sm mb-6" style={{ color: 'var(--admin-text-secondary)' }}>
           Are you sure you want to delete discount code{' '}
-          <span className="text-white font-medium font-mono">{code}</span>?
+          <span className="font-medium font-mono" style={{ color: 'var(--admin-text)' }}>
+            {code}
+          </span>
+          ?
         </p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+            style={{
+              backgroundColor: 'var(--admin-border)',
+              color: 'var(--admin-text)',
+            }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 bg-[#ef4444] hover:bg-[#dc2626] disabled:bg-[#374151] text-white rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            style={{
+              backgroundColor: loading ? 'var(--admin-text-disabled)' : 'var(--admin-error)',
+              color: 'white',
+            }}
           >
             {loading ? (
               <>
@@ -359,7 +407,6 @@ function DiscountFormModal({
         if (!res.ok) throw new Error(data.error ?? 'Failed to create');
         toast.success(`Discount "${form.code.toUpperCase()}" created`);
       } else {
-        // Edit mode — PATCH
         const numId = extractNumericId(editId!);
         const body: Record<string, unknown> = {
           title: form.title.trim(),
@@ -392,29 +439,61 @@ function DiscountFormModal({
 
   const isEdit = mode === 'edit';
 
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border)',
+    color: 'var(--admin-text)',
+  };
+
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl w-full max-w-lg shadow-2xl shadow-black/60 flex flex-col max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--admin-overlay)' }}
+    >
+      <div
+        className="rounded-2xl w-full max-w-lg flex flex-col max-h-[90vh]"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+          boxShadow: 'var(--admin-shadow-dropdown)',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center gap-3 p-6 border-b border-[#1f2d4e]">
-          <div className="w-10 h-10 rounded-xl bg-[#d4a843]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#d4a843] text-xl">
+        <div
+          className="flex items-center gap-3 p-6"
+          style={{ borderBottom: '1px solid var(--admin-border)' }}
+        >
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: 'var(--admin-brand-bg)' }}
+          >
+            <span
+              className="material-symbols-outlined text-xl"
+              style={{ color: 'var(--admin-brand)' }}
+            >
               {isEdit ? 'edit' : 'sell'}
             </span>
           </div>
           <div className="flex-1">
-            <p className="text-white font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+            <p
+              className="font-semibold"
+              style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
+            >
               {isEdit
                 ? `Edit Discount${initialCode ? ` — ${initialCode}` : ''}`
                 : 'Create Discount'}
             </p>
-            <p className="text-[#6b7280] text-xs">
+            <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
               {isEdit
                 ? 'Update discount settings (code cannot be changed)'
                 : 'Add a new discount code to your store'}
             </p>
           </div>
-          <button onClick={onClose} className="text-[#374151] hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="transition-colors"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
@@ -423,34 +502,56 @@ function DiscountFormModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-              Title <span className="text-[#ef4444]">*</span>
+            <label className="admin-label block mb-1.5">
+              Title <span style={{ color: 'var(--admin-error)' }}>*</span>
             </label>
             <input
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
               placeholder="e.g. Summer Sale 20%"
-              className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+              style={inputStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--admin-brand)';
+                e.currentTarget.style.boxShadow = '0 0 0 1px var(--admin-brand)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--admin-border)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
           </div>
 
           {/* Code (create only) */}
           {!isEdit && (
             <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-                Code <span className="text-[#ef4444]">*</span>
+              <label className="admin-label block mb-1.5">
+                Code <span style={{ color: 'var(--admin-error)' }}>*</span>
               </label>
               <div className="flex gap-2">
                 <input
                   value={form.code}
                   onChange={(e) => set('code', e.target.value.toUpperCase())}
                   placeholder="SUMMER20"
-                  className="flex-1 bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors font-mono uppercase"
+                  className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none transition-colors font-mono uppercase"
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--admin-brand)';
+                    e.currentTarget.style.boxShadow = '0 0 0 1px var(--admin-brand)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--admin-border)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => set('code', generateCode())}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all"
+                  style={{
+                    backgroundColor: 'var(--admin-border)',
+                    color: 'var(--admin-text-secondary)',
+                  }}
                 >
                   <span className="material-symbols-outlined text-sm">casino</span>
                   Auto
@@ -462,10 +563,20 @@ function DiscountFormModal({
           {/* Edit: show code as read-only */}
           {isEdit && initialCode && (
             <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Code</label>
-              <div className="flex items-center gap-2 bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-2.5">
-                <span className="font-mono text-sm text-[#6b7280]">{initialCode}</span>
-                <span className="text-[#374151] text-xs ml-auto">Cannot be changed</span>
+              <label className="admin-label block mb-1.5">Code</label>
+              <div
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5"
+                style={{
+                  backgroundColor: 'var(--admin-bg-input)',
+                  border: '1px solid var(--admin-border)',
+                }}
+              >
+                <span className="font-mono text-sm" style={{ color: 'var(--admin-text-muted)' }}>
+                  {initialCode}
+                </span>
+                <span className="text-xs ml-auto" style={{ color: 'var(--admin-text-disabled)' }}>
+                  Cannot be changed
+                </span>
               </div>
             </div>
           )}
@@ -473,24 +584,26 @@ function DiscountFormModal({
           {/* Type + Value */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-                Discount Type
-              </label>
+              <label className="admin-label block mb-1.5">Discount Type</label>
               <select
                 value={form.type}
                 onChange={(e) => set('type', e.target.value as DiscountType)}
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+                style={inputStyle}
               >
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed Amount ($)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-                Value <span className="text-[#ef4444]">*</span>
+              <label className="admin-label block mb-1.5">
+                Value <span style={{ color: 'var(--admin-error)' }}>*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280] text-sm">
+                <span
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                  style={{ color: 'var(--admin-text-muted)' }}
+                >
                   {form.type === 'percentage' ? '%' : '$'}
                 </span>
                 <input
@@ -501,7 +614,8 @@ function DiscountFormModal({
                   value={form.value}
                   onChange={(e) => set('value', e.target.value)}
                   placeholder={form.type === 'percentage' ? '20' : '10.00'}
-                  className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl pl-8 pr-4 py-2.5 text-sm outline-none transition-colors"
+                  className="w-full rounded-xl pl-8 pr-4 py-2.5 text-sm outline-none transition-colors"
+                  style={inputStyle}
                 />
               </div>
             </div>
@@ -510,31 +624,34 @@ function DiscountFormModal({
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">Start Date</label>
+              <label className="admin-label block mb-1.5">Start Date</label>
               <input
                 type="datetime-local"
                 value={form.startsAt}
                 onChange={(e) => set('startsAt', e.target.value)}
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+                style={inputStyle}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-                End Date <span className="text-[#374151]">(optional)</span>
+              <label className="admin-label block mb-1.5">
+                End Date <span style={{ color: 'var(--admin-text-disabled)' }}>(optional)</span>
               </label>
               <input
                 type="datetime-local"
                 value={form.endsAt}
                 onChange={(e) => set('endsAt', e.target.value)}
-                className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+                className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+                style={inputStyle}
               />
             </div>
           </div>
 
           {/* Usage Limits */}
           <div>
-            <label className="block text-xs font-medium text-[#9ca3af] mb-1.5">
-              Max Total Uses <span className="text-[#374151]">(0 = unlimited)</span>
+            <label className="admin-label block mb-1.5">
+              Max Total Uses{' '}
+              <span style={{ color: 'var(--admin-text-disabled)' }}>(0 = unlimited)</span>
             </label>
             <input
               type="number"
@@ -542,7 +659,8 @@ function DiscountFormModal({
               value={form.usageLimit}
               onChange={(e) => set('usageLimit', e.target.value)}
               placeholder="Unlimited"
-              className="w-full bg-[#0a0f1e] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-colors"
+              style={inputStyle}
             />
           </div>
 
@@ -558,7 +676,9 @@ function DiscountFormModal({
               <div
                 className="w-9 h-5 rounded-full transition-colors"
                 style={{
-                  backgroundColor: form.onePerCustomer ? '#d4a843' : '#1f2d4e',
+                  backgroundColor: form.onePerCustomer
+                    ? 'var(--admin-brand)'
+                    : 'var(--admin-border)',
                 }}
               >
                 <div
@@ -570,26 +690,38 @@ function DiscountFormModal({
               </div>
             </div>
             <div>
-              <p className="text-sm text-white">Limit to one per customer</p>
-              <p className="text-xs text-[#6b7280]">Each customer can only use this code once</p>
+              <p className="text-sm" style={{ color: 'var(--admin-text)' }}>
+                Limit to one per customer
+              </p>
+              <p className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+                Each customer can only use this code once
+              </p>
             </div>
           </label>
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 border-t border-[#1f2d4e]">
+        <div className="flex gap-3 p-6" style={{ borderTop: '1px solid var(--admin-border)' }}>
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex-1 bg-[#1f2d4e] hover:bg-[#263d6e] text-white rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+            style={{
+              backgroundColor: 'var(--admin-border)',
+              color: 'var(--admin-text)',
+            }}
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit as unknown as React.MouseEventHandler}
             disabled={submitting}
-            className="flex-1 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#374151] text-[#0a0f1e] disabled:text-[#6b7280] rounded-xl py-2.5 text-sm font-bold transition-colors flex items-center justify-center gap-2"
+            className="flex-1 rounded-xl py-2.5 text-sm font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{
+              backgroundColor: 'var(--admin-brand)',
+              color: 'var(--admin-bg)',
+            }}
           >
             {submitting ? (
               <>
@@ -715,13 +847,8 @@ export default function DiscountsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: 'var(--font-heading)', color: '#ffffff' }}
-          >
-            Discounts
-          </h1>
-          <p className="text-[#6b7280] text-sm mt-1">
+          <h1 className="admin-h1 text-2xl">Discounts</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--admin-text-muted)' }}>
             {loading
               ? 'Loading…'
               : `${discounts.length} discount code${discounts.length !== 1 ? 's' : ''}`}
@@ -729,7 +856,11 @@ export default function DiscountsPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#d4a843] hover:bg-[#e4c06a] text-[#0a0f1e] text-sm font-bold transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors"
+          style={{
+            backgroundColor: 'var(--admin-brand)',
+            color: 'var(--admin-bg)',
+          }}
         >
           <span className="material-symbols-outlined text-base">add</span>
           Create Discount
@@ -738,31 +869,42 @@ export default function DiscountsPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon="sell" label="Active" value={loading ? '—' : activeCount} color="#10b981" />
+        <StatCard
+          icon="sell"
+          label="Active"
+          value={loading ? '—' : activeCount}
+          colorToken="var(--admin-success)"
+        />
         <StatCard
           icon="schedule"
           label="Scheduled"
           value={loading ? '—' : scheduledCount}
-          color="#6b8cff"
+          colorToken="var(--admin-info)"
         />
         <StatCard
           icon="cancel"
           label="Expired"
           value={loading ? '—' : expiredCount}
-          color="#6b7280"
+          colorToken="var(--admin-text-muted)"
         />
         <StatCard
           icon="bar_chart"
           label="Total Uses"
           value={loading ? '—' : totalUsage}
-          color="#d4a843"
+          colorToken="var(--admin-brand)"
         />
       </div>
 
       {/* Filters Row */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Status tabs */}
-        <div className="flex gap-1 bg-[#111827] border border-[#1f2d4e] rounded-xl p-1 flex-none">
+        <div
+          className="flex gap-1 rounded-xl p-1 flex-none"
+          style={{
+            backgroundColor: 'var(--admin-bg-card)',
+            border: '1px solid var(--admin-border)',
+          }}
+        >
           {STATUS_TABS.map((tab) => {
             const isActive = statusFilter === tab.key;
             return (
@@ -771,7 +913,9 @@ export default function DiscountsPage() {
                 onClick={() => setStatusFilter(tab.key)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={
-                  isActive ? { backgroundColor: '#d4a843', color: '#0a0f1e' } : { color: '#6b7280' }
+                  isActive
+                    ? { backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }
+                    : { color: 'var(--admin-text-muted)' }
                 }
               >
                 {tab.label}
@@ -780,8 +924,14 @@ export default function DiscountsPage() {
                     className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
                     style={
                       isActive
-                        ? { backgroundColor: '#0a0f1e22', color: '#0a0f1e' }
-                        : { backgroundColor: '#1f2d4e', color: '#9ca3af' }
+                        ? {
+                            backgroundColor: 'color-mix(in srgb, var(--admin-bg) 20%, transparent)',
+                            color: 'var(--admin-bg)',
+                          }
+                        : {
+                            backgroundColor: 'var(--admin-border)',
+                            color: 'var(--admin-text-secondary)',
+                          }
                     }
                   >
                     {tab.key === 'ACTIVE'
@@ -798,19 +948,36 @@ export default function DiscountsPage() {
 
         {/* Search */}
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#374151] text-base">
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-base"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             search
           </span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by code or title…"
-            className="w-full bg-[#111827] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none transition-colors"
+            className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              border: '1px solid var(--admin-border)',
+              color: 'var(--admin-text)',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'var(--admin-brand)';
+              e.currentTarget.style.boxShadow = '0 0 0 1px var(--admin-brand)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--admin-border)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#374151] hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: 'var(--admin-text-disabled)' }}
             >
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
@@ -819,14 +986,28 @@ export default function DiscountsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl overflow-hidden">
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: 'var(--admin-bg-card)',
+          border: '1px solid var(--admin-border)',
+        }}
+      >
         {error ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="material-symbols-outlined text-[#ef4444] text-4xl mb-3">error</span>
-            <p className="text-[#ef4444] text-sm">{error}</p>
+            <span
+              className="material-symbols-outlined text-4xl mb-3"
+              style={{ color: 'var(--admin-error)' }}
+            >
+              error
+            </span>
+            <p className="text-sm" style={{ color: 'var(--admin-error)' }}>
+              {error}
+            </p>
             <button
               onClick={fetchDiscounts}
-              className="mt-4 text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
+              className="mt-4 text-sm transition-colors"
+              style={{ color: 'var(--admin-brand)' }}
             >
               Try again
             </button>
@@ -835,44 +1016,38 @@ export default function DiscountsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[#1f2d4e]">
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3 pl-6">
-                    Code
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Title
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Type
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Value
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Usage
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3">
-                    Dates
-                  </th>
-                  <th className="text-right text-xs font-medium uppercase tracking-wider text-[#6b7280] px-4 py-3 pr-6">
+                <tr style={{ borderBottom: '1px solid var(--admin-border)' }}>
+                  {['Code', 'Title', 'Type', 'Value', 'Usage', 'Status', 'Dates'].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`text-left text-xs font-medium uppercase tracking-wider px-4 py-3 ${i === 0 ? 'pl-6' : ''}`}
+                      style={{ color: 'var(--admin-text-muted)' }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                  <th
+                    className="text-right text-xs font-medium uppercase tracking-wider px-4 py-3 pr-6"
+                    style={{ color: 'var(--admin-text-muted)' }}
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1f2d4e]">
+              <tbody>
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-16">
                       <div className="flex flex-col items-center gap-3">
-                        <span className="material-symbols-outlined text-[#374151] text-4xl">
+                        <span
+                          className="material-symbols-outlined text-4xl"
+                          style={{ color: 'var(--admin-text-disabled)' }}
+                        >
                           {search || statusFilter !== 'ALL' ? 'search_off' : 'local_offer'}
                         </span>
-                        <p className="text-[#6b7280] text-sm">
+                        <p className="text-sm" style={{ color: 'var(--admin-text-muted)' }}>
                           {search || statusFilter !== 'ALL'
                             ? 'No discounts match your filters'
                             : 'No discount codes yet'}
@@ -880,7 +1055,8 @@ export default function DiscountsPage() {
                         {!search && statusFilter === 'ALL' && (
                           <button
                             onClick={() => setShowCreate(true)}
-                            className="text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
+                            className="text-sm transition-colors"
+                            style={{ color: 'var(--admin-brand)' }}
                           >
                             Create your first discount
                           </button>
@@ -891,7 +1067,8 @@ export default function DiscountsPage() {
                               setSearch('');
                               setStatusFilter('ALL');
                             }}
-                            className="text-[#d4a843] text-sm hover:text-[#e4c06a] transition-colors"
+                            className="text-sm transition-colors"
+                            style={{ color: 'var(--admin-brand)' }}
                           >
                             Clear filters
                           </button>
@@ -905,11 +1082,27 @@ export default function DiscountsPage() {
                     const usage = getTotalUsage(discount);
                     const usageLimit = discount.usageLimit;
                     return (
-                      <tr key={discount.id} className="hover:bg-[#1f2d4e]/20 transition-colors">
+                      <tr
+                        key={discount.id}
+                        className="transition-colors"
+                        style={{ borderBottom: '1px solid var(--admin-border)' }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = 'var(--admin-bg-hover)')
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = 'transparent')
+                        }
+                      >
                         {/* Code */}
                         <td className="px-4 py-4 pl-6">
                           <div className="flex items-center">
-                            <span className="text-white font-mono text-sm font-medium bg-[#1f2d4e] px-2 py-1 rounded-lg">
+                            <span
+                              className="font-mono text-sm font-medium px-2 py-1 rounded-lg"
+                              style={{
+                                color: 'var(--admin-text)',
+                                backgroundColor: 'var(--admin-border)',
+                              }}
+                            >
                               {firstCode?.code ?? '—'}
                             </span>
                             {firstCode?.code && <CopyButton text={firstCode.code} />}
@@ -918,29 +1111,40 @@ export default function DiscountsPage() {
 
                         {/* Title */}
                         <td className="px-4 py-4">
-                          <span className="text-[#e5e7eb] text-sm">{discount.title}</span>
+                          <span className="text-sm" style={{ color: 'var(--admin-text-body)' }}>
+                            {discount.title}
+                          </span>
                         </td>
 
                         {/* Type */}
                         <td className="px-4 py-4">
-                          <span className="text-[#9ca3af] text-xs">
+                          <span
+                            className="text-xs"
+                            style={{ color: 'var(--admin-text-secondary)' }}
+                          >
                             {getDiscountType(discount)}
                           </span>
                         </td>
 
                         {/* Value */}
                         <td className="px-4 py-4">
-                          <span className="text-[#d4a843] font-semibold text-sm">
+                          <span
+                            className="font-semibold text-sm"
+                            style={{ color: 'var(--admin-brand)' }}
+                          >
                             {getDiscountValue(discount)}
                           </span>
                         </td>
 
                         {/* Usage */}
                         <td className="px-4 py-4">
-                          <span className="text-[#e5e7eb] text-sm">
+                          <span className="text-sm" style={{ color: 'var(--admin-text-body)' }}>
                             {usage}
                             {usageLimit != null && (
-                              <span className="text-[#6b7280]"> / {usageLimit}</span>
+                              <span style={{ color: 'var(--admin-text-muted)' }}>
+                                {' '}
+                                / {usageLimit}
+                              </span>
                             )}
                           </span>
                         </td>
@@ -952,14 +1156,17 @@ export default function DiscountsPage() {
 
                         {/* Dates */}
                         <td className="px-4 py-4">
-                          <div className="text-xs text-[#6b7280] space-y-0.5">
+                          <div
+                            className="text-xs space-y-0.5"
+                            style={{ color: 'var(--admin-text-muted)' }}
+                          >
                             <p>
-                              <span className="text-[#374151]">Start:</span>{' '}
+                              <span style={{ color: 'var(--admin-text-disabled)' }}>Start:</span>{' '}
                               {formatDate(discount.startsAt ?? discount.createdAt)}
                             </p>
                             {discount.endsAt && (
                               <p>
-                                <span className="text-[#374151]">End:</span>{' '}
+                                <span style={{ color: 'var(--admin-text-disabled)' }}>End:</span>{' '}
                                 {formatDate(discount.endsAt)}
                               </p>
                             )}
@@ -971,14 +1178,22 @@ export default function DiscountsPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => setEditTarget(discount)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1f2d4e] hover:bg-[#263d6e] text-[#9ca3af] hover:text-white text-xs font-medium transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                backgroundColor: 'var(--admin-border)',
+                                color: 'var(--admin-text-secondary)',
+                              }}
                             >
                               <span className="material-symbols-outlined text-sm">edit</span>
                               Edit
                             </button>
                             <button
                               onClick={() => setDeleteTarget(discount)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ef4444]/10 hover:bg-[#ef4444]/20 text-[#ef4444] text-xs font-medium transition-all"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                              style={{
+                                backgroundColor: 'var(--admin-error-bg)',
+                                color: 'var(--admin-error)',
+                              }}
                             >
                               <span className="material-symbols-outlined text-sm">delete</span>
                               Delete
@@ -997,7 +1212,7 @@ export default function DiscountsPage() {
 
       {/* Filtered count note */}
       {!loading && !error && (search || statusFilter !== 'ALL') && (
-        <p className="text-[#6b7280] text-xs text-center">
+        <p className="text-xs text-center" style={{ color: 'var(--admin-text-muted)' }}>
           Showing {filtered.length} of {discounts.length} discounts
         </p>
       )}

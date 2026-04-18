@@ -18,12 +18,12 @@ export function NewsletterSection() {
   }
 
   return (
-    <section className="bg-[#f4f4f0] py-20 px-6">
+    <section className="bg-[#f4f4f0] py-12 md:py-20 px-4 md:px-6">
       <div className="max-w-2xl mx-auto text-center">
         <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-3">
           Stay Updated
         </p>
-        <h2 className="font-headline text-3xl text-[#303330] mb-4">Stay in the Loop</h2>
+        <h2 className="font-headline text-2xl md:text-3xl text-[#303330] mb-4">Stay in the Loop</h2>
         <p className="text-[#5d605c] mb-10 leading-relaxed">
           Subscribe to receive updates, access to exclusive deals, and more.
         </p>

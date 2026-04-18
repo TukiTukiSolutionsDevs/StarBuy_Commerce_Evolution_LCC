@@ -38,7 +38,7 @@ export default function ContactPage() {
         <p className="font-label text-[#795a00] uppercase tracking-[0.3em] text-xs font-bold mb-4">
           We&apos;re Here to Help
         </p>
-        <h1 className="font-headline text-4xl md:text-5xl text-[#303330]">Get in Touch</h1>
+        <h1 className="font-headline text-3xl md:text-5xl text-[#303330]">Get in Touch</h1>
         <p className="mt-4 text-[#5d605c] leading-relaxed">
           Have a question about your order or want to learn more about StarBuyBaby? We&apos;re here
           to help. Fill out the form and we&apos;ll respond within 24-48 business hours.
@@ -99,7 +99,7 @@ export default function ContactPage() {
 
         {/* Form */}
         <div className="lg:col-span-2">
-          <div className="rounded-2xl bg-[#ffffff] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
+          <div className="rounded-2xl bg-[#ffffff] p-5 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
             <h2 className="font-headline text-xl text-[#303330] mb-6">Send a Message</h2>
             <ContactForm />
           </div>

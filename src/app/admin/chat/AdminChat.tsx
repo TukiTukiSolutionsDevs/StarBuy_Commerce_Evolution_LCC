@@ -82,42 +82,72 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCallResult }) {
 
   return (
     <div
-      className={`rounded-xl border text-xs overflow-hidden ${
-        isDestructive ? 'border-red-500/20 bg-red-500/5' : 'border-[#1f2d4e] bg-[#0f1729]'
-      }`}
+      className="rounded-xl border text-xs overflow-hidden"
+      style={
+        isDestructive
+          ? {
+              borderColor: 'color-mix(in srgb, var(--admin-error) 20%, transparent)',
+              backgroundColor: 'color-mix(in srgb, var(--admin-error) 5%, transparent)',
+            }
+          : { borderColor: 'var(--admin-border)', backgroundColor: 'var(--admin-bg-input)' }
+      }
     >
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-colors"
       >
         <span
-          className={`material-symbols-outlined text-base ${
-            isDestructive ? 'text-red-400' : 'text-[#d4a843]'
-          }`}
+          className="material-symbols-outlined text-base"
+          style={{ color: isDestructive ? 'var(--admin-error)' : 'var(--admin-brand)' }}
         >
           {icon}
         </span>
-        <span className="text-[#9ca3af] font-mono flex-1">{toolCall.toolName}</span>
+        <span className="font-mono flex-1" style={{ color: 'var(--admin-text-secondary)' }}>
+          {toolCall.toolName}
+        </span>
         {isSuccess ? (
-          <span className="material-symbols-outlined text-[#10b981] text-sm">check_circle</span>
+          <span
+            className="material-symbols-outlined text-sm"
+            style={{ color: 'var(--admin-success)' }}
+          >
+            check_circle
+          </span>
         ) : (
-          <span className="material-symbols-outlined text-red-400 text-sm">error</span>
+          <span
+            className="material-symbols-outlined text-sm"
+            style={{ color: 'var(--admin-error)' }}
+          >
+            error
+          </span>
         )}
-        <span className="material-symbols-outlined text-[#374151] text-sm">
+        <span
+          className="material-symbols-outlined text-sm"
+          style={{ color: 'var(--admin-text-disabled)' }}
+        >
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
       </button>
 
       {expanded && (
-        <div className="border-t border-[#1f2d4e] px-3 py-2">
-          <div className="text-[#6b7280] mb-1">Input:</div>
-          <pre className="text-[#9ca3af] whitespace-pre-wrap break-all font-mono leading-relaxed">
+        <div className="px-3 py-2" style={{ borderTop: '1px solid var(--admin-border)' }}>
+          <div style={{ color: 'var(--admin-text-muted)' }} className="mb-1">
+            Input:
+          </div>
+          <pre
+            className="whitespace-pre-wrap break-all font-mono leading-relaxed"
+            style={{ color: 'var(--admin-text-secondary)' }}
+          >
             {JSON.stringify(toolCall.args, null, 2)}
           </pre>
           {resultData !== undefined && (
             <>
-              <div className="text-[#6b7280] mt-2 mb-1">Output:</div>
-              <pre className="text-[#9ca3af] whitespace-pre-wrap break-all font-mono leading-relaxed text-[10px]">
+              <div style={{ color: 'var(--admin-text-muted)' }} className="mt-2 mb-1">
+                Output:
+              </div>
+              <pre
+                className="whitespace-pre-wrap break-all font-mono leading-relaxed text-[10px]"
+                style={{ color: 'var(--admin-text-secondary)' }}
+              >
                 {JSON.stringify(resultData, null, 2)}
               </pre>
             </>
@@ -147,9 +177,12 @@ function MessageBubble({ message }: { message: UIMessage }) {
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       <div
-        className={`flex-none w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-          isUser ? 'bg-[#d4a843] text-[#0a0f1e]' : 'bg-[#1b2a5e] text-[#d4a843]'
-        }`}
+        className="flex-none w-8 h-8 rounded-full flex items-center justify-center text-sm"
+        style={
+          isUser
+            ? { backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }
+            : { backgroundColor: 'var(--admin-bg-hover)', color: 'var(--admin-brand)' }
+        }
       >
         <span className="material-symbols-outlined text-base">
           {isUser ? 'person' : 'smart_toy'}
@@ -162,10 +195,19 @@ function MessageBubble({ message }: { message: UIMessage }) {
         {textContent && (
           <div
             className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-              isUser
-                ? 'bg-[#d4a843] text-[#0a0f1e] font-medium rounded-tr-sm'
-                : 'bg-[#111827] text-[#e5e7eb] rounded-tl-sm border border-[#1f2d4e]'
+              isUser ? 'font-medium rounded-tr-sm' : 'rounded-tl-sm'
             }`}
+            style={
+              isUser
+                ? { backgroundColor: 'var(--admin-brand)', color: 'var(--admin-bg)' }
+                : {
+                    backgroundColor: 'var(--admin-bg-card)',
+                    color: 'var(--admin-text-body)',
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: 'var(--admin-border)',
+                  }
+            }
           >
             <MessageContent content={textContent} />
           </div>
@@ -198,13 +240,24 @@ function MessageBubble({ message }: { message: UIMessage }) {
               return (
                 <div
                   key={toolCallId}
-                  className="flex items-center gap-2 bg-[#0f1729] border border-[#1f2d4e] rounded-xl px-3 py-2 text-xs"
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs"
+                  style={{
+                    backgroundColor: 'var(--admin-bg-input)',
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: 'var(--admin-border)',
+                  }}
                 >
-                  <span className="material-symbols-outlined text-[#d4a843] text-base animate-pulse">
+                  <span
+                    className="material-symbols-outlined text-base animate-pulse"
+                    style={{ color: 'var(--admin-brand)' }}
+                  >
                     hourglass_empty
                   </span>
-                  <span className="text-[#6b7280] font-mono">{toolName}</span>
-                  <span className="text-[#374151]">running...</span>
+                  <span className="font-mono" style={{ color: 'var(--admin-text-muted)' }}>
+                    {toolName}
+                  </span>
+                  <span style={{ color: 'var(--admin-text-disabled)' }}>running...</span>
                 </div>
               );
             })}
@@ -280,29 +333,45 @@ export default function AdminChat() {
   }
 
   return (
-    <div className="flex h-screen bg-[#0a0f1e] overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: 'var(--admin-bg)' }}>
       {/* Sidebar */}
       <aside
-        className={`flex-none flex flex-col bg-[#0d1526] border-r border-[#1f2d4e] transition-all duration-300 ${
+        className={`flex-none flex flex-col transition-all duration-300 ${
           sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'
         }`}
+        style={{
+          backgroundColor: 'var(--admin-bg-sidebar)',
+          borderRight: '1px solid var(--admin-border)',
+        }}
       >
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-[#1f2d4e]">
+        <div
+          className="flex items-center gap-3 px-4 py-5"
+          style={{ borderBottom: '1px solid var(--admin-border)' }}
+        >
           <img src="/logo.png" alt="StarBuy" className="h-9 w-auto flex-none" />
-          <div className="text-[#6b7280] text-xs">Admin</div>
+          <div className="text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+            Admin
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
-          <p className="text-[#374151] text-xs font-medium uppercase tracking-widest mb-3">
+          <p
+            className="text-xs font-medium uppercase tracking-widest mb-3"
+            style={{ color: 'var(--admin-text-disabled)' }}
+          >
             Quick Actions
           </p>
           {QUICK_ACTIONS.map((action) => (
             <button
               key={action.label}
               onClick={() => handleQuickAction(action.prompt)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#9ca3af] hover:text-white hover:bg-[#1b2a5e]/40 transition-colors text-left group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors text-left group"
+              style={{ color: 'var(--admin-text-secondary)' }}
             >
-              <span className="material-symbols-outlined text-[#374151] group-hover:text-[#d4a843] text-base transition-colors">
+              <span
+                className="material-symbols-outlined text-base transition-colors"
+                style={{ color: 'var(--admin-text-disabled)' }}
+              >
                 {action.icon}
               </span>
               {action.label}
@@ -310,10 +379,11 @@ export default function AdminChat() {
           ))}
         </div>
 
-        <div className="p-4 border-t border-[#1f2d4e]">
+        <div className="p-4" style={{ borderTop: '1px solid var(--admin-border)' }}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-[#6b7280] hover:text-red-400 hover:bg-red-400/5 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined text-base">logout</span>
             Sign out
@@ -323,24 +393,44 @@ export default function AdminChat() {
 
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-[#1f2d4e] bg-[#0d1526]">
+        <header
+          className="flex items-center gap-3 px-4 py-3"
+          style={{
+            borderBottom: '1px solid var(--admin-border)',
+            backgroundColor: 'var(--admin-bg-sidebar)',
+          }}
+        >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-[#6b7280] hover:text-white transition-colors"
+            className="hover:text-white transition-colors"
+            style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined">{sidebarOpen ? 'menu_open' : 'menu'}</span>
           </button>
           <div className="flex-1">
             <h1
-              className="text-white font-semibold text-sm"
-              style={{ fontFamily: 'var(--font-heading)' }}
+              className="font-semibold text-sm"
+              style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
             >
               Chat
             </h1>
           </div>
-          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#10b981]/10 border border-[#10b981]/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-            <span className="text-[#10b981] text-xs">Online</span>
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded-full"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--admin-success) 10%, transparent)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'color-mix(in srgb, var(--admin-success) 20%, transparent)',
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: 'var(--admin-success)' }}
+            />
+            <span className="text-xs" style={{ color: 'var(--admin-success)' }}>
+              Online
+            </span>
           </div>
         </header>
 
@@ -354,18 +444,35 @@ export default function AdminChat() {
               ))}
               {isLoading && (
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#1b2a5e] flex items-center justify-center flex-none">
-                    <span className="material-symbols-outlined text-[#d4a843] text-base">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-none"
+                    style={{ backgroundColor: 'var(--admin-bg-hover)' }}
+                  >
+                    <span
+                      className="material-symbols-outlined text-base"
+                      style={{ color: 'var(--admin-brand)' }}
+                    >
                       smart_toy
                     </span>
                   </div>
-                  <div className="bg-[#111827] border border-[#1f2d4e] rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div
+                    className="rounded-2xl rounded-tl-sm px-4 py-3"
+                    style={{
+                      backgroundColor: 'var(--admin-bg-card)',
+                      borderWidth: 1,
+                      borderStyle: 'solid',
+                      borderColor: 'var(--admin-border)',
+                    }}
+                  >
                     <div className="flex gap-1 items-center">
                       {[0, 1, 2].map((i) => (
                         <span
                           key={i}
-                          className="w-1.5 h-1.5 bg-[#d4a843] rounded-full animate-bounce"
-                          style={{ animationDelay: `${i * 0.15}s` }}
+                          className="w-1.5 h-1.5 rounded-full animate-bounce"
+                          style={{
+                            backgroundColor: 'var(--admin-brand)',
+                            animationDelay: `${i * 0.15}s`,
+                          }}
                         />
                       ))}
                     </div>
@@ -383,7 +490,13 @@ export default function AdminChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="border-t border-[#1f2d4e] bg-[#0d1526] p-4">
+        <div
+          className="p-4"
+          style={{
+            borderTop: '1px solid var(--admin-border)',
+            backgroundColor: 'var(--admin-bg-sidebar)',
+          }}
+        >
           <div className="relative">
             <textarea
               ref={inputRef}
@@ -393,21 +506,32 @@ export default function AdminChat() {
               placeholder="Ask me anything about your store... (Enter to send, Shift+Enter for newline)"
               rows={1}
               disabled={isLoading}
-              className="w-full bg-[#0f1729] border border-[#1f2d4e] focus:border-[#d4a843] focus:ring-1 focus:ring-[#d4a843] text-white placeholder-[#374151] rounded-2xl px-4 py-3 pr-14 text-sm resize-none outline-none transition-colors leading-relaxed max-h-32 overflow-y-auto"
-              style={{ minHeight: '48px' }}
+              className="w-full rounded-2xl px-4 py-3 pr-14 text-sm resize-none outline-none transition-colors leading-relaxed max-h-32 overflow-y-auto"
+              style={{
+                backgroundColor: 'var(--admin-bg-input)',
+                borderWidth: 1,
+                borderStyle: 'solid',
+                borderColor: 'var(--admin-border)',
+                color: 'var(--admin-text)',
+                minHeight: '48px',
+              }}
             />
             <button
               type="button"
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="absolute right-3 bottom-3 w-9 h-9 bg-[#d4a843] hover:bg-[#e4c06a] disabled:bg-[#1f2d4e] disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors"
+              className="absolute right-3 bottom-3 w-9 h-9 disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors"
+              style={{ backgroundColor: 'var(--admin-brand)' }}
             >
-              <span className="material-symbols-outlined text-[#0a0f1e] text-base">
+              <span
+                className="material-symbols-outlined text-base"
+                style={{ color: 'var(--admin-bg)' }}
+              >
                 {isLoading ? 'hourglass_empty' : 'send'}
               </span>
             </button>
           </div>
-          <p className="text-[#374151] text-xs mt-2 text-center">
+          <p className="text-xs mt-2 text-center" style={{ color: 'var(--admin-text-disabled)' }}>
             AI may make mistakes. Always verify destructive actions before confirming.
           </p>
         </div>
@@ -423,12 +547,15 @@ function WelcomeScreen({ onAction }: { onAction: (prompt: string) => void }) {
     <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-4">
       <img src="/logo.png" alt="StarBuy" className="h-20 w-auto mb-6" />
       <h2
-        className="text-2xl font-bold text-white mb-2"
-        style={{ fontFamily: 'var(--font-heading)' }}
+        className="text-2xl font-bold mb-2"
+        style={{ fontFamily: 'var(--font-heading)', color: 'var(--admin-text)' }}
       >
         Admin Assistant
       </h2>
-      <p className="text-[#6b7280] text-sm max-w-md mb-8 leading-relaxed">
+      <p
+        className="text-sm max-w-md mb-8 leading-relaxed"
+        style={{ color: 'var(--admin-text-muted)' }}
+      >
         Your AI-powered store manager. Ask me to search products, manage orders, check inventory,
         create discounts, and more.
       </p>
@@ -437,12 +564,24 @@ function WelcomeScreen({ onAction }: { onAction: (prompt: string) => void }) {
           <button
             key={action.label}
             onClick={() => onAction(action.prompt)}
-            className="flex items-center gap-3 bg-[#111827] hover:bg-[#1b2a5e]/40 border border-[#1f2d4e] hover:border-[#d4a843]/30 rounded-xl px-4 py-3 text-left transition-all group"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all group"
+            style={{
+              backgroundColor: 'var(--admin-bg-card)',
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--admin-border)',
+            }}
           >
-            <span className="material-symbols-outlined text-[#d4a843] text-xl group-hover:scale-110 transition-transform">
+            <span
+              className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform"
+              style={{ color: 'var(--admin-brand)' }}
+            >
               {action.icon}
             </span>
-            <span className="text-[#9ca3af] group-hover:text-white text-sm transition-colors">
+            <span
+              className="text-sm transition-colors"
+              style={{ color: 'var(--admin-text-secondary)' }}
+            >
               {action.label}
             </span>
           </button>
