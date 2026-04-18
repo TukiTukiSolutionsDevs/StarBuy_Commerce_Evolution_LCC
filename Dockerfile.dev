@@ -1,0 +1,29 @@
+# ============================================================
+# Dev Dockerfile — hot-reload con `next dev` (Turbopack)
+# No multi-stage: instalamos TODAS las deps (incluye devDependencies)
+# ============================================================
+FROM node:22-alpine
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat
+
+# Instalar dependencias primero (capa cacheada mientras no cambien)
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# El código fuente se monta vía bind mount en docker-compose.dev.yml,
+# por eso NO copiamos `COPY . .` aquí.
+
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+# Polling para que el hot-reload funcione bien desde macOS/Windows
+# (los eventos inotify no se propagan bien a través de Docker Desktop)
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

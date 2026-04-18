@@ -1,0 +1,29 @@
+services:
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: starbuy-app-dev
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    ports:
+      - '3000:3000'
+    volumes:
+      # Bind mount del código fuente para hot-reload
+      - .:/app
+      # Volúmenes anónimos: evitan que el node_modules/.next del HOST
+      # (posible arquitectura distinta) pise los del CONTENEDOR
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - STARBUY_DATA_DIR=/app/data
+    networks:
+      - starbuy-dev-net
+
+networks:
+  starbuy-dev-net:
+    driver: bridge
