@@ -164,17 +164,21 @@ function ActionCard({
   const agent = agentKey ? agentInfo[agentKey] : null;
 
   const statusIcon = isPending ? 'hourglass_empty' : isError ? 'error' : 'check_circle';
-  const statusColor = isPending ? '#9ca3af' : isError ? '#ef4444' : '#10b981';
+  const statusColor = isPending
+    ? '#9ca3af'
+    : isError
+      ? 'var(--admin-error)'
+      : 'var(--admin-success)';
 
   return (
     <div className="relative pl-6">
       {/* Timeline dot */}
       <span
-        className="absolute left-0 top-2.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a0f1e]"
+        className="absolute left-0 top-2.5 w-2.5 h-2.5 rounded-full border-2 border-[var(--admin-bg)]"
         style={{ backgroundColor: agent?.color ?? '#374151' }}
       />
 
-      <div className="bg-[#111827] border border-[#1f2d4e] rounded-lg overflow-hidden">
+      <div className="bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-lg overflow-hidden">
         {/* Header row */}
         <button
           onClick={() => setExpanded(!expanded)}
@@ -202,12 +206,12 @@ function ActionCard({
                   {agent.name}
                 </span>
               )}
-              <code className="text-[11px] text-[#d4a843] font-mono truncate">
+              <code className="text-[11px] text-[var(--admin-brand)] font-mono truncate">
                 {formatCallSignature(entry.toolName, entry.args)}
               </code>
             </div>
             {isDone && (
-              <p className="text-[10px] text-[#6b7280] mt-0.5 truncate">
+              <p className="text-[10px] text-[var(--admin-text-muted)] mt-0.5 truncate">
                 → {summarizeOutput(entry.output)}
               </p>
             )}
@@ -215,8 +219,10 @@ function ActionCard({
 
           {/* Timestamp + expand */}
           <div className="flex items-center gap-1 flex-none">
-            <time className="text-[9px] text-[#374151]">{formatTime(entry.timestamp)}</time>
-            <span className="material-symbols-outlined text-[#374151] text-xs">
+            <time className="text-[9px] text-[var(--admin-text-disabled)]">
+              {formatTime(entry.timestamp)}
+            </time>
+            <span className="material-symbols-outlined text-[var(--admin-text-disabled)] text-xs">
               {expanded ? 'expand_less' : 'expand_more'}
             </span>
           </div>
@@ -224,18 +230,22 @@ function ActionCard({
 
         {/* Expanded detail */}
         {expanded && (
-          <div className="border-t border-[#1f2d4e] px-2.5 py-2 space-y-2">
+          <div className="border-t border-[var(--admin-border)] px-2.5 py-2 space-y-2">
             {Object.keys(entry.args).length > 0 && (
               <div>
-                <p className="text-[9px] text-[#374151] uppercase tracking-wider mb-1">Args</p>
-                <pre className="text-[9px] text-[#9ca3af] font-mono whitespace-pre-wrap break-all leading-relaxed max-h-24 overflow-y-auto">
+                <p className="text-[9px] text-[var(--admin-text-disabled)] uppercase tracking-wider mb-1">
+                  Args
+                </p>
+                <pre className="text-[9px] text-[var(--admin-text-secondary)] font-mono whitespace-pre-wrap break-all leading-relaxed max-h-24 overflow-y-auto">
                   {JSON.stringify(entry.args, null, 2)}
                 </pre>
               </div>
             )}
             {isDone && entry.output !== null && (
               <div>
-                <p className="text-[9px] text-[#374151] uppercase tracking-wider mb-1">Output</p>
+                <p className="text-[9px] text-[var(--admin-text-disabled)] uppercase tracking-wider mb-1">
+                  Output
+                </p>
                 <pre
                   className="text-[9px] font-mono whitespace-pre-wrap break-all leading-relaxed max-h-32 overflow-y-auto"
                   style={{ color: isError ? '#f87171' : '#9ca3af' }}
@@ -259,9 +269,11 @@ export default function ActionLog({ messages, agentInfo }: ActionLogProps) {
   if (actions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center gap-3">
-        <span className="material-symbols-outlined text-[#374151] text-3xl">terminal</span>
-        <p className="text-[#6b7280] text-xs">No actions yet</p>
-        <p className="text-[#374151] text-[10px] leading-relaxed">
+        <span className="material-symbols-outlined text-[var(--admin-text-disabled)] text-3xl">
+          terminal
+        </span>
+        <p className="text-[var(--admin-text-muted)] text-xs">No actions yet</p>
+        <p className="text-[var(--admin-text-disabled)] text-[10px] leading-relaxed">
           Tool calls will appear here as the AI executes tasks.
         </p>
       </div>
@@ -271,17 +283,17 @@ export default function ActionLog({ messages, agentInfo }: ActionLogProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1f2d4e] bg-[#0d1526] flex-none">
-        <span className="text-[#9ca3af] text-xs">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg-sidebar)] flex-none">
+        <span className="text-[var(--admin-text-secondary)] text-xs">
           {actions.length} action{actions.length !== 1 ? 's' : ''}
         </span>
-        <span className="text-[#374151] text-[10px]">Most recent first</span>
+        <span className="text-[var(--admin-text-disabled)] text-[10px]">Most recent first</span>
       </div>
 
       {/* Timeline */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {/* Vertical line */}
-        <div className="relative space-y-3 before:absolute before:left-1 before:top-3 before:bottom-3 before:w-px before:bg-[#1f2d4e]">
+        <div className="relative space-y-3 before:absolute before:left-1 before:top-3 before:bottom-3 before:w-px before:bg-[var(--admin-border)]">
           {actions.map((entry) => (
             <ActionCard key={entry.id} entry={entry} agentInfo={agentInfo} />
           ))}

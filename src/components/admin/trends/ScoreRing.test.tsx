@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ScoreRing } from './ScoreRing';
+import { STATE_CONFIG } from './TrendStateBadge';
 
 describe('ScoreRing — score label', () => {
   it('renders the score number', () => {
@@ -88,29 +89,40 @@ describe('ScoreRing — sizes', () => {
 });
 
 describe('ScoreRing — state colors on progress arc', () => {
-  it('uses #10b981 for rising', () => {
+  // Source of truth: STATE_CONFIG — tests remain valid when hex values migrate to tokens.
+  it('uses the rising color for rising', () => {
     const { container } = render(<ScoreRing score={80} state="rising" />);
-    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe('#10b981');
+    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe(
+      STATE_CONFIG.rising.color,
+    );
   });
 
-  it('uses #ef4444 for declining', () => {
+  it('uses the declining color for declining', () => {
     const { container } = render(<ScoreRing score={20} state="declining" />);
-    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe('#ef4444');
+    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe(
+      STATE_CONFIG.declining.color,
+    );
   });
 
-  it('uses #6b8cff for stable', () => {
+  it('uses the stable color for stable', () => {
     const { container } = render(<ScoreRing score={50} state="stable" />);
-    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe('#6b8cff');
+    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe(
+      STATE_CONFIG.stable.color,
+    );
   });
 
-  it('uses #d4a843 for peak', () => {
+  it('uses the peak color for peak', () => {
     const { container } = render(<ScoreRing score={90} state="peak" />);
-    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe('#d4a843');
+    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe(
+      STATE_CONFIG.peak.color,
+    );
   });
 
-  it('uses #4b5563 for unknown', () => {
+  it('uses the unknown color for unknown', () => {
     const { container } = render(<ScoreRing score={30} state="unknown" />);
-    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe('#4b5563');
+    expect(container.querySelectorAll('circle')[1].getAttribute('stroke')).toBe(
+      STATE_CONFIG.unknown.color,
+    );
   });
 });
 

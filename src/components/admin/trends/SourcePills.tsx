@@ -26,7 +26,8 @@ interface SourcePillsProps {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-const PILL = 'bg-[#1f2d4e] text-[#6b7280] text-[10px] font-mono rounded-full px-2 py-0.5';
+const PILL =
+  'bg-[var(--admin-border)] text-[var(--admin-text-muted)] text-[10px] font-mono rounded-full px-2 py-0.5';
 
 export function SourcePills({ sources }: SourcePillsProps) {
   if (!sources.length) return null;

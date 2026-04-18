@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * Admin Settings page — privada, data live (providers, API keys, Shopify connection).
+ * `force-dynamic` evita que Next intente prerenderearla como SSG estática.
+ * El prerender fallaba con "Cannot read properties of null (reading 'use')"
+ * al serializar estado client-only durante el build.
+ * Mismo patrón que /admin/page.tsx (dashboard).
+ */
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/useToast';
 import { useAdminTheme, type AdminTheme } from '@/components/admin/ThemeProvider';
@@ -91,7 +100,7 @@ const PROVIDER_META: Record<
   openai: {
     name: 'OpenAI (GPT)',
     icon: 'auto_awesome',
-    color: '#10b981',
+    color: 'var(--admin-success)',
     envKey: 'OPENAI_API_KEY',
     description: 'OpenAI GPT-4o — fast, reliable, great for general tasks.',
   },
@@ -131,7 +140,7 @@ const TREND_PROVIDER_META: Record<
   serpapi: {
     name: 'SerpAPI',
     icon: 'search',
-    color: '#10b981',
+    color: 'var(--admin-success)',
     reliability: 'HIGH',
     cost: '~$0.01/search',
     description: 'Google Trends + SERP data. Most reliable, highest accuracy.',
@@ -151,7 +160,7 @@ const TREND_PROVIDER_META: Record<
   tavily: {
     name: 'Tavily',
     icon: 'travel_explore',
-    color: '#f59e0b',
+    color: 'var(--admin-warning)',
     reliability: 'MEDIUM',
     cost: '~$0.01/search',
     description: 'Web search trend signals. Uses your shared Tavily AI key.',
@@ -175,7 +184,7 @@ const TREND_PROVIDER_META: Record<
   meta: {
     name: 'Meta Ads',
     icon: 'ads_click',
-    color: '#3b82f6',
+    color: 'var(--admin-info)',
     reliability: 'LOW',
     cost: 'Free',
     description: 'Facebook/Instagram ad trend signals. Requires Meta access token.',
@@ -866,7 +875,7 @@ export default function SettingsPage() {
               </span>
               Session Duration
             </p>
-            <p className="text-sm text-white">24 hours</p>
+            <p className="text-sm text-[var(--admin-text)]">24 hours</p>
             <p className="text-xs text-[var(--admin-text-muted)]">
               Admin sessions expire after 24h. JWT tokens are signed with{' '}
               <code className="bg-[var(--admin-border)] px-1 rounded text-[var(--admin-text-secondary)]">
@@ -972,7 +981,9 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div>
-                <p className="text-sm text-white font-medium">Shopify Storefront API</p>
+                <p className="text-sm text-[var(--admin-text-heading)] font-medium">
+                  Shopify Storefront API
+                </p>
                 <p className="text-xs text-[var(--admin-text-muted)]">
                   Public storefront — products, cart, checkout
                 </p>
@@ -1000,7 +1011,9 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div>
-                <p className="text-sm text-white font-medium">Shopify Admin API</p>
+                <p className="text-sm text-[var(--admin-text-heading)] font-medium">
+                  Shopify Admin API
+                </p>
                 <p className="text-xs text-[var(--admin-text-muted)]">
                   Product management, orders, inventory
                 </p>
@@ -1036,7 +1049,9 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-3">
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${meta.color}15` }}
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${meta.color} 10%, transparent)`,
+                    }}
                   >
                     <span
                       className="material-symbols-outlined text-sm"
@@ -1046,7 +1061,7 @@ export default function SettingsPage() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm text-white font-medium flex items-center gap-2">
+                    <p className="text-sm text-[var(--admin-text-heading)] font-medium flex items-center gap-2">
                       {meta.name}
                       {isActive && (
                         <span className="text-[10px] bg-[var(--admin-brand)]/10 text-[var(--admin-brand)] px-2 py-0.5 rounded-full font-medium">
@@ -1075,7 +1090,9 @@ export default function SettingsPage() {
                 </span>
               </div>
               <div>
-                <p className="text-sm text-white font-medium">AutoDS Integration</p>
+                <p className="text-sm text-[var(--admin-text-heading)] font-medium">
+                  AutoDS Integration
+                </p>
                 <p className="text-xs text-[var(--admin-text-muted)]">
                   Dropshipping & product sourcing
                 </p>
@@ -1155,7 +1172,9 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${meta.color}15` }}
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${meta.color} 10%, transparent)`,
+                      }}
                     >
                       <span
                         className="material-symbols-outlined text-xl"
@@ -1165,7 +1184,9 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-white font-medium text-sm">{meta.name}</div>
+                      <div className="text-[var(--admin-text-heading)] font-medium text-sm">
+                        {meta.name}
+                      </div>
                       {/* Toggle acts as radio — clicking enables this provider */}
                       <span
                         onClick={(e) => {
@@ -1222,7 +1243,7 @@ export default function SettingsPage() {
                   key: 'openai' as const,
                   label: 'OpenAI',
                   icon: 'auto_awesome',
-                  color: '#10b981',
+                  color: 'var(--admin-success)',
                   env: 'OPENAI_API_KEY',
                   placeholder: 'sk-...',
                 },
@@ -1238,7 +1259,7 @@ export default function SettingsPage() {
                   key: 'tavily' as const,
                   label: 'Tavily',
                   icon: 'travel_explore',
-                  color: '#f59e0b',
+                  color: 'var(--admin-warning)',
                   env: 'TAVILY_API_KEY',
                   placeholder: 'tvly-...',
                 },
@@ -1256,7 +1277,9 @@ export default function SettingsPage() {
 
                     {/* Name + status */}
                     <div className="w-20 flex-none">
-                      <span className="text-white text-xs font-medium">{p.label}</span>
+                      <span className="text-[var(--admin-text-heading)] text-xs font-medium">
+                        {p.label}
+                      </span>
                       <div className="mt-0.5">
                         {status?.configured ? (
                           <span className="text-[10px] text-[var(--admin-success)]">
@@ -1288,7 +1311,7 @@ export default function SettingsPage() {
                         placeholder={
                           status?.configured ? 'Enter new key to replace...' : p.placeholder
                         }
-                        className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-white placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand)]/50 font-mono pr-8"
+                        className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-3 py-2 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-brand)]/50 font-mono pr-8"
                       />
                       <button
                         onClick={() => setShowKeys((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
@@ -1372,7 +1395,7 @@ export default function SettingsPage() {
                       value={ollamaUrl}
                       onChange={(e) => setOllamaUrl(e.target.value)}
                       placeholder="http://localhost:11434"
-                      className="flex-1 bg-[var(--admin-bg-input)] border border-[var(--admin-border)] focus:border-[var(--admin-brand)] focus:ring-1 focus:ring-[var(--admin-brand)] text-white rounded-xl px-4 py-2.5 text-sm outline-none"
+                      className="flex-1 bg-[var(--admin-bg-input)] border border-[var(--admin-border)] focus:border-[var(--admin-brand)] focus:ring-1 focus:ring-[var(--admin-brand)] text-[var(--admin-text)] rounded-xl px-4 py-2.5 text-sm outline-none"
                     />
                     <button
                       onClick={() => testConnection('ollama')}
@@ -1415,7 +1438,7 @@ export default function SettingsPage() {
                         }}
                         className={`text-left rounded-lg px-3 py-2 text-sm border transition-colors ${
                           ollamaModel === m
-                            ? 'border-[var(--admin-warning)] bg-[var(--admin-warning)]/10 text-white'
+                            ? 'border-[var(--admin-warning)] bg-[var(--admin-warning)]/10 text-[var(--admin-warning)]'
                             : 'border-[var(--admin-border)] text-[var(--admin-text-secondary)] hover:border-[var(--admin-border-hover)]'
                         }`}
                       >
@@ -1430,7 +1453,7 @@ export default function SettingsPage() {
                       setSelectedModel(e.target.value);
                     }}
                     placeholder="Or type custom model name..."
-                    className="w-full mt-2 bg-[var(--admin-bg-input)] border border-[var(--admin-border)] focus:border-[var(--admin-brand)] text-white rounded-lg px-3 py-2 text-xs font-mono outline-none"
+                    className="w-full mt-2 bg-[var(--admin-bg-input)] border border-[var(--admin-border)] focus:border-[var(--admin-brand)] text-[var(--admin-text)] rounded-lg px-3 py-2 text-xs font-mono outline-none"
                   />
                 </div>
               </div>
@@ -1548,13 +1571,19 @@ export default function SettingsPage() {
           <div className="bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl p-4 mb-6">
             <div className="flex items-center gap-3 mb-2">
               <span className="text-base">🧠</span>
-              <span className="text-white text-sm font-semibold">AI Model (Brain)</span>
+              <span className="text-[var(--admin-text-heading)] text-sm font-semibold">
+                AI Model (Brain)
+              </span>
               <span className="text-[var(--admin-brand)] text-sm">+</span>
               <span className="text-base">🔍</span>
-              <span className="text-white text-sm font-semibold">Search Tool (Eyes)</span>
+              <span className="text-[var(--admin-text-heading)] text-sm font-semibold">
+                Search Tool (Eyes)
+              </span>
               <span className="text-[var(--admin-brand)] text-sm">=</span>
               <span className="text-base">🏆</span>
-              <span className="text-white text-sm font-semibold">Winning Products</span>
+              <span className="text-[var(--admin-text-heading)] text-sm font-semibold">
+                Winning Products
+              </span>
             </div>
             <p className="text-[var(--admin-text-muted)] text-xs leading-relaxed">
               The AI model analyzes and scores products. The search tool brings fresh data from the
@@ -1748,7 +1777,7 @@ export default function SettingsPage() {
                       value={tavilyKey}
                       onChange={(e) => setTavilyKey(e.target.value)}
                       placeholder="tvly-..."
-                      className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] focus:ring-1 focus:ring-[var(--admin-accent)] text-white rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
+                      className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] focus:ring-1 focus:ring-[var(--admin-accent)] text-[var(--admin-text)] rounded-xl px-4 py-2.5 text-sm font-mono outline-none pr-10"
                     />
                     <button
                       type="button"
@@ -1933,7 +1962,9 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-2">
                           <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: `${meta.color}15` }}
+                            style={{
+                              backgroundColor: `color-mix(in srgb, ${meta.color} 10%, transparent)`,
+                            }}
                           >
                             <span
                               className="material-symbols-outlined text-sm"
@@ -1943,11 +1974,14 @@ export default function SettingsPage() {
                             </span>
                           </div>
                           <div>
-                            <p className="text-white text-sm font-medium flex items-center gap-1.5">
+                            <p className="text-[var(--admin-text-heading)] text-sm font-medium flex items-center gap-1.5">
                               {meta.name}
                               <span
                                 className="text-[10px] px-1.5 py-0.5 rounded-full font-normal"
-                                style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
+                                style={{
+                                  backgroundColor: `color-mix(in srgb, ${meta.color} 10%, transparent)`,
+                                  color: meta.color,
+                                }}
                               >
                                 {provider.reliability}
                               </span>
@@ -2007,7 +2041,7 @@ export default function SettingsPage() {
                                         ? 'Enter new key to replace...'
                                         : field.placeholder
                                     }
-                                    className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-accent)]/50 font-mono pr-7"
+                                    className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-lg px-3 py-1.5 text-xs text-[var(--admin-text)] placeholder:text-[var(--admin-text-disabled)] focus:outline-none focus:border-[var(--admin-accent)]/50 font-mono pr-7"
                                   />
                                   <button
                                     onClick={() =>
@@ -2046,7 +2080,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => handleTestTrendProvider(provider.id)}
                           disabled={isTesting}
-                          className="flex items-center gap-1.5 text-xs text-[var(--admin-text-secondary)] hover:text-white border border-[var(--admin-border)] hover:border-[var(--admin-border-hover)] rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1.5 text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] border border-[var(--admin-border)] hover:border-[var(--admin-border-hover)] rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
                         >
                           {isTesting ? (
                             <span className="material-symbols-outlined text-sm animate-spin">
@@ -2077,7 +2111,7 @@ export default function SettingsPage() {
 
               {/* Strategy Selector */}
               <div className="border-t border-[var(--admin-border)] pt-5">
-                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-[var(--admin-text-heading)] mb-3 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[var(--admin-accent)]">
                     merge
                   </span>
@@ -2116,7 +2150,7 @@ export default function SettingsPage() {
                       }
                       className={`text-left rounded-xl p-3 border transition-all ${
                         trendConfig?.activeStrategy === s.value
-                          ? 'border-[var(--admin-accent)] bg-[var(--admin-accent)]/10 text-white'
+                          ? 'border-[var(--admin-accent)] bg-[var(--admin-accent)]/10 text-[var(--admin-accent)]'
                           : 'border-[var(--admin-border)] text-[var(--admin-text-secondary)] hover:border-[var(--admin-border-hover)]'
                       }`}
                     >
@@ -2132,7 +2166,7 @@ export default function SettingsPage() {
               {/* Cache Toggle */}
               <div className="flex items-center justify-between py-3 px-4 bg-[var(--admin-bg-elevated)] rounded-xl">
                 <div>
-                  <p className="text-sm text-white font-medium flex items-center gap-2">
+                  <p className="text-sm text-[var(--admin-text-heading)] font-medium flex items-center gap-2">
                     <span className="material-symbols-outlined text-sm text-[var(--admin-accent)]">
                       speed
                     </span>
@@ -2156,6 +2190,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleSaveTrendConfig}
                   disabled={savingTrendConfig || !trendConfig}
+                  // eslint-disable-next-line no-restricted-syntax -- over solid --admin-accent button
                   className="bg-[var(--admin-accent)] hover:bg-[var(--admin-accent-hover)] disabled:bg-[var(--admin-border)] text-white font-semibold rounded-xl px-8 py-3 text-sm transition-colors flex items-center gap-2"
                 >
                   {savingTrendConfig ? (
@@ -2191,7 +2226,7 @@ export default function SettingsPage() {
           {/* Clear Cache */}
           <div className="flex items-center justify-between p-4 border border-[var(--admin-error)]/20 rounded-xl bg-[var(--admin-error)]/5">
             <div>
-              <p className="text-sm text-white font-medium flex items-center gap-2">
+              <p className="text-sm text-[var(--admin-text-heading)] font-medium flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[var(--admin-error)]">
                   delete_sweep
                 </span>
@@ -2220,7 +2255,7 @@ export default function SettingsPage() {
           {/* Logout / Revoke Session */}
           <div className="flex items-center justify-between p-4 border border-[var(--admin-error)]/20 rounded-xl bg-[var(--admin-error)]/5">
             <div>
-              <p className="text-sm text-white font-medium flex items-center gap-2">
+              <p className="text-sm text-[var(--admin-text-heading)] font-medium flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm text-[var(--admin-error)]">
                   logout
                 </span>

@@ -51,14 +51,14 @@ describe('PulseEventCard', () => {
     render(<PulseEventCard event={makeEvent({ deltaPercent: 25.3 })} />);
     const delta = screen.getByTestId('delta-value');
     expect(delta).toHaveTextContent('+25.3%');
-    expect(delta.className).toContain('text-emerald-400');
+    expect(delta).toHaveStyle({ color: 'var(--admin-success)' });
   });
 
   it('displays negative delta in red', () => {
     render(<PulseEventCard event={makeEvent({ deltaPercent: -18.7 })} />);
     const delta = screen.getByTestId('delta-value');
     expect(delta).toHaveTextContent('-18.7%');
-    expect(delta.className).toContain('text-red-400');
+    expect(delta).toHaveStyle({ color: 'var(--admin-error)' });
   });
 
   it('shows score transition', () => {

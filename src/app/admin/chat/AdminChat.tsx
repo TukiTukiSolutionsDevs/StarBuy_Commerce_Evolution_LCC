@@ -402,7 +402,7 @@ export default function AdminChat() {
         >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hover:text-white transition-colors"
+            className="hover:text-[var(--admin-text)] transition-colors"
             style={{ color: 'var(--admin-text-muted)' }}
           >
             <span className="material-symbols-outlined">{sidebarOpen ? 'menu_open' : 'menu'}</span>

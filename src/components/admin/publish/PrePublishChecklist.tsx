@@ -29,8 +29,10 @@ export function PrePublishChecklist({
       data-testid="pre-publish-checklist"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
     >
-      <div className="w-full max-w-md rounded-xl border border-[#1f2d4e] bg-[#111827] p-6 shadow-xl">
-        <h2 className="mb-4 text-lg font-semibold text-white">Pre-publish Checklist</h2>
+      <div className="w-full max-w-md rounded-xl border border-[var(--admin-border)] bg-[var(--admin-bg-card)] p-6 shadow-xl">
+        <h2 className="mb-4 text-lg font-semibold text-[var(--admin-text-heading)]">
+          Pre-publish Checklist
+        </h2>
         <ul className="mb-6 space-y-2">
           {CHECKS.map(({ key, label }) => (
             <li key={key} className="flex items-center gap-3">
@@ -57,7 +59,7 @@ export function PrePublishChecklist({
           <button
             data-testid="checklist-cancel"
             onClick={onCancel}
-            className="flex-1 rounded border border-[#1f2d4e] py-2 text-sm text-gray-400 hover:text-white"
+            className="flex-1 rounded border border-[var(--admin-border)] py-2 text-sm text-gray-400 hover:text-[var(--admin-text)]"
           >
             Cancel
           </button>
@@ -65,7 +67,7 @@ export function PrePublishChecklist({
             data-testid="checklist-confirm"
             onClick={onConfirm}
             disabled={!ready || loading}
-            className="flex-1 rounded bg-[#d4a843] py-2 text-sm font-medium text-[#0a0f1a] disabled:opacity-50"
+            className="flex-1 rounded bg-[var(--admin-brand)] py-2 text-sm font-medium text-[var(--admin-bg)] disabled:opacity-50"
           >
             {loading ? 'Publishing...' : 'Publish Now'}
           </button>

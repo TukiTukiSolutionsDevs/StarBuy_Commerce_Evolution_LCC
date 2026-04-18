@@ -100,6 +100,6 @@ describe('StatCompare', () => {
     const states = [makeState('CA', 'California', 85), makeState('TX', 'Texas', 70)];
     render(<StatCompare states={states} />);
     const row = screen.getByTestId('compare-row-opportunity-score');
-    expect(row.className).toContain('bg-');
+    expect(row).toHaveStyle({ backgroundColor: 'var(--admin-bg-elevated)' });
   });
 });

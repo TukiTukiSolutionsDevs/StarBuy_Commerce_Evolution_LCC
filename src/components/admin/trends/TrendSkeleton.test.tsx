@@ -38,10 +38,10 @@ describe('TrendSkeleton — card variant', () => {
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
-  it('card skeleton has bg-[#111827] dark background', () => {
+  it('card skeleton uses admin card background token', () => {
     const { container } = renderInDiv(<TrendSkeleton variant="card" count={1} />);
     const card = container.querySelector('.rounded-2xl');
-    expect(card?.className).toContain('bg-[#111827]');
+    expect(card?.className).toContain('bg-[var(--admin-bg-card)]');
   });
 });
 

@@ -60,7 +60,7 @@ export function ScoreRing({ score, state, size = 'md' }: ScoreRingProps) {
         />
       </svg>
       <span
-        className="absolute inset-0 flex items-center justify-center font-bold text-white"
+        className="absolute inset-0 flex items-center justify-center font-bold text-[var(--admin-text-heading)]"
         style={{ fontSize: FONT_PX[size] }}
       >
         {clamped}

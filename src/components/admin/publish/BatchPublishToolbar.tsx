@@ -53,10 +53,10 @@ export function BatchPublishToolbar({
   return (
     <div
       data-testid="batch-publish-toolbar"
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl border border-[#1f2d4e] bg-[#111827] ${className}`}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-bg-card)] ${className}`}
     >
-      <span className="text-sm text-[#9ca3af]">
-        <span data-testid="batch-count" className="font-semibold text-white">
+      <span className="text-sm text-[var(--admin-text-secondary)]">
+        <span data-testid="batch-count" className="font-semibold text-[var(--admin-text-heading)]">
           {selectedIds.length}
         </span>{' '}
         selected
@@ -75,7 +75,7 @@ export function BatchPublishToolbar({
       <button
         data-testid="batch-clear-btn"
         onClick={onClearSelection}
-        className="text-xs text-[#6b7280] hover:text-white px-2 py-1 rounded-lg hover:bg-[#1f2d4e]/60 transition-colors"
+        className="text-xs text-[var(--admin-text-muted)] hover:text-[var(--admin-text)] px-2 py-1 rounded-lg hover:bg-[var(--admin-border)]/60 transition-colors"
       >
         Clear
       </button>
@@ -84,7 +84,7 @@ export function BatchPublishToolbar({
         data-testid="batch-publish-btn"
         onClick={handlePublish}
         disabled={!canPublish}
-        className="px-4 py-1.5 rounded-xl bg-[#d4a843] hover:bg-[#c49a3a] text-[#0d1526] text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-4 py-1.5 rounded-xl bg-[var(--admin-brand)] hover:bg-[var(--admin-brand-hover)] text-[var(--admin-bg-sidebar)] text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {publishing ? 'Publishing...' : `Publish ${selectedIds.length} items`}
       </button>

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
@@ -278,7 +278,6 @@ describe('pulse events', () => {
 
 describe('edge cases', () => {
   it('handles corrupt JSON gracefully for scores', () => {
-    const { writeFileSync, mkdirSync } = await import('fs');
     const dir = join(tmpDir, '.starbuy-states');
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'scores.json'), '{not valid json', 'utf-8');
@@ -286,7 +285,6 @@ describe('edge cases', () => {
   });
 
   it('handles corrupt JSON gracefully for snapshots', () => {
-    const { writeFileSync, mkdirSync } = await import('fs');
     const dir = join(tmpDir, '.starbuy-states');
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'snapshots.json'), 'broken', 'utf-8');
@@ -294,7 +292,6 @@ describe('edge cases', () => {
   });
 
   it('handles corrupt JSON gracefully for pulse events', () => {
-    const { writeFileSync, mkdirSync } = await import('fs');
     const dir = join(tmpDir, '.starbuy-states');
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'pulse-events.json'), '---', 'utf-8');

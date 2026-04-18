@@ -67,7 +67,7 @@ export function PublishProgressFeed({
   return (
     <div
       data-testid="publish-progress-feed"
-      className="space-y-2 rounded-lg border border-[#1f2d4e] bg-[#111827] p-4"
+      className="space-y-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-bg-card)] p-4"
     >
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-400">Publishing status</span>

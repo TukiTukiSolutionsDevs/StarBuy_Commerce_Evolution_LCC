@@ -24,7 +24,7 @@ export function AlertFeed({
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-24 rounded-xl bg-[#111827] border border-[#1f2d4e] animate-pulse"
+            className="h-24 rounded-xl bg-[var(--admin-bg-card)] border border-[var(--admin-border)] animate-pulse"
           />
         ))}
       </div>
@@ -34,10 +34,10 @@ export function AlertFeed({
   if (alerts.length === 0) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 text-center ${className}`}>
-        <span className="material-symbols-outlined text-4xl text-[#374151] mb-3">
+        <span className="material-symbols-outlined text-4xl text-[var(--admin-text-disabled)] mb-3">
           notifications_off
         </span>
-        <p className="text-sm text-[#6b7280]">{emptyMessage}</p>
+        <p className="text-sm text-[var(--admin-text-muted)]">{emptyMessage}</p>
       </div>
     );
   }

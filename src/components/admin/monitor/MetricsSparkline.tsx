@@ -23,7 +23,7 @@ export function MetricsSparkline({
     return (
       <div
         data-testid="sparkline-empty"
-        className={`flex items-center justify-center text-xs text-[#4b5563] ${className}`}
+        className={`flex items-center justify-center text-xs text-[var(--admin-text-disabled)] ${className}`}
         style={{ width, height }}
       >
         No data

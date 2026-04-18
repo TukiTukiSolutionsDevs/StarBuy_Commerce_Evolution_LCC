@@ -106,7 +106,7 @@ function NotFound() {
         </p>
         <Link
           href="/admin/explorer"
-          className="flex items-center gap-2 text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
+          className="flex items-center gap-2 text-[var(--admin-text)] rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
           style={{ backgroundColor: 'var(--admin-border)' }}
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
@@ -300,7 +300,7 @@ export default function CategoryPage() {
             </p>
             <button
               onClick={() => activeTabId && fetchSubcategory(activeTabId)}
-              className="flex items-center gap-2 text-white rounded-xl px-4 py-2 text-sm font-medium transition-colors"
+              className="flex items-center gap-2 text-[var(--admin-text)] rounded-xl px-4 py-2 text-sm font-medium transition-colors"
               style={{ backgroundColor: 'var(--admin-border)' }}
             >
               <span className="material-symbols-outlined text-base">refresh</span>

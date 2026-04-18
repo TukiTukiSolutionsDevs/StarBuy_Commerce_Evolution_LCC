@@ -391,7 +391,7 @@ function RuleModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[var(--admin-text-muted)] hover:text-white hover:bg-[var(--admin-border)] transition-all"
+            className="p-1.5 rounded-lg text-[var(--admin-text-muted)] hover:text-[var(--admin-text)] hover:bg-[var(--admin-border)] transition-all"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
@@ -449,7 +449,8 @@ function RuleModal({
                     }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                       isActive
-                        ? 'border text-white'
+                        ? // eslint-disable-next-line no-restricted-syntax -- over dynamic inline color
+                          'border text-white'
                         : 'bg-[var(--admin-bg)] border border-[var(--admin-border)] text-[var(--admin-text-muted)] hover:text-[var(--admin-text-secondary)]'
                     }`}
                     style={
@@ -715,7 +716,7 @@ function RuleModal({
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--admin-border)]">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-[var(--admin-text-secondary)] hover:text-white hover:bg-[var(--admin-border)] transition-all"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] hover:bg-[var(--admin-border)] transition-all"
           >
             Cancel
           </button>

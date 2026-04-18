@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
@@ -246,7 +246,6 @@ describe('getStats', () => {
 
 describe('edge cases', () => {
   it('handles corrupt JSON gracefully', () => {
-    const { writeFileSync, mkdirSync } = await import('fs');
     const dir = join(tmpDir, '.starbuy-publish');
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'records.json'), '{broken', 'utf-8');

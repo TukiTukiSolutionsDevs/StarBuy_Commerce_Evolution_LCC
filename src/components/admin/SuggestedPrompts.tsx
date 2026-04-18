@@ -30,7 +30,7 @@ const PROMPT_CATEGORIES: PromptCategory[] = [
   {
     label: 'Orders',
     icon: 'receipt_long',
-    color: '#10b981',
+    color: 'var(--admin-success)',
     prompts: ['Show unfulfilled orders', 'Revenue this week', 'Process fulfillment for order #'],
   },
   {
@@ -64,16 +64,16 @@ export default function SuggestedPrompts({ onSelectPrompt }: SuggestedPromptsPro
     <div className="flex flex-col items-center px-3 py-4 gap-4 w-full">
       {/* Header */}
       <div className="text-center mb-1">
-        <span className="material-symbols-outlined text-[#d4a843] text-4xl mb-2 block">
+        <span className="material-symbols-outlined text-[var(--admin-brand)] text-4xl mb-2 block">
           smart_toy
         </span>
         <p
-          className="text-white font-semibold text-sm"
+          className="text-[var(--admin-text-heading)] font-semibold text-sm"
           style={{ fontFamily: 'var(--font-heading)' }}
         >
           AI Store Assistant
         </p>
-        <p className="text-[#6b7280] text-xs leading-relaxed mt-1">
+        <p className="text-[var(--admin-text-muted)] text-xs leading-relaxed mt-1">
           Ask me anything or pick a suggestion below
         </p>
       </div>
@@ -105,10 +105,10 @@ export default function SuggestedPrompts({ onSelectPrompt }: SuggestedPromptsPro
                   onClick={() => onSelectPrompt(prompt)}
                   className="
                     group w-full text-left
-                    bg-[#0f1729] hover:bg-[#111827]
-                    border border-[#1f2d4e] hover:border-[#2d3f6e]
+                    bg-[var(--admin-chat-bg)] hover:bg-[var(--admin-bg-card)]
+                    border border-[var(--admin-border)] hover:border-[var(--admin-border-hover)]
                     rounded-lg px-3 py-2
-                    text-[11px] text-[#9ca3af] hover:text-[#e5e7eb]
+                    text-[11px] text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-body)]
                     transition-all duration-150
                     flex items-center justify-between gap-2
                   "

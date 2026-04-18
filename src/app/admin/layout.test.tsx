@@ -38,12 +38,14 @@ vi.mock('next/link', () => ({
     children,
     className,
     title,
+    style,
   }: {
     href: string;
     children: React.ReactNode;
     className?: string;
     title?: string;
-  }) => React.createElement('a', { href, className, title }, children),
+    style?: React.CSSProperties;
+  }) => React.createElement('a', { href, className, title, style }, children),
 }));
 
 vi.mock('@/components/ui/ToastProvider', () => ({

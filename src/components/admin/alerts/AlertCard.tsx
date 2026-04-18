@@ -52,7 +52,7 @@ export function AlertCard({ alert, onRead, onDismiss, onSnooze, className = '' }
     <div
       data-testid="alert-card"
       data-severity={alert.severity}
-      className={`relative rounded-xl border bg-[#111827] p-4 ${s.border} ${className}`}
+      className={`relative rounded-xl border bg-[var(--admin-bg-card)] p-4 ${s.border} ${className}`}
     >
       {/* Unread indicator */}
       {alert.status === 'unread' && (
@@ -69,12 +69,20 @@ export function AlertCard({ alert, onRead, onDismiss, onSnooze, className = '' }
             >
               {TYPE_LABELS[alert.type]}
             </span>
-            <span className="text-[#4b5563] text-xs">{formatRelativeTime(alert.createdAt)}</span>
+            <span className="text-[var(--admin-text-disabled)] text-xs">
+              {formatRelativeTime(alert.createdAt)}
+            </span>
           </div>
-          <p className="text-sm font-medium text-white leading-snug">{alert.title}</p>
-          <p className="text-xs text-[#9ca3af] mt-0.5 leading-relaxed">{alert.message}</p>
+          <p className="text-sm font-medium text-[var(--admin-text-heading)] leading-snug">
+            {alert.title}
+          </p>
+          <p className="text-xs text-[var(--admin-text-secondary)] mt-0.5 leading-relaxed">
+            {alert.message}
+          </p>
           {alert.sourceLabel && (
-            <p className="text-[10px] text-[#4b5563] mt-1">Source: {alert.sourceLabel}</p>
+            <p className="text-[10px] text-[var(--admin-text-disabled)] mt-1">
+              Source: {alert.sourceLabel}
+            </p>
           )}
         </div>
       </div>
@@ -85,7 +93,7 @@ export function AlertCard({ alert, onRead, onDismiss, onSnooze, className = '' }
           <button
             data-testid="alert-read-btn"
             onClick={() => onRead(alert.id)}
-            className="text-xs text-[#9ca3af] hover:text-white px-2 py-1 rounded-lg hover:bg-[#1f2d4e]/60 transition-colors"
+            className="text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] px-2 py-1 rounded-lg hover:bg-[var(--admin-border)]/60 transition-colors"
           >
             Mark read
           </button>
@@ -95,7 +103,7 @@ export function AlertCard({ alert, onRead, onDismiss, onSnooze, className = '' }
           <button
             data-testid="alert-dismiss-btn"
             onClick={() => onDismiss(alert.id)}
-            className="text-xs text-[#6b7280] hover:text-[#ef4444] px-2 py-1 rounded-lg hover:bg-[#ef4444]/5 transition-colors"
+            className="text-xs text-[var(--admin-text-muted)] hover:text-[var(--admin-error)] px-2 py-1 rounded-lg hover:bg-[var(--admin-error)]/5 transition-colors"
           >
             Dismiss
           </button>

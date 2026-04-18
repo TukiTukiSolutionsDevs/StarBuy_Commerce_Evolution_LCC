@@ -5,7 +5,7 @@
 
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { MarginBadge } from './MarginBadge';
+import { MarginBadge, MARGIN_COLORS } from './MarginBadge';
 
 describe('MarginBadge', () => {
   it('renders the margin percentage', () => {
@@ -14,40 +14,40 @@ describe('MarginBadge', () => {
     expect(screen.getByTestId('margin-badge')).toHaveTextContent('35%');
   });
 
-  it('uses red color for margin below 20%', () => {
+  it('uses low color for margin below 20%', () => {
     render(<MarginBadge margin={15} />);
     const badge = screen.getByTestId('margin-badge');
-    expect(badge).toHaveStyle({ color: '#ef4444' });
+    expect(badge).toHaveStyle({ color: MARGIN_COLORS.low });
   });
 
-  it('uses yellow/gold color for margin 20%', () => {
+  it('uses medium color for margin 20%', () => {
     render(<MarginBadge margin={20} />);
     const badge = screen.getByTestId('margin-badge');
-    expect(badge).toHaveStyle({ color: '#d4a843' });
+    expect(badge).toHaveStyle({ color: MARGIN_COLORS.medium });
   });
 
-  it('uses yellow/gold color for margin 40%', () => {
+  it('uses medium color for margin 40%', () => {
     render(<MarginBadge margin={40} />);
     const badge = screen.getByTestId('margin-badge');
-    expect(badge).toHaveStyle({ color: '#d4a843' });
+    expect(badge).toHaveStyle({ color: MARGIN_COLORS.medium });
   });
 
-  it('uses green color for margin above 40%', () => {
+  it('uses high color for margin above 40%', () => {
     render(<MarginBadge margin={55} />);
     const badge = screen.getByTestId('margin-badge');
-    expect(badge).toHaveStyle({ color: '#10b981' });
+    expect(badge).toHaveStyle({ color: MARGIN_COLORS.high });
   });
 
-  it('uses red for margin = 0', () => {
+  it('uses low for margin = 0', () => {
     render(<MarginBadge margin={0} />);
     const badge = screen.getByTestId('margin-badge');
-    expect(badge).toHaveStyle({ color: '#ef4444' });
+    expect(badge).toHaveStyle({ color: MARGIN_COLORS.low });
   });
 
-  it('uses green for margin = 100', () => {
+  it('uses high for margin = 100', () => {
     render(<MarginBadge margin={100} />);
     const badge = screen.getByTestId('margin-badge');
-    expect(badge).toHaveStyle({ color: '#10b981' });
+    expect(badge).toHaveStyle({ color: MARGIN_COLORS.high });
   });
 
   it('rounds margin to nearest integer', () => {

@@ -41,9 +41,9 @@ function computeMarginPreview(cost: string, sale: string): number | null {
 }
 
 function marginColor(m: number): string {
-  if (m < 20) return '#ef4444';
+  if (m < 20) return 'var(--admin-error)';
   if (m <= 40) return '#d4a843';
-  return '#10b981';
+  return 'var(--admin-success)';
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -146,19 +146,24 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
       />
 
       {/* Panel */}
-      <div className="relative z-10 w-full max-w-md bg-[#0d1526] border border-[#1f2d4e] rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-md bg-[var(--admin-bg-sidebar)] border border-[var(--admin-border)] rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f2d4e]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--admin-border)]">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#d4a843]" style={{ fontSize: 20 }}>
+            <span
+              className="material-symbols-outlined text-[var(--admin-brand)]"
+              style={{ fontSize: 20 }}
+            >
               science
             </span>
-            <h2 className="text-white font-semibold text-sm">Add to Research Board</h2>
+            <h2 className="text-[var(--admin-text-heading)] font-semibold text-sm">
+              Add to Research Board
+            </h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-[#4b5563] hover:text-white hover:bg-white/10 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-[var(--admin-text-muted)] hover:text-[var(--admin-text)] hover:bg-white/10 transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
@@ -172,14 +177,18 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
         </div>
 
         {/* Trend summary */}
-        <div className="px-6 py-3 bg-[#111827] border-b border-[#1f2d4e]">
-          <p className="text-white font-medium text-sm truncate">{trendData.keyword}</p>
-          <p className="text-[#6b7280] text-xs mt-0.5">
-            Trend score: <span className="text-[#9ca3af]">{trendData.trendScore}</span>
+        <div className="px-6 py-3 bg-[var(--admin-bg-card)] border-b border-[var(--admin-border)]">
+          <p className="text-[var(--admin-text-heading)] font-medium text-sm truncate">
+            {trendData.keyword}
+          </p>
+          <p className="text-[var(--admin-text-muted)] text-xs mt-0.5">
+            Trend score:{' '}
+            <span className="text-[var(--admin-text-secondary)]">{trendData.trendScore}</span>
             {trendData.category && (
               <>
                 {' '}
-                &middot; <span className="text-[#9ca3af]">{trendData.category}</span>
+                &middot;{' '}
+                <span className="text-[var(--admin-text-secondary)]">{trendData.category}</span>
               </>
             )}
           </p>
@@ -190,11 +199,11 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
           {/* Prices row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[#9ca3af] text-xs font-medium mb-1.5">
-                Cost Price <span className="text-[#ef4444]">*</span>
+              <label className="block text-[var(--admin-text-secondary)] text-xs font-medium mb-1.5">
+                Cost Price <span className="text-[var(--admin-error)]">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4b5563] text-sm">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-disabled)] text-sm">
                   $
                 </span>
                 <input
@@ -204,17 +213,17 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
                   value={costPrice}
                   onChange={(e) => setCostPrice(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-[#111827] border border-[#1f2d4e] text-white placeholder-[#374151] rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+                  className="w-full bg-[var(--admin-bg-card)] border border-[var(--admin-border)] text-[var(--admin-text)] placeholder-[var(--admin-text-disabled)] rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-[var(--admin-brand)]/50 transition-colors"
                   data-testid="cost-price-input"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-[#9ca3af] text-xs font-medium mb-1.5">
-                Sale Price <span className="text-[#ef4444]">*</span>
+              <label className="block text-[var(--admin-text-secondary)] text-xs font-medium mb-1.5">
+                Sale Price <span className="text-[var(--admin-error)]">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4b5563] text-sm">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-disabled)] text-sm">
                   $
                 </span>
                 <input
@@ -224,7 +233,7 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
                   value={salePrice}
                   onChange={(e) => setSalePrice(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-[#111827] border border-[#1f2d4e] text-white placeholder-[#374151] rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#d4a843]/50 transition-colors"
+                  className="w-full bg-[var(--admin-bg-card)] border border-[var(--admin-border)] text-[var(--admin-text)] placeholder-[var(--admin-text-disabled)] rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-[var(--admin-brand)]/50 transition-colors"
                   data-testid="sale-price-input"
                 />
               </div>
@@ -235,16 +244,19 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
           {marginPreview !== null && (
             <div
               data-testid="margin-preview"
-              className="flex items-center gap-2 bg-[#111827] border border-[#1f2d4e] rounded-xl px-3 py-2"
+              className="flex items-center gap-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-xl px-3 py-2"
             >
-              <span className="material-symbols-outlined text-[#6b7280]" style={{ fontSize: 14 }}>
+              <span
+                className="material-symbols-outlined text-[var(--admin-text-muted)]"
+                style={{ fontSize: 14 }}
+              >
                 percent
               </span>
-              <span className="text-[#6b7280] text-xs">Margin:</span>
+              <span className="text-[var(--admin-text-muted)] text-xs">Margin:</span>
               <span className="text-sm font-semibold" style={{ color: marginColor(marginPreview) }}>
                 {marginPreview.toFixed(1)}%
               </span>
-              <span className="text-[#374151] text-xs ml-auto">
+              <span className="text-[var(--admin-text-disabled)] text-xs ml-auto">
                 {marginPreview < 20
                   ? 'Low margin'
                   : marginPreview <= 40
@@ -256,22 +268,22 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
 
           {/* Notes */}
           <div>
-            <label className="block text-[#9ca3af] text-xs font-medium mb-1.5">
-              Notes <span className="text-[#374151]">(optional)</span>
+            <label className="block text-[var(--admin-text-secondary)] text-xs font-medium mb-1.5">
+              Notes <span className="text-[var(--admin-text-disabled)]">(optional)</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Supplier info, observations..."
               rows={2}
-              className="w-full bg-[#111827] border border-[#1f2d4e] text-white placeholder-[#374151] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4a843]/50 transition-colors resize-none"
+              className="w-full bg-[var(--admin-bg-card)] border border-[var(--admin-border)] text-[var(--admin-text)] placeholder-[var(--admin-text-disabled)] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[var(--admin-brand)]/50 transition-colors resize-none"
               data-testid="notes-input"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <p className="text-[#ef4444] text-xs flex items-center gap-1.5">
+            <p className="text-[var(--admin-error)] text-xs flex items-center gap-1.5">
               <span className="material-symbols-outlined text-sm">error</span>
               {error}
             </p>
@@ -282,7 +294,7 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-[#111827] hover:bg-[#1f2d4e] border border-[#1f2d4e] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+              className="flex-1 bg-[var(--admin-bg-card)] hover:bg-[var(--admin-border)] border border-[var(--admin-border)] text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
             >
               Cancel
             </button>
@@ -290,7 +302,7 @@ export function AddToResearchModal({ isOpen, onClose, trendData }: AddToResearch
               type="submit"
               disabled={submitting}
               data-testid="submit-btn"
-              className="flex-1 bg-[#d4a843] hover:bg-[#c49833] disabled:opacity-60 disabled:cursor-not-allowed text-[#0d1526] font-semibold rounded-xl px-4 py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-[var(--admin-brand)] hover:bg-[var(--admin-brand-hover)] disabled:opacity-60 disabled:cursor-not-allowed text-[var(--admin-bg-sidebar)] font-semibold rounded-xl px-4 py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>

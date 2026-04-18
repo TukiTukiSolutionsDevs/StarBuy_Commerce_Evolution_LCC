@@ -528,6 +528,7 @@ export default function TrendEnginePage() {
               <div className="flex items-center gap-3 pt-1">
                 <Link
                   href="/admin/settings"
+                  // eslint-disable-next-line no-restricted-syntax -- over solid --admin-error button
                   className="inline-flex items-center gap-1.5 text-white font-semibold rounded-xl px-4 py-2 text-xs transition-colors"
                   style={{ backgroundColor: 'var(--admin-error)' }}
                 >
@@ -1007,6 +1008,7 @@ export default function TrendEnginePage() {
           >
             <button
               onClick={loadTrendingNow}
+              // eslint-disable-next-line no-restricted-syntax -- over solid --admin-accent button
               className="flex items-center gap-2 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition-colors"
               style={{ backgroundColor: 'var(--admin-accent)' }}
             >

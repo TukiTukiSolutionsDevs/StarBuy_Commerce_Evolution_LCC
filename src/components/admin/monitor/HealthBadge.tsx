@@ -65,11 +65,14 @@ export function HealthBadge({
         {badge}
         <div
           data-testid="health-badge-tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block z-10 bg-[#0d1526] border border-[#1f2d4e] rounded-xl px-3 py-2 min-w-max max-w-xs shadow-xl"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block z-10 bg-[var(--admin-bg-sidebar)] border border-[var(--admin-border)] rounded-xl px-3 py-2 min-w-max max-w-xs shadow-xl"
         >
           <ul className="space-y-1">
             {reasons.map((r, i) => (
-              <li key={i} className="text-xs text-[#9ca3af] flex items-start gap-1.5">
+              <li
+                key={i}
+                className="text-xs text-[var(--admin-text-secondary)] flex items-start gap-1.5"
+              >
                 <span className={`w-1.5 h-1.5 rounded-full flex-none mt-0.5 ${config.dot}`} />
                 {r}
               </li>

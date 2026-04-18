@@ -23,11 +23,19 @@ interface AiScoreBadgeProps {
 
 type LabelKey = 'Weak' | 'Fair' | 'Good' | 'Strong';
 
-const LABEL_CONFIG: Record<LabelKey, { color: string; bg: string; border: string }> = {
-  Weak: { color: '#ef4444', bg: '#ef444426', border: '#ef44444d' },
-  Fair: { color: '#d4a843', bg: '#d4a84326', border: '#d4a8434d' },
-  Good: { color: '#10b981', bg: '#10b98126', border: '#10b9814d' },
-  Strong: { color: '#6366f1', bg: '#6366f126', border: '#6366f14d' },
+function mkConfig(color: string) {
+  return {
+    color,
+    bg: `color-mix(in srgb, ${color} 15%, transparent)`,
+    border: `color-mix(in srgb, ${color} 30%, transparent)`,
+  };
+}
+
+export const LABEL_CONFIG: Record<LabelKey, { color: string; bg: string; border: string }> = {
+  Weak: mkConfig('var(--admin-error)'),
+  Fair: mkConfig('#d4a843'),
+  Good: mkConfig('var(--admin-success)'),
+  Strong: mkConfig('#6366f1'),
 };
 
 function getConfig(label: string) {
@@ -68,10 +76,10 @@ export function AiScoreBadge({ score, label, breakdown }: AiScoreBadgeProps) {
       {showTip && (
         <div
           data-testid="ai-score-tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 w-44 bg-[#0d1526] border border-[#1f2d4e] rounded-xl p-3 shadow-xl text-xs"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 w-44 bg-[var(--admin-bg-sidebar)] border border-[var(--admin-border)] rounded-xl p-3 shadow-xl text-xs"
           role="tooltip"
         >
-          <p className="text-[#9ca3af] font-semibold mb-2 uppercase tracking-wider text-[10px]">
+          <p className="text-[var(--admin-text-secondary)] font-semibold mb-2 uppercase tracking-wider text-[10px]">
             AI Breakdown
           </p>
           <div className="space-y-1.5">
@@ -81,7 +89,7 @@ export function AiScoreBadge({ score, label, breakdown }: AiScoreBadgeProps) {
             <Row label="Volume" value={breakdown.volume} />
           </div>
           {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-[#1f2d4e]" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-[var(--admin-border)]" />
         </div>
       )}
     </div>
@@ -91,15 +99,15 @@ export function AiScoreBadge({ score, label, breakdown }: AiScoreBadgeProps) {
 function Row({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[#6b7280]">{label}</span>
+      <span className="text-[var(--admin-text-muted)]">{label}</span>
       <div className="flex items-center gap-1.5">
-        <div className="w-16 h-1 rounded-full bg-[#1f2d4e] overflow-hidden">
+        <div className="w-16 h-1 rounded-full bg-[var(--admin-border)] overflow-hidden">
           <div
-            className="h-full rounded-full bg-[#6366f1]"
+            className="h-full rounded-full bg-[var(--admin-accent)]"
             style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
           />
         </div>
-        <span className="text-white w-6 text-right">{value}</span>
+        <span className="text-[var(--admin-text-heading)] w-6 text-right">{value}</span>
       </div>
     </div>
   );

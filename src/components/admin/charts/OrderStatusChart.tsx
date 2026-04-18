@@ -4,7 +4,7 @@
  * OrderStatusChart
  *
  * Donut chart showing order count distribution by financial status.
- * Status colors: PAID=#10b981, PENDING=#d4a843, REFUNDED=#ef4444, OTHER=#6b7280
+ * Status colors map to admin semantic tokens where applicable.
  */
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -15,11 +15,11 @@ export type OrderStatusDataPoint = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  PAID: '#10b981',
+  PAID: 'var(--admin-success)',
   PENDING: '#d4a843',
-  REFUNDED: '#ef4444',
+  REFUNDED: 'var(--admin-error)',
   VOIDED: '#6b8cff',
-  PARTIALLY_PAID: '#f59e0b',
+  PARTIALLY_PAID: 'var(--admin-warning)',
   PARTIALLY_REFUNDED: '#f97316',
   OTHER: '#6b7280',
 };
@@ -37,9 +37,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   const item = payload[0];
   return (
-    <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-3 shadow-xl">
-      <p className="text-[#6b7280] text-xs mb-1">{item.name}</p>
-      <p className="text-white font-semibold text-sm">{item.value.toLocaleString()} orders</p>
+    <div className="bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-3 shadow-xl">
+      <p className="text-[var(--admin-text-muted)] text-xs mb-1">{item.name}</p>
+      <p className="text-[var(--admin-text-heading)] font-semibold text-sm">
+        {item.value.toLocaleString()} orders
+      </p>
     </div>
   );
 }
@@ -52,7 +54,7 @@ export function OrderStatusChart({ data }: OrderStatusChartProps) {
   if (!data.length) {
     return (
       <div className="flex items-center justify-center h-[220px]">
-        <p className="text-[#6b7280] text-sm">No order data</p>
+        <p className="text-[var(--admin-text-muted)] text-sm">No order data</p>
       </div>
     );
   }

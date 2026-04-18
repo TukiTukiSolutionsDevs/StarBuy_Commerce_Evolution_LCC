@@ -54,7 +54,7 @@ export function RollbackButton({
         <button
           data-testid="rollback-confirm-no"
           onClick={() => setConfirming(false)}
-          className="rounded border border-[#1f2d4e] px-2 py-1 text-xs text-gray-400"
+          className="rounded border border-[var(--admin-border)] px-2 py-1 text-xs text-gray-400"
         >
           Cancel
         </button>

@@ -31,9 +31,9 @@ type CustomTooltipProps = {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0a0f1e] border border-[#1f2d4e] rounded-xl px-4 py-3 shadow-xl">
-      <p className="text-[#6b7280] text-xs mb-1">{label}</p>
-      <p className="text-white font-semibold text-sm">
+    <div className="bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-xl px-4 py-3 shadow-xl">
+      <p className="text-[var(--admin-text-muted)] text-xs mb-1">{label}</p>
+      <p className="text-[var(--admin-text-heading)] font-semibold text-sm">
         $
         {payload[0].value.toLocaleString('en-US', {
           minimumFractionDigits: 2,

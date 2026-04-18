@@ -17,14 +17,24 @@ interface MarginBadgeProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+export const MARGIN_COLORS = {
+  low: 'var(--admin-error)',
+  medium: '#d4a843',
+  high: 'var(--admin-success)',
+} as const;
+
+function mkConfig(color: string) {
+  return {
+    color,
+    bg: `color-mix(in srgb, ${color} 15%, transparent)`,
+    border: `color-mix(in srgb, ${color} 30%, transparent)`,
+  };
+}
+
 function getMarginConfig(margin: number): { color: string; bg: string; border: string } {
-  if (margin < 20) {
-    return { color: '#ef4444', bg: '#ef444426', border: '#ef44444d' };
-  }
-  if (margin <= 40) {
-    return { color: '#d4a843', bg: '#d4a84326', border: '#d4a8434d' };
-  }
-  return { color: '#10b981', bg: '#10b98126', border: '#10b9814d' };
+  if (margin < 20) return mkConfig(MARGIN_COLORS.low);
+  if (margin <= 40) return mkConfig(MARGIN_COLORS.medium);
+  return mkConfig(MARGIN_COLORS.high);
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────

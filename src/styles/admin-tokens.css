@@ -58,6 +58,10 @@
   --admin-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
   --admin-shadow-dropdown: 0 8px 32px rgba(0, 0, 0, 0.4);
 
+  /* Chat widget */
+  --admin-chat-bg: #0f1729;
+  --admin-chat-avatar-bg: #1b2a5e;
+
   /* Misc */
   --admin-overlay: rgba(0, 0, 0, 0.6);
   --admin-scrollbar-track: #0a0f1e;
@@ -112,6 +116,10 @@
   /* Shadows */
   --admin-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --admin-shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Chat widget */
+  --admin-chat-bg: #eef0f5;
+  --admin-chat-avatar-bg: #dbe3f5;
 
   /* Misc */
   --admin-overlay: rgba(0, 0, 0, 0.3);

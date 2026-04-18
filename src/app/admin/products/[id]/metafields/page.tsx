@@ -421,6 +421,7 @@ function ConfirmDeleteModal({
           <button
             onClick={handleConfirm}
             disabled={deleting}
+            // eslint-disable-next-line no-restricted-syntax -- over solid --admin-error button
             className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{ backgroundColor: 'var(--admin-error)' }}
           >

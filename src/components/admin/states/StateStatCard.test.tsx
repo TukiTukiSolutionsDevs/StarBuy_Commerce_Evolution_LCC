@@ -24,21 +24,21 @@ describe('StateStatCard', () => {
     const trend = screen.getByTestId('stat-trend');
     expect(trend).toBeInTheDocument();
     expect(trend).toHaveTextContent('trending_up');
-    expect(trend.className).toContain('text-emerald-400');
+    expect(trend).toHaveStyle({ color: 'var(--admin-success)' });
   });
 
   it('renders down trend icon', () => {
     render(<StateStatCard label="Score" value={40} trend="down" />);
     const trend = screen.getByTestId('stat-trend');
     expect(trend).toHaveTextContent('trending_down');
-    expect(trend.className).toContain('text-red-400');
+    expect(trend).toHaveStyle({ color: 'var(--admin-error)' });
   });
 
   it('renders neutral trend icon', () => {
     render(<StateStatCard label="Score" value={50} trend="neutral" />);
     const trend = screen.getByTestId('stat-trend');
     expect(trend).toHaveTextContent('trending_flat');
-    expect(trend.className).toContain('text-gray-400');
+    expect(trend).toHaveStyle({ color: 'var(--admin-text-muted)' });
   });
 
   it('does not render trend when not provided', () => {

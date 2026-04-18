@@ -102,7 +102,10 @@ describe('UsaMap', () => {
   it('applies selected state stroke styling', () => {
     render(<UsaMap scores={{}} selectedState="CA" />);
     const ca = screen.getByTestId('state-CA');
-    expect(ca.className.baseVal || ca.getAttribute('class')).toContain('stroke-white');
+    // Selected state gets the thicker stroke-2 class (vs stroke-[0.5] for unselected)
+    // and an inline stroke color driven by the admin theme token.
+    expect(ca.getAttribute('class')).toContain('stroke-2');
+    expect(ca.getAttribute('style')).toContain('var(--admin-text)');
   });
 
   it('each state has role="button" and tabIndex', () => {

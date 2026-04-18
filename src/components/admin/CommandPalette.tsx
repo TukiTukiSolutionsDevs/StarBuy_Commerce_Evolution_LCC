@@ -337,17 +337,17 @@ export default function CommandPalette() {
         style={{ paddingTop: '20vh' }}
       >
         <div
-          className="w-full max-w-xl bg-[#111827] border border-[#1f2d4e] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          className="w-full max-w-xl bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Input row ─────────────────────────────────────────────── */}
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#1f2d4e]">
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--admin-border)]">
             {loading ? (
-              <span className="material-symbols-outlined text-xl text-[#d4a843] animate-spin flex-none">
+              <span className="material-symbols-outlined text-xl text-[var(--admin-brand)] animate-spin flex-none">
                 progress_activity
               </span>
             ) : (
-              <span className="material-symbols-outlined text-xl text-[#4b5563] flex-none">
+              <span className="material-symbols-outlined text-xl text-[var(--admin-text-disabled)] flex-none">
                 search
               </span>
             )}
@@ -358,14 +358,14 @@ export default function CommandPalette() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search across your store..."
-              className="flex-1 bg-transparent text-white placeholder-[#4b5563] text-[15px] outline-none"
+              className="flex-1 bg-transparent text-[var(--admin-text)] placeholder-[var(--admin-text-disabled)] text-[15px] outline-none"
               autoComplete="off"
               spellCheck={false}
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
-                className="text-[#4b5563] hover:text-[#9ca3af] transition-colors flex-none"
+                className="text-[var(--admin-text-disabled)] hover:text-[var(--admin-text-secondary)] transition-colors flex-none"
                 aria-label="Clear search"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
@@ -377,7 +377,7 @@ export default function CommandPalette() {
           <div ref={listRef} className="max-h-[400px] overflow-y-auto overscroll-contain">
             {/* Empty state while searching with no results yet */}
             {isSearching && !loading && results && !hasResults && (
-              <div className="flex flex-col items-center gap-2 py-10 text-[#4b5563]">
+              <div className="flex flex-col items-center gap-2 py-10 text-[var(--admin-text-disabled)]">
                 <span className="material-symbols-outlined text-3xl">search_off</span>
                 <p className="text-sm">No results for &ldquo;{query}&rdquo;</p>
               </div>
@@ -389,7 +389,7 @@ export default function CommandPalette() {
                 <div key={section}>
                   {/* Section header */}
                   <div className="px-4 pt-3 pb-1.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[#374151]">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--admin-text-disabled)]">
                       {section}
                     </span>
                   </div>
@@ -409,13 +409,15 @@ export default function CommandPalette() {
                         onMouseEnter={() => setActiveIndex(globalIdx)}
                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                           isActive
-                            ? 'bg-[#1b2a5e]/40 text-white'
-                            : 'text-[#9ca3af] hover:text-white'
+                            ? 'bg-[var(--admin-chat-avatar-bg)]/40 text-[var(--admin-text)]'
+                            : 'text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)]'
                         }`}
                       >
                         <span
                           className={`material-symbols-outlined text-lg flex-none ${
-                            isActive ? 'text-[#d4a843]' : 'text-[#4b5563]'
+                            isActive
+                              ? 'text-[var(--admin-brand)]'
+                              : 'text-[var(--admin-text-disabled)]'
                           }`}
                         >
                           {item.icon}
@@ -423,13 +425,13 @@ export default function CommandPalette() {
                         <span className="flex-1 min-w-0">
                           <span className="block text-sm font-medium truncate">{item.label}</span>
                           {item.sublabel && (
-                            <span className="block text-xs text-[#6b7280] truncate">
+                            <span className="block text-xs text-[var(--admin-text-muted)] truncate">
                               {item.sublabel}
                             </span>
                           )}
                         </span>
                         {isActive && (
-                          <span className="text-[#4b5563] flex-none">
+                          <span className="text-[var(--admin-text-disabled)] flex-none">
                             <span className="material-symbols-outlined text-base">
                               keyboard_return
                             </span>
@@ -443,21 +445,21 @@ export default function CommandPalette() {
           </div>
 
           {/* ── Footer hints ──────────────────────────────────────────── */}
-          <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#1f2d4e] bg-[#0d1526]/60">
-            <span className="flex items-center gap-1 text-[#374151] text-xs">
-              <kbd className="px-1 py-0.5 rounded bg-[#1f2d4e] text-[#6b7280] font-mono text-[10px]">
+          <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[var(--admin-border)] bg-[var(--admin-bg-sidebar)]/60">
+            <span className="flex items-center gap-1 text-[var(--admin-text-disabled)] text-xs">
+              <kbd className="px-1 py-0.5 rounded bg-[var(--admin-border)] text-[var(--admin-text-muted)] font-mono text-[10px]">
                 esc
               </kbd>
               <span>close</span>
             </span>
-            <span className="flex items-center gap-1 text-[#374151] text-xs">
-              <kbd className="px-1 py-0.5 rounded bg-[#1f2d4e] text-[#6b7280] font-mono text-[10px]">
+            <span className="flex items-center gap-1 text-[var(--admin-text-disabled)] text-xs">
+              <kbd className="px-1 py-0.5 rounded bg-[var(--admin-border)] text-[var(--admin-text-muted)] font-mono text-[10px]">
                 ↑↓
               </kbd>
               <span>navigate</span>
             </span>
-            <span className="flex items-center gap-1 text-[#374151] text-xs">
-              <kbd className="px-1 py-0.5 rounded bg-[#1f2d4e] text-[#6b7280] font-mono text-[10px]">
+            <span className="flex items-center gap-1 text-[var(--admin-text-disabled)] text-xs">
+              <kbd className="px-1 py-0.5 rounded bg-[var(--admin-border)] text-[var(--admin-text-muted)] font-mono text-[10px]">
                 ↵
               </kbd>
               <span>select</span>

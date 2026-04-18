@@ -24,13 +24,15 @@ export function MonitorDashboard({
       <div className="flex items-center justify-between">
         <div>
           <h2
-            className="text-white font-bold text-lg"
+            className="text-[var(--admin-text-heading)] font-bold text-lg"
             style={{ fontFamily: 'var(--font-heading)' }}
           >
             Product Monitor
           </h2>
           {lastUpdated && (
-            <p className="text-[#6b7280] text-xs mt-0.5">Last updated: {lastUpdated}</p>
+            <p className="text-[var(--admin-text-muted)] text-xs mt-0.5">
+              Last updated: {lastUpdated}
+            </p>
           )}
         </div>
 
@@ -40,7 +42,7 @@ export function MonitorDashboard({
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-[#111827] hover:bg-[#1f2d4e] border border-[#1f2d4e] text-[#9ca3af] hover:text-white rounded-xl px-4 py-2 text-sm transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-[var(--admin-bg-card)] hover:bg-[var(--admin-border)] border border-[var(--admin-border)] text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] rounded-xl px-4 py-2 text-sm transition-colors disabled:opacity-50"
           >
             <span
               className={`material-symbols-outlined text-base ${isLoading ? 'animate-spin' : ''}`}
@@ -61,7 +63,7 @@ export function MonitorDashboard({
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="h-36 bg-[#111827] border border-[#1f2d4e] rounded-2xl animate-pulse"
+              className="h-36 bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-2xl animate-pulse"
             />
           ))}
         </div>
@@ -71,13 +73,15 @@ export function MonitorDashboard({
       {!isLoading && metrics.length === 0 && (
         <div
           data-testid="empty-state"
-          className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-[#1f2d4e] rounded-2xl"
+          className="flex flex-col items-center justify-center py-24 text-center border border-dashed border-[var(--admin-border)] rounded-2xl"
         >
-          <span className="material-symbols-outlined text-[#374151] text-5xl mb-4">
+          <span className="material-symbols-outlined text-[var(--admin-text-disabled)] text-5xl mb-4">
             monitor_heart
           </span>
-          <p className="text-white font-semibold text-lg mb-2">No products to monitor</p>
-          <p className="text-[#6b7280] text-sm">
+          <p className="text-[var(--admin-text-heading)] font-semibold text-lg mb-2">
+            No products to monitor
+          </p>
+          <p className="text-[var(--admin-text-muted)] text-sm">
             Publish products to Shopify to start tracking their metrics.
           </p>
         </div>

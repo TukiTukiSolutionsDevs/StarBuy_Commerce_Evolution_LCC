@@ -21,13 +21,33 @@ interface PulseEventCardProps {
 function getSeverityConfig(severity: PulseSeverity) {
   switch (severity) {
     case 'anomaly':
-      return { label: 'Anomaly', color: '#ef4444', bg: '#ef444420', border: '#ef444440' };
+      return {
+        label: 'Anomaly',
+        color: 'var(--admin-error)',
+        bg: 'color-mix(in srgb, var(--admin-error) 12%, transparent)',
+        border: 'color-mix(in srgb, var(--admin-error) 25%, transparent)',
+      };
     case 'major':
-      return { label: 'Major', color: '#f59e0b', bg: '#f59e0b20', border: '#f59e0b40' };
+      return {
+        label: 'Major',
+        color: 'var(--admin-warning)',
+        bg: 'color-mix(in srgb, var(--admin-warning) 12%, transparent)',
+        border: 'color-mix(in srgb, var(--admin-warning) 25%, transparent)',
+      };
     case 'notable':
-      return { label: 'Notable', color: '#3b82f6', bg: '#3b82f620', border: '#3b82f640' };
+      return {
+        label: 'Notable',
+        color: 'var(--admin-info)',
+        bg: 'color-mix(in srgb, var(--admin-info) 12%, transparent)',
+        border: 'color-mix(in srgb, var(--admin-info) 25%, transparent)',
+      };
     default:
-      return { label: 'Minor', color: '#6b7280', bg: '#6b728020', border: '#6b728040' };
+      return {
+        label: 'Minor',
+        color: '#6b7280',
+        bg: 'color-mix(in srgb, #6b7280 12%, transparent)',
+        border: 'color-mix(in srgb, #6b7280 25%, transparent)',
+      };
   }
 }
 

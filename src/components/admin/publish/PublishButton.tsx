@@ -73,7 +73,7 @@ export function PublishButton({
           ? 'bg-green-500/20 text-green-400 cursor-default'
           : isDisabled
             ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            : 'bg-[#d4a843] text-[#0a0f1a] hover:bg-[#b8902e]'
+            : 'bg-[var(--admin-brand)] text-[var(--admin-bg)] hover:bg-[var(--admin-brand-hover)]'
       } ${className}`}
     >
       {label}

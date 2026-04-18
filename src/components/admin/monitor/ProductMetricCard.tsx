@@ -17,34 +17,48 @@ export function ProductMetricCard({ metrics, onClick, className = '' }: ProductM
     <div
       data-testid="product-metric-card"
       onClick={() => onClick?.(shopifyProductId)}
-      className={`bg-[#111827] border border-[#1f2d4e] rounded-2xl p-4 flex flex-col gap-3 ${
-        onClick ? 'cursor-pointer hover:border-[#d4a843]/40 transition-colors' : ''
+      className={`bg-[var(--admin-bg-card)] border border-[var(--admin-border)] rounded-2xl p-4 flex flex-col gap-3 ${
+        onClick ? 'cursor-pointer hover:border-[var(--admin-brand)]/40 transition-colors' : ''
       } ${className}`}
     >
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-white font-semibold text-sm truncate flex-1">{title}</p>
+        <p className="text-[var(--admin-text-heading)] font-semibold text-sm truncate flex-1">
+          {title}
+        </p>
         <HealthBadge health={health} reasons={healthReasons} size="sm" showTooltip />
       </div>
 
       {/* ── Stats grid ── */}
       <div className="grid grid-cols-3 gap-2">
         <div className="flex flex-col">
-          <span className="text-[#6b7280] text-[10px] uppercase tracking-wide">Views</span>
-          <span className="text-white text-sm font-semibold">{views.toLocaleString()}</span>
+          <span className="text-[var(--admin-text-muted)] text-[10px] uppercase tracking-wide">
+            Views
+          </span>
+          <span className="text-[var(--admin-text-heading)] text-sm font-semibold">
+            {views.toLocaleString()}
+          </span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[#6b7280] text-[10px] uppercase tracking-wide">Orders</span>
-          <span className="text-white text-sm font-semibold">{orders.toLocaleString()}</span>
+          <span className="text-[var(--admin-text-muted)] text-[10px] uppercase tracking-wide">
+            Orders
+          </span>
+          <span className="text-[var(--admin-text-heading)] text-sm font-semibold">
+            {orders.toLocaleString()}
+          </span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[#6b7280] text-[10px] uppercase tracking-wide">Revenue</span>
-          <span className="text-[#d4a843] text-sm font-semibold">${revenue.toFixed(2)}</span>
+          <span className="text-[var(--admin-text-muted)] text-[10px] uppercase tracking-wide">
+            Revenue
+          </span>
+          <span className="text-[var(--admin-brand)] text-sm font-semibold">
+            ${revenue.toFixed(2)}
+          </span>
         </div>
       </div>
 
       {/* ── Inventory ── */}
-      <div className="flex items-center gap-1.5 text-xs text-[#6b7280]">
+      <div className="flex items-center gap-1.5 text-xs text-[var(--admin-text-muted)]">
         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
           inventory_2
         </span>

@@ -27,20 +27,20 @@ export function SnoozeMenu({ onSnooze, className = '' }: SnoozeMenuProps) {
       <button
         data-testid="snooze-trigger"
         onClick={() => setOpen((v) => !v)}
-        className="text-xs text-[#9ca3af] hover:text-white px-2 py-1 rounded-lg hover:bg-[#1f2d4e]/60 transition-colors flex items-center gap-1"
+        className="text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] px-2 py-1 rounded-lg hover:bg-[var(--admin-border)]/60 transition-colors flex items-center gap-1"
       >
         <span className="material-symbols-outlined text-sm">schedule</span>
         Snooze
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-20 bg-[#0d1526] border border-[#1f2d4e] rounded-xl shadow-xl min-w-[130px] py-1">
+        <div className="absolute left-0 top-full mt-1 z-20 bg-[var(--admin-bg-sidebar)] border border-[var(--admin-border)] rounded-xl shadow-xl min-w-[130px] py-1">
           {OPTIONS.map((opt) => (
             <button
               key={opt.hours}
               data-testid={`snooze-option-${opt.hours}`}
               onClick={() => handleSelect(opt.hours)}
-              className="w-full text-left px-3 py-2 text-xs text-[#9ca3af] hover:text-white hover:bg-[#1f2d4e]/60 transition-colors"
+              className="w-full text-left px-3 py-2 text-xs text-[var(--admin-text-secondary)] hover:text-[var(--admin-text)] hover:bg-[var(--admin-border)]/60 transition-colors"
             >
               {opt.label}
             </button>

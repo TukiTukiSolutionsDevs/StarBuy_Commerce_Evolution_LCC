@@ -23,10 +23,26 @@ const ICON_MAP: Record<ToastType, string> = {
 };
 
 const COLOR_MAP: Record<ToastType, { bg: string; border: string; icon: string }> = {
-  success: { bg: 'bg-[#10b981]/10', border: 'border-[#10b981]/20', icon: 'text-[#10b981]' },
-  error: { bg: 'bg-[#ef4444]/10', border: 'border-[#ef4444]/20', icon: 'text-[#ef4444]' },
-  warning: { bg: 'bg-[#f59e0b]/10', border: 'border-[#f59e0b]/20', icon: 'text-[#f59e0b]' },
-  info: { bg: 'bg-[#3b82f6]/10', border: 'border-[#3b82f6]/20', icon: 'text-[#3b82f6]' },
+  success: {
+    bg: 'bg-[var(--admin-success)]/10',
+    border: 'border-[var(--admin-success)]/20',
+    icon: 'text-[var(--admin-success)]',
+  },
+  error: {
+    bg: 'bg-[var(--admin-error)]/10',
+    border: 'border-[var(--admin-error)]/20',
+    icon: 'text-[var(--admin-error)]',
+  },
+  warning: {
+    bg: 'bg-[var(--admin-warning)]/10',
+    border: 'border-[var(--admin-warning)]/20',
+    icon: 'text-[var(--admin-warning)]',
+  },
+  info: {
+    bg: 'bg-[var(--admin-info)]/10',
+    border: 'border-[var(--admin-info)]/20',
+    icon: 'text-[var(--admin-info)]',
+  },
 };
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -59,14 +75,16 @@ export function Toast({ toast, onDismiss }: { toast: ToastData; onDismiss: (id: 
         setVisible(false);
         setTimeout(() => onDismiss(toast.id), 300);
       }}
-      className={`flex items-center gap-3 w-80 px-4 py-3 rounded-xl border ${colors.bg} ${colors.border} bg-[#111827] shadow-lg shadow-black/30 cursor-pointer transition-all duration-300 ${
+      className={`flex items-center gap-3 w-80 px-4 py-3 rounded-xl border ${colors.bg} ${colors.border} bg-[var(--admin-bg-card)] shadow-lg shadow-black/30 cursor-pointer transition-all duration-300 ${
         visible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
       }`}
     >
       <span className={`material-symbols-outlined text-xl flex-none ${colors.icon}`}>
         {ICON_MAP[toast.type]}
       </span>
-      <span className="text-sm text-[#e5e7eb] text-left flex-1">{toast.message}</span>
+      <span className="text-sm text-[var(--admin-text-body)] text-left flex-1">
+        {toast.message}
+      </span>
     </button>
   );
 }

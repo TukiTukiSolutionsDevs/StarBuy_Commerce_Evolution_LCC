@@ -279,6 +279,7 @@ function CollectionCard({
             >
               inventory_2
             </span>
+            {/* eslint-disable-next-line no-restricted-syntax -- over black/60 overlay */}
             <span className="text-white text-xs font-medium">{collection.productsCount.count}</span>
           </div>
         </div>
@@ -295,6 +296,7 @@ function CollectionCard({
           </button>
           <button
             onClick={() => onDelete(collection)}
+            // eslint-disable-next-line no-restricted-syntax -- over solid --admin-error button
             className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
             style={{ backgroundColor: 'var(--admin-error)' }}
           >
@@ -1128,6 +1130,7 @@ function ConfirmDeleteModal({
           <button
             onClick={handleConfirm}
             disabled={deleting}
+            // eslint-disable-next-line no-restricted-syntax -- over solid --admin-error button
             className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{ backgroundColor: 'var(--admin-error)' }}
           >

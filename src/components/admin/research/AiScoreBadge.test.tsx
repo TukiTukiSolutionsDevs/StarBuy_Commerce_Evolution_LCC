@@ -5,7 +5,7 @@
 
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { AiScoreBadge } from './AiScoreBadge';
+import { AiScoreBadge, LABEL_CONFIG } from './AiScoreBadge';
 import type { AiScoreBreakdown } from '@/lib/research/types';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -30,24 +30,24 @@ describe('AiScoreBadge', () => {
     expect(screen.getByTestId('ai-score-badge')).toHaveTextContent('Good');
   });
 
-  it('uses red color for Weak label', () => {
+  it('uses Weak color for Weak label', () => {
     render(<AiScoreBadge score={25} label="Weak" breakdown={breakdown} />);
-    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: '#ef4444' });
+    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: LABEL_CONFIG.Weak.color });
   });
 
-  it('uses gold color for Fair label', () => {
+  it('uses Fair color for Fair label', () => {
     render(<AiScoreBadge score={50} label="Fair" breakdown={breakdown} />);
-    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: '#d4a843' });
+    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: LABEL_CONFIG.Fair.color });
   });
 
-  it('uses green color for Good label', () => {
+  it('uses Good color for Good label', () => {
     render(<AiScoreBadge score={73} label="Good" breakdown={breakdown} />);
-    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: '#10b981' });
+    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: LABEL_CONFIG.Good.color });
   });
 
-  it('uses indigo color for Strong label', () => {
+  it('uses Strong color for Strong label', () => {
     render(<AiScoreBadge score={90} label="Strong" breakdown={breakdown} />);
-    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: '#6366f1' });
+    expect(screen.getByTestId('ai-score-badge')).toHaveStyle({ color: LABEL_CONFIG.Strong.color });
   });
 
   it('shows tooltip on hover with breakdown values', () => {

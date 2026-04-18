@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { TrendStateBadge } from './TrendStateBadge';
+import { TrendStateBadge, STATE_CONFIG } from './TrendStateBadge';
 
 describe('TrendStateBadge — labels', () => {
   it('renders "Rising" for rising state', () => {
@@ -80,28 +80,29 @@ describe('TrendStateBadge — sizes', () => {
 });
 
 describe('TrendStateBadge — colors', () => {
-  // happy-dom preserves hex values in inline styles (no rgb() normalization)
-  it('applies rising color (#10b981) via inline style', () => {
+  // happy-dom preserves raw values in inline styles (CSS vars aren't resolved).
+  // Assertions use STATE_CONFIG so they stay in sync with the source of truth.
+  it('applies rising color via inline style', () => {
     const { container } = render(<TrendStateBadge state="rising" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.style.color).toBe('#10b981');
+    expect(badge.style.color).toBe(STATE_CONFIG.rising.color);
   });
 
-  it('applies declining color (#ef4444) via inline style', () => {
+  it('applies declining color via inline style', () => {
     const { container } = render(<TrendStateBadge state="declining" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.style.color).toBe('#ef4444');
+    expect(badge.style.color).toBe(STATE_CONFIG.declining.color);
   });
 
-  it('applies stable color (#6b8cff) via inline style', () => {
+  it('applies stable color via inline style', () => {
     const { container } = render(<TrendStateBadge state="stable" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.style.color).toBe('#6b8cff');
+    expect(badge.style.color).toBe(STATE_CONFIG.stable.color);
   });
 
-  it('applies peak color (#d4a843) via inline style', () => {
+  it('applies peak color via inline style', () => {
     const { container } = render(<TrendStateBadge state="peak" />);
     const badge = container.firstChild as HTMLElement;
-    expect(badge.style.color).toBe('#d4a843');
+    expect(badge.style.color).toBe(STATE_CONFIG.peak.color);
   });
 });

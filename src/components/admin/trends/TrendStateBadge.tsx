@@ -12,11 +12,11 @@ import type { TrendState } from '@/lib/trends/types';
 // ─── State config (canonical — re-exported for ScoreRing + others) ────────────
 
 export const STATE_CONFIG: Record<TrendState, { color: string; icon: string; label: string }> = {
-  rising: { color: '#10b981', icon: 'trending_up', label: 'Rising' },
+  rising: { color: 'var(--admin-success)', icon: 'trending_up', label: 'Rising' },
   peak: { color: '#d4a843', icon: 'rocket_launch', label: 'Peak' },
   stable: { color: '#6b8cff', icon: 'trending_flat', label: 'Stable' },
-  declining: { color: '#ef4444', icon: 'trending_down', label: 'Declining' },
-  unknown: { color: '#4b5563', icon: 'help', label: 'Unknown' },
+  declining: { color: 'var(--admin-error)', icon: 'trending_down', label: 'Declining' },
+  unknown: { color: 'var(--admin-text-disabled)', icon: 'help', label: 'Unknown' },
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -37,8 +37,8 @@ export function TrendStateBadge({ state, size = 'md' }: TrendStateBadgeProps) {
     <span
       className={`inline-flex items-center gap-1 rounded-full border ${sizeClasses}`}
       style={{
-        backgroundColor: `${color}26`, // ~15% opacity
-        borderColor: `${color}4d`, // ~30% opacity
+        backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)`,
+        borderColor: `color-mix(in srgb, ${color} 30%, transparent)`,
         color,
       }}
     >
