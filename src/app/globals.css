@@ -219,3 +219,18 @@ button {
 .animate-scroll-hint {
   animation: scroll-hint 2s ease-in-out infinite;
 }
+
+/* ── Accessibility: respect user's reduced-motion preference ──────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-twinkle,
+  .animate-float-up,
+  .animate-pulse-glow,
+  .animate-scroll-hint {
+    animation: none !important;
+  }
+  .animate-twinkle {
+    /* Estrellas visibles pero estáticas para usuarios con reduced-motion */
+    opacity: 0.6;
+  }
+}
